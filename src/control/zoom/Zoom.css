@@ -1,0 +1,29 @@
+#control-zoom {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  margin: 0px;
+
+  padding: 8px;
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  border: 1px solid #78290F;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-text {
+  color: #78290F;
+  font-weight: bold;
+  font-size: 18px;
+  margin: 0px;
+}
+
+.control-scale {
+  cursor: pointer;
+  padding-left: 8px;
+  padding-right: 8px;
+  font-size: 20px;
+}

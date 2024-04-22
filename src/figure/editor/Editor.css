@@ -1,0 +1,37 @@
+.ql-editor {
+  padding: 0px !important;
+  
+  height: auto;
+  max-height: 100%;
+
+  -ms-overflow-style: none;  /* Internet Explorer 10+  - hide scrollbar */
+  scrollbar-width: none;  /* Firefox - hide scrollbar */
+}
+.ql-editor::-webkit-scrollbar { 
+  display: none;  /* Safari and Chrome - hide scrollbar */
+}
+
+.ql-toolbar {
+  background-color: #444444;
+  padding: 8px;
+  width: 340px;
+  border-radius: 20px;
+  cursor: initial;
+}
+
+.ql-tooltip {
+  left: 0px !important;
+  top: -65px !important;  
+}
+
+.ql-picker-options {
+  cursor: pointer;
+}
+
+.ql-tooltip-arrow {
+  display: none !important;
+}
+
+.drag-started p:hover{
+  cursor: move;
+}

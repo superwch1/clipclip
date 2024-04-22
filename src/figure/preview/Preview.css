@@ -1,0 +1,23 @@
+.disable-click{
+  pointer-events: none;
+}
+
+.react_tinylink_card {
+  pointer-events: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.react_tinylink_card_content_wrapper {
+  pointer-events: initial !important;
+}
+
+.react_tinylink_card_content_header_description, .react_tinylink_card_content_description, .react_tinylink_card_footer_description {
+  cursor: pointer !important;
+}
+
+.react_tinylink_card_media {
+  cursor: move !important;
+}
