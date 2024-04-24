@@ -12,69 +12,39 @@ function Canvas({scale}) {
   const [figures, setFigures] = useState([]);
   const isFirstConnection = useRef(true);
 
-  const { sendMessage } = useWebSocket(`${Config.ws}/figure`, {
-    onMessage: (event) => {
-      if (!event.data) {
-        return;
-      }
-
-      const message = JSON.parse(event.data);
-      if (message.action === 'update') {     
-        var matchedFigure = figures.find((x) => x.id === message.figure._id);
-        
-        if(matchedFigure) {
-          updateFigure(message.figure, figures, setFigures)
-        }
-        else {
-          createFigure(message.figure, figures, setFigures)
-        }
-      }
-
-      else if (message.action === 'create' || message.action === 'copy') {
-        createFigure(message.figure, figures, setFigures);
-      }
-
-      else if (message.action === 'delete') {
-        deleteFigure(message.figure, figures, setFigures)
-      }
-    },
+  const { sendMessage, readyState } = useWebSocket(`${Config.ws}/figure`, {
+    onMessage: (event) => processMessageFromWebSocket(event, figures, setFigures),
     shouldReconnect: (closeEvent) => true,
     reconnectInterval: () => 5000,
+    /*
+    heartbeat: {
+      message: 'ping',
+      returnMessage: 'pong',
+      timeout: 10000, // 10 seconds, if no response is received, the connection will be closed
+      interval: 5000, // every 5 seconds, a ping message will be sent
+    }, 
     onOpen: async (event) => {
+      console.log('connected');
       if (isFirstConnection.current) {
         isFirstConnection.current = false;
       }
       else {
-        const response = await axios.get(`${Config.url}/figures`);
-
-        const figureList = response.data.map((figure, index) => ({
-          id: figure._id, type: figure.type, x: figure.x, y: figure.y, width: figure.width,
-          height: figure.height, backgroundColor: figure.backgroundColor, url: figure.url, zIndex: figure.zIndex
-        }));
-
+        var figureList = await getFigureFromServer();
         setFigures(figureList);
       }
-    }
+    } */
   });
 
-
+  useEffect(() => {
+    console.log(readyState);
+  }, [readyState])
 
   useEffect(() => {
     const getFigures = async () => {
-      try {
-        const response = await axios.get(`${Config.url}/figures`);
-
-        const figureList = response.data.map((figure, index) => ({
-          id: figure._id, type: figure.type, x: figure.x, y: figure.y, width: figure.width,
-          height: figure.height, backgroundColor: figure.backgroundColor, url: figure.url, zIndex: figure.zIndex
-        }));
-
-        setFigures(figureList);
-      } catch (error) {
-        console.error('Error getting figures:', error);
-      }
+      var figureList = await getFigureFromServer();
+      setFigures(figureList);
     };
-
+    
     getFigures();  
   }, [])
 
@@ -98,6 +68,43 @@ function Canvas({scale}) {
   );
 }
 
+
+async function getFigureFromServer() {
+  const response = await axios.get(`${Config.url}/figures`);
+
+  const figureList = response.data.map((figure, index) => ({
+    id: figure._id, type: figure.type, x: figure.x, y: figure.y, width: figure.width,
+    height: figure.height, backgroundColor: figure.backgroundColor, url: figure.url, zIndex: figure.zIndex
+  }));
+  return figureList;
+}
+
+
+function processMessageFromWebSocket(event, figures, setFigures) {
+  if (!event.data) {
+    return;
+  }
+
+  const message = JSON.parse(event.data);
+  if (message.action === 'update') {     
+    var matchedFigure = figures.find((x) => x.id === message.figure._id);
+    
+    if(matchedFigure) {
+      updateFigure(message.figure, figures, setFigures)
+    }
+    else {
+      createFigure(message.figure, figures, setFigures)
+    }
+  }
+
+  else if (message.action === 'create' || message.action === 'copy') {
+    createFigure(message.figure, figures, setFigures);
+  }
+
+  else if (message.action === 'delete') {
+    deleteFigure(message.figure, figures, setFigures)
+  }
+}
 
 
 function deleteFigure(deletedFigure, figures, setFigures) {
