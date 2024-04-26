@@ -2,22 +2,49 @@
   pointer-events: none;
 }
 
-.react_tinylink_card {
-  pointer-events: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  height: 100% !important;
-  width: 100% !important;
+
+/* it use of column-reverse and descending order to allow top element shrink before bottom element */
+
+.preview-container {
+  height: 100%;
+  width: 100%; 
+  overflow: hidden;
+  display: flex; 
+  flex-direction: column-reverse;
 }
 
-.react_tinylink_card_content_wrapper {
-  pointer-events: initial !important;
+.preview-media {
+  flex: 1 1 auto;
+  object-fit: cover;
+  order: 2;
+  overflow: hidden;
+  background-color: #FFFFFF;
 }
 
-.react_tinylink_card_content_header_description, .react_tinylink_card_content_description, .react_tinylink_card_footer_description {
-  cursor: pointer !important;
+.preview-content {
+  flex: 0 0 auto;
+  overflow: hidden;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  order: 1;
+
+  text-decoration: none;
+  color: #000000;
 }
 
-.react_tinylink_card_media {
-  cursor: move !important;
+.preview-title {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.preview-text {
+  margin: 0px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+
+  display: -webkit-box;
+   -webkit-line-clamp: 2; /* only display 2 line of p */
+   -webkit-box-orient: vertical;
 }
