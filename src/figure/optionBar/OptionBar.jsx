@@ -8,10 +8,10 @@ import { RgbaColorPicker } from "react-colorful";
 import { useEffect, useRef } from 'react'
 
 
-function OptionBar({id, backgroundColor, sendWebSocketMessage}) {
+function OptionBar({id, backgroundColor, setBackgroundColor, sendWebSocketMessage}) {
 
   // execute the function after it has not been called for 100 milliseconds. 
-  const changeColor = debounce((newColor) => {
+  const changeColor = debounce((newColor, setBackgroundColor) => {
     const message = { action: "backgroundcolor", id: id, backgroundColor: newColor }
     const jsonString = JSON.stringify(message);
     sendWebSocketMessage(jsonString);
@@ -33,7 +33,11 @@ function OptionBar({id, backgroundColor, sendWebSocketMessage}) {
       
       <div ref={wrapperRef} id={`${id}-colorpicker`} className={'colorpicker-hide'} style={{position: "absolute", left: "7px", top: "60px", width: "200px", height: "200px"}}>
         <RgbaColorPicker color={{r: parseInt(rgba[0]), g: parseInt(rgba[1]), b: parseInt(rgba[2]), a: parseFloat(rgba[3])}}
-          onChange={(event) => changeColor(`rgba(${event.r},${event.g},${event.b},${event.a})`)} />
+          // reason for not using useState in figure is because once it rerender after setState, the changeColor function will be keep invoking
+          onChange={(event) => {
+            changeColor(`rgba(${event.r},${event.g},${event.b},${event.a})`)
+            document.getElementById(id).style.backgroundColor = `rgba(${event.r},${event.g},${event.b},${event.a})`;
+          }} />
       </div>
     </div>
   )

@@ -11,15 +11,18 @@
   display: none;  /* Safari and Chrome - hide scrollbar */
 }
 
-.ql-toolbar {
+.ql-display {
+  /* remove the mechanism on hiding quill toolbar when the text is not selected */
+  display: initial !important; 
+}
+
+.ql-tooltip {
   background-color: #444444;
   padding: 8px;
   width: 340px;
   border-radius: 20px;
   cursor: initial;
-}
 
-.ql-tooltip {
   left: 0px !important;
   top: -65px !important;  
 }

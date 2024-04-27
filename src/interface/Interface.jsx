@@ -66,7 +66,7 @@ function Interface() {
       </div>
 
       { /* these component are placed on top of the Canvas */ }
-      <Create scale={scale}/>
+      <Create />
       <Zoom scale={scale} setScale={setScale}/>
     </> 
   )

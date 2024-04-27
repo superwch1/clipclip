@@ -86,6 +86,9 @@ function onSelectFigureBeforeFunction(id) {
     quillEditor[0].classList.add(`${id}-noDrag`);
     quillEditor[0].setAttribute('contenteditable', true);
   }
+
+  const quillTooltip = document.getElementById(`${id}`).getElementsByClassName('ql-tooltip');
+  quillTooltip[0].classList.add('ql-display')
 }
 
 function onMouseUp(id) {
@@ -101,6 +104,9 @@ function onClickOutsideFigureBeforeFunction(id) {
   quillEditor[0].classList.remove(`${id}-noDrag`);
   quillEditor[0].classList.add(`drag-started`);
   quillEditor[0].setAttribute('contenteditable', false);
+
+  const quillTooltip = figure.getElementsByClassName('ql-tooltip');
+  quillTooltip[0].classList.remove('ql-display')
   
   // remove highlighted text after click outside since selected text is draggable and cause error
   const container = document.querySelector(`#${id}-quill`);
