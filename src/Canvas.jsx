@@ -1,8 +1,8 @@
 import Editor from './figure/editor/Editor'
 import Image from './figure/image/Image'
 import Preview from './figure/preview/Preview'
-import { useEffect, useState, useRef } from 'react'
-import useWebSocket, { ReadyState } from 'react-use-websocket';
+import { useState, useRef } from 'react'
+import useWebSocket from 'react-use-websocket';
 import axios from 'axios';
 import Config from './config/Config'
 
@@ -12,41 +12,33 @@ function Canvas({scale}) {
   const [figures, setFigures] = useState([]);
   const isFirstConnection = useRef(true);
 
-  const { sendMessage, readyState } = useWebSocket(`${Config.ws}/figure`, {
+  // if connection is lost, messages are queued up and sent after reconnected
+  const { sendMessage } = useWebSocket(`${Config.ws}/figure`, {
     onMessage: (event) => processMessageFromWebSocket(event, figures, setFigures),
-    shouldReconnect: (closeEvent) => true,
+    shouldReconnect: (closeEvent) => true, // it will attempt to reconnect after the connection is closed
     reconnectInterval: () => 5000,
-    /*
+    filter: (message) => false, // prevent rerender every time it receives a message from websocket
+
     heartbeat: {
       message: 'ping',
       returnMessage: 'pong',
       timeout: 10000, // 10 seconds, if no response is received, the connection will be closed
       interval: 5000, // every 5 seconds, a ping message will be sent
     }, 
+    
+    // get all the figures properties from web server if it is not connectedfor  longer than timeout period
     onOpen: async (event) => {
-      console.log('connected');
-      if (isFirstConnection.current) {
+      if (isFirstConnection.current === true) {
         isFirstConnection.current = false;
+        var figureList = await getFigureFromServer();
+        setFigures(figureList);
       }
       else {
         var figureList = await getFigureFromServer();
         setFigures(figureList);
       }
-    } */
+    }
   });
-
-  useEffect(() => {
-    console.log(readyState);
-  }, [readyState])
-
-  useEffect(() => {
-    const getFigures = async () => {
-      var figureList = await getFigureFromServer();
-      setFigures(figureList);
-    };
-    
-    getFigures();  
-  }, [])
 
   return (
     <>

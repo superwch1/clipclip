@@ -28,15 +28,6 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
     setSizeAndPosition({x: x, y: y, width: width, height: height})
   }, [x, y, width, height]);
 
-  /*
-  useEffect(() => {
-    const object = document.getElementById(`${id}`);
-    const previewContent = object.getElementsByClassName('react_tinylink_card_content_wrapper');
-    previewContent[0].style.backgroundColor = `${backgroundColor}`;
-    previewContent[0].classList.add(`${id}-noDrag`);
-  });
-  */
-
   const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
   const [previewData, setPreviewData] = useState();
   const wrapperRef = useRef(null);
@@ -62,7 +53,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
             <p className='preview-text'>{previewData.description}</p>
             <p className='preview-text'>{previewData.url}</p>
           </a>
-      </div>   
+        </div>   
       </Rnd>
     )
   }

@@ -10,8 +10,11 @@ export default class Interface {
   static interfaceHeight = 30000;
 
 
-  static url = "http://localhost:1234";
-  static ws = "ws://localhost:1234";
+  // static url = `http://${window.location.host}`; 
+  static url = `http://localhost:1234`;
+
+  // static ws = `ws://${window.location.host}`; 
+  static ws = `ws://localhost:1234`;
 
   /* not allow to resize on topLeft to prevent it overlaps while changing text color in editor toolbar */
   static objectResizingDirection = {bottomLeft: true, bottomRight: true };

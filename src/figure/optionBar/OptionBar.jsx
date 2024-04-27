@@ -31,7 +31,7 @@ function OptionBar({id, backgroundColor, sendWebSocketMessage}) {
       <img src={layerupButton} className='option' alt="layerup" onClick={(event) => sendWebSocketMessage(JSON.stringify({ action: "layerup", id: id }))} />
       <img src={layerdownButton} className='option' alt="layerdown" onClick={(event) => sendWebSocketMessage(JSON.stringify({ action: "layerdown", id: id }))} />
       
-      <div ref={wrapperRef}  id={`${id}-colorpicker`} className={'colorpicker-hide'} style={{position: "absolute", left: "7px", top: "60px", width: "200px", height: "200px"}}>
+      <div ref={wrapperRef} id={`${id}-colorpicker`} className={'colorpicker-hide'} style={{position: "absolute", left: "7px", top: "60px", width: "200px", height: "200px"}}>
         <RgbaColorPicker color={{r: parseInt(rgba[0]), g: parseInt(rgba[1]), b: parseInt(rgba[2]), a: parseFloat(rgba[3])}}
           onChange={(event) => changeColor(`rgba(${event.r},${event.g},${event.b},${event.a})`)} />
       </div>
