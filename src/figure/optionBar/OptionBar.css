@@ -18,10 +18,13 @@
   display: none;
 }
 
+/* https://github.com/BetterTyped/react-zoom-pan-pinch/issues/135 */
+/* pointer-events is set to none in the zoom and pinch package */
 .option {
+  pointer-events: initial !important;
   width: 26px;
   height: 26px;
-  cursor: pointer;
+  cursor: pointer !important;
 }
 
 .option-backgroundColor {

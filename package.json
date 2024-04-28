@@ -20,6 +20,7 @@
     "react-rnd": "^10.4.10",
     "react-tiny-link": "^3.6.1",
     "react-use-websocket": "^4.8.1",
+    "react-zoom-pan-pinch": "^3.4.4",
     "y-quill": "^0.1.5",
     "y-websocket": "^2.0.2",
     "yjs": "^13.6.14"

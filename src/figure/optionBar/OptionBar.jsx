@@ -8,10 +8,10 @@ import { RgbaColorPicker } from "react-colorful";
 import { useEffect, useRef } from 'react'
 
 
-function OptionBar({id, backgroundColor, setBackgroundColor, sendWebSocketMessage}) {
+function OptionBar({id, backgroundColor, sendWebSocketMessage}) {
 
   // execute the function after it has not been called for 100 milliseconds. 
-  const changeColor = debounce((newColor, setBackgroundColor) => {
+  const changeColor = debounce((newColor) => {
     const message = { action: "backgroundcolor", id: id, backgroundColor: newColor }
     const jsonString = JSON.stringify(message);
     sendWebSocketMessage(jsonString);
