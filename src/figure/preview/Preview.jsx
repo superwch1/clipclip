@@ -41,7 +41,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
       <Rnd enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
         bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}}
         minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight}  
-        onMouseDown={(event) => onSelectFigure(event, id, null, null)} draggable={false} scale={scale}
+        onMouseDown={(event) => onSelectFigure(event, id, null, null)} draggable={false} scale={scale} className='figure'
         onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}
         onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)}>
   

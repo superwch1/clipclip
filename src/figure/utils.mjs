@@ -3,6 +3,10 @@ import { useEffect } from 'react'
 function onClickOutsideFigure(ref, id, beforeFunction, afterFunction) {
   useEffect( () => {
     function handleClickOutside (event) {
+      
+      console.log(id)
+      console.log(!ref.current.contains(event.target))
+
       if (ref.current && !ref.current.contains(event.target)) {
         if (beforeFunction !== null) {
           beforeFunction(id);

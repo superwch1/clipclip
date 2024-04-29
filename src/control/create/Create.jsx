@@ -60,7 +60,7 @@ function onClickOutsideColorPicker(urlRef, previewButtonRef, controlUrlId) {
 
 async function createEditor(event, scale) { 
   const coordinate = JSON.parse(localStorage.getItem('coordinate'));
-  const figure = { type: "editor", x: (coordinate.x / scale) + 100, y: (coordinate.y / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
+  const figure = { type: "editor", x: -(coordinate.x / scale) + 100, y: -(coordinate.y / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
   await axios.post(`${Config.url}/editor`, figure);
 }
 
@@ -72,7 +72,7 @@ async function createPreview(event, controlUrlId, scale) {
   if (event.key === 'Enter' || event.keyCode === 13) {
 
     const coordinate = JSON.parse(localStorage.getItem('coordinate'));
-    const figure = { type: "preview", x: (coordinate.x / scale) + 100, y: (coordinate.y / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", 
+    const figure = { type: "preview", x: -(coordinate.x / scale) + 100, y: -(coordinate.y / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", 
                      url: document.getElementById('option-url').value, zIndex: 5}
     await axios.post(`${Config.url}/editor`, figure);
 
@@ -87,7 +87,7 @@ async function uploadImage(event, scale) {
   formData.append("image", file);
 
   const coordinate = JSON.parse(localStorage.getItem('coordinate'));
-  const figure = { type: "image", x: (coordinate.x / scale) + 100, y: (coordinate.y / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
+  const figure = { type: "image", x: -(coordinate.x / scale) + 100, y: -(coordinate.y / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
   formData.append('figure', JSON.stringify(figure));
 
   await axios.post(`${Config.url}/image`, formData, {

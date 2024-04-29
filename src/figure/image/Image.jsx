@@ -26,7 +26,7 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
     <Rnd enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
       bounds="#interface" lockAspectRatio={true} style={{zIndex: `${zIndex}`}} cancel={`.${id}-noDrag`}
       minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
-      onMouseDown={(event) => onSelectFigure(event, id, null, null)} scale={scale}
+      onMouseDown={(event) => onSelectFigure(event, id, null, null)} scale={scale} className='figure'
       onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}
       onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)}>
       
@@ -37,6 +37,7 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
     </Rnd>
   )
 }, figureIsEqual);
+
 
 
 export default Image

@@ -53,23 +53,20 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
   onClickOutsideFigure(wrapperRef, id, onClickOutsideFigureBeforeFunction, null);
 
   return (
-    <div>
-      <Rnd enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
+    <Rnd enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
           bounds="#interface" cancel={`.${id}-noDrag`} style={{backgroundColor: `${backgroundColor}`, zIndex: `${zIndex}`}}
           minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
-          onMouseDown={(event) => onSelectFigure(event, id, onSelectFigureBeforeFunction, null)} scale={scale}
+          onMouseDown={(event) => onSelectFigure(event, id, onSelectFigureBeforeFunction, null)} scale={scale} className='figure'
           onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)} 
           onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}>
       
-        { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
-        <div id={id} ref={wrapperRef} style={{width: "100%", height: "100%"}} onMouseUp={(event) => onMouseUp(id)}>
-        <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
-          <QuillToolbar id={id} />
-          <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>
-        </div>     
-      </Rnd>
-    </div>
-    
+      { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
+      <div id={id} ref={wrapperRef} style={{width: "100%", height: "100%"}} onMouseUp={(event) => onMouseUp(id)}>
+      <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
+        <QuillToolbar id={id} />
+        <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>
+      </div>     
+    </Rnd>
   )
 }, figureIsEqual);
 
