@@ -28,7 +28,7 @@ function Create({scale}) {
       <div id="control-create">
         <div className="option-text" ref={previewButtonRef} onClick={(event) => showInput(controlUrlId)}>連結</div>
         <div className="option-text" onClick={createImage}>相片
-          <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage(event, scale)} style={{display: 'none'}} accept="image/*" />
+          <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage(event, scale)} style={{display: 'none'}} accept=".jpg, .jpeg, .gif, .png, .webp" />
         </div>
         <div className="option-symbol" onClick={(event) => createEditor(event, scale)}
             onMouseOver={(event) => document.getElementById('option-cross').setAttribute('src', crossBrown)} 
@@ -59,8 +59,12 @@ function onClickOutsideColorPicker(urlRef, previewButtonRef, controlUrlId) {
 }
 
 async function createEditor(event, scale) { 
-  const coordinate = JSON.parse(localStorage.getItem('coordinate'));
-  const figure = { type: "editor", x: -(coordinate.x / scale) + 100, y: -(coordinate.y / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
+  // it should be using the value from translate since if the user move out of the bound
+  // the value of coordinate may not be saved into the local storage
+  var element = document.getElementsByClassName('react-transform-component');
+  var style = window.getComputedStyle(element[0]);
+  var matrix = new WebKitCSSMatrix(style.transform);  
+  const figure = { type: "editor", x: -(matrix.m41 / scale) + 100, y: -(matrix.m42 / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
   await axios.post(`${Config.url}/editor`, figure);
 }
 
@@ -71,10 +75,12 @@ async function showInput(controlUrlId) {
 async function createPreview(event, controlUrlId, scale) {
   if (event.key === 'Enter' || event.keyCode === 13) {
 
-    const coordinate = JSON.parse(localStorage.getItem('coordinate'));
-    const figure = { type: "preview", x: -(coordinate.x / scale) + 100, y: -(coordinate.y / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", 
+    var element = document.getElementsByClassName('react-transform-component');
+    var style = window.getComputedStyle(element[0]);
+    var matrix = new WebKitCSSMatrix(style.transform);  
+    const figure = { type: "preview", x: -(matrix.m41 / scale) + 100, y: -(matrix.m42 / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", 
                      url: document.getElementById('option-url').value, zIndex: 5}
-    await axios.post(`${Config.url}/editor`, figure);
+    await axios.post(`${Config.url}/preview`, figure);
 
     document.getElementById('option-url').value = '';
     document.getElementById(controlUrlId).style.display = 'none';
@@ -86,8 +92,10 @@ async function uploadImage(event, scale) {
   const formData = new FormData();
   formData.append("image", file);
 
-  const coordinate = JSON.parse(localStorage.getItem('coordinate'));
-  const figure = { type: "image", x: -(coordinate.x / scale) + 100, y: -(coordinate.y / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
+  var element = document.getElementsByClassName('react-transform-component');
+  var style = window.getComputedStyle(element[0]);
+  var matrix = new WebKitCSSMatrix(style.transform);  
+  const figure = { type: "image", x: -(matrix.m41 / scale) + 100, y: -(matrix.m42 / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
   formData.append('figure', JSON.stringify(figure));
 
   await axios.post(`${Config.url}/image`, formData, {

@@ -32,7 +32,7 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
       
       <div id={`${id}`} ref={wrapperRef} >
       <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
-        <img draggable={false} src={`${Config.url}/image/?id=${id}`} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
+        <img draggable={false} src={`${Config.url}/image/?url=${url}`} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
       </div>
     </Rnd>
   )

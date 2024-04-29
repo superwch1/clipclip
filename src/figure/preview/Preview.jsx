@@ -16,8 +16,8 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
 
   useEffect(() => {
     const getInfo = async () => {
-      const response = await axios.get(`${Config.url}/preview`, { params: { url: url} });
-      setPreviewData(response.data);
+      const response = await axios.get(`${Config.url}/preview`, { params: { id: id} });
+      setPreviewData(response.data[0]);
     }
     getInfo();
   }, [url])

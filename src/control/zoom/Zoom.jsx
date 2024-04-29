@@ -1,22 +1,22 @@
 import './Zoom.css'
 import { useControls } from "react-zoom-pan-pinch";
 import Config from '../../config/Config'
+import { useState, useEffect } from 'react'
 
 function Zoom({scale, setScale}) {
-
   
   const { setTransform } = useControls();
 
   return (
     <div id="control-zoom">
-      <p className="control-text control-scale" onClick={(transformState) => zoomIn(transformState, scale, setScale, setTransform)}>+</p>
+      <p className="control-text control-scale" onClick={(event) => zoomIn(scale, setScale, setTransform)}>+</p>
       <p className="control-text">{Math.round(scale * 100)}%</p>
-      <p className="control-text control-scale" onClick={(transformState) => zoomOut(transformState, scale, setScale, setTransform)}>-</p>
+      <p className="control-text control-scale" onClick={(event) => zoomOut(scale, setScale, setTransform)}>-</p>
     </div>
   )
 }
 
-function zoomIn(transformState, scale, setScale, setTransform){
+function zoomIn(scale, setScale, setTransform){
   var newScale = scale;
   if (scale + 0.1 <= Config.interfaceMaxZoomScale) { // Zoom in
     newScale = scale + 0.1;
@@ -39,7 +39,7 @@ function zoomIn(transformState, scale, setScale, setTransform){
   } 
 }
 
-function zoomOut(transformState, scale, setScale, setTransform){
+function zoomOut(scale, setScale, setTransform){
   var newScale = scale;
   if (scale - 0.1 >= Config.interfaceMinZoomScale) { // Zoom out
     newScale = scale - 0.1;
