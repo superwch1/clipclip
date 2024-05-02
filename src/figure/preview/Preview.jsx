@@ -31,7 +31,14 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
   const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
   const [previewData, setPreviewData] = useState();
   const wrapperRef = useRef(null);
-  onClickOutsideFigure(wrapperRef, id, null, null);  
+  
+  useEffect(() => {
+    // it updates the reference of wrapperRef after loading the previewData
+    if (previewData !== null && wrapperRef.current) {
+      onClickOutsideFigure(wrapperRef, id, null, null);  
+    }
+  }, [previewData]);
+  
 
   if (previewData == null) {
     return (<div></div>)
@@ -39,7 +46,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
   else {
     return (
       <Rnd enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
-        bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}}
+        bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}} 
         minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight}  
         onMouseDown={(event) => onSelectFigure(event, id, null, null)} draggable={false} scale={scale} className='figure'
         onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}

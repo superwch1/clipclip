@@ -1,7 +1,7 @@
 import Editor from './figure/editor/Editor'
 import Image from './figure/image/Image'
 import Preview from './figure/preview/Preview'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import useWebSocket from 'react-use-websocket';
 import axios from 'axios';
 import Config from './config/Config'
@@ -26,7 +26,7 @@ function Canvas({scale}) {
       interval: 5000, // every 5 seconds, a ping message will be sent
     }, 
     
-    // get all the figures properties from web server if it is not connectedfor  longer than timeout period
+    // get all the figures properties from web server if it is not connected for longer than timeout period
     onOpen: async (event) => {
       if (isFirstConnection.current === true) {
         isFirstConnection.current = false;
@@ -39,6 +39,7 @@ function Canvas({scale}) {
       }
     }
   });
+
 
   return (
     <>

@@ -5,7 +5,7 @@ function onClickOutsideFigure(ref, id, beforeFunction, afterFunction) {
     function handleClickOutside (event) {
       
       console.log(id)
-      console.log(!ref.current.contains(event.target))
+      console.log(ref.current)
 
       if (ref.current && !ref.current.contains(event.target)) {
         if (beforeFunction !== null) {

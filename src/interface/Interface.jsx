@@ -1,11 +1,14 @@
 import Canvas from '../Canvas'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import React, {  } from "react";
 import Create from '../control/create/Create'
 import Zoom from '../control/zoom/Zoom'
+import Cursors from '../cursors/Cursors'
 import './Interface.css'
 import Config from '../config/Config'
 import { TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
+import * as rdd from 'react-device-detect';
+import { debounce } from 'lodash';
 
 
 function Interface() {
@@ -16,29 +19,46 @@ function Interface() {
     storedCoordinate = {x: -Config.interfaceWidth / 2, y: -Config.interfaceWidth / 2};
   }
 
-
   var storedScale = JSON.parse(localStorage.getItem('scale'));
   if (storedScale === null) {
     localStorage.setItem('scale', 1);
     storedScale = 1;
-  } 
+  }
+  
+  useEffect(() => {
+    // recalculate the position after adjusting the screen size
+    const checkPosition = debounce((transformRef) => {
+      var state = transformRef.current.instance.transformState;
+      var result = isLimitToBound({x: state.positionX, y: state.positionY, scale: state.scale, setTransform: transformRef.current.setTransform});
+
+      localStorage.setItem('coordinate',  JSON.stringify({x: result.x, y: result.y}));
+      localStorage.setItem('scale', result.scale);
+      setScale(result.scale);
+    }, 200);
+
+    window.onresize = (event) => checkPosition(transformRef);
+  }, []);
 
   const [scale, setScale] = useState(storedScale);
+  const transformRef = useRef(null);
+  var minScale = rdd.isMobile === true ? Config.interfaceMinZoomScaleForMobile : Config.interfaceMinZoomScaleForDesktop;
 
   return (
     <div>
       { /* even the picture is larger than vw and vh, it still constrain everything in the view part of web browser */ }
       <TransformWrapper limitToBounds={false} initialPositionX={storedCoordinate.x} initialPositionY={storedCoordinate.y}
-        initialScale={scale} minScale={Config.interfaceMinZoomScale} maxScale={Config.interfaceMaxZoomScale} onZoomStop={(transformState) => onZoomStop(transformState, setScale)} 
+        ref={transformRef} initialScale={scale} minScale={minScale} maxScale={Config.interfaceMaxZoomScale} 
+        onZoomStop={(transformState) => onZoomStop(transformState, setScale)} 
         zoomAnimation={{ disabled: true, size: 0.1 }} // prevent scale smaller than minScale while zooming out with ctrl and wheel
         doubleClick={{disabled: true}} pinch={{excluded: ['figure']}} 
-        panning={{allowLeftClickPan: false, allowRightClickPan: false, excluded: ['figure'] }} onPanningStop={(transformState) => onPanningStop(transformState, scale)}>
+        panning={{allowRightClickPan: true, excluded: ['figure'] }} onPanningStop={(transformState) => onPanningStop(transformState)}>
 
       {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
         <>
           <TransformComponent>
             <div id="interface" style={{ width: `${Config.interfaceWidth}px`, height: `${Config.interfaceHeight}px`}}>
-              <Canvas scale={scale} />
+              <Canvas scale={scale} />  
+              <Cursors scale={scale}/> {/* cursor needs to stay inside div otherwise the position will be incorrect */}
             </div>
           </TransformComponent>
           { /* these component are placed on top of the Canvas */ }
@@ -53,59 +73,47 @@ function Interface() {
 }
 
 function onZoomStop (transformState, setScale) {
-  var result = isLimitToBound(transformState, transformState.state.scale);
+  var result = isLimitToBound({x: transformState.state.positionX, y: transformState.state.positionY, scale: transformState.state.scale,
+    setTransform: transformState.setTransform});
 
-  // the scale has effects on coordinate so it needs to be modified together
-  var element = document.getElementsByClassName('react-transform-component');
-  var style = window.getComputedStyle(element[0]);
-  var matrix = new WebKitCSSMatrix(style.transform);
-
-  if (result === true) {
-    localStorage.setItem('coordinate',  JSON.stringify({x: matrix.m41, y: matrix.m42}));
-    localStorage.setItem('scale', transformState.state.scale);
-    setScale(transformState.state.scale);
-  }
-
+  // the scale has effects on coordinate so it needs to be saved together
+  localStorage.setItem('coordinate',  JSON.stringify({x: result.x, y: result.y}));
+  localStorage.setItem('scale', result.scale);
+  setScale(result.scale);
 }
 
 
-function onPanningStop (transformState, scale) {
-  var result = isLimitToBound(transformState, scale);
-
-  var element = document.getElementsByClassName('react-transform-component');
-  var style = window.getComputedStyle(element[0]);
-  var matrix = new WebKitCSSMatrix(style.transform);
-
-  if (result === true) {
-    localStorage.setItem('coordinate',  JSON.stringify({x: matrix.m41, y: matrix.m42}));
-  }
+function onPanningStop (transformState) {
+  var result = isLimitToBound({x: transformState.state.positionX, y: transformState.state.positionY, scale: transformState.state.scale,
+    setTransform: transformState.setTransform});
+  localStorage.setItem('coordinate',  JSON.stringify({x: result.x, y: result.y}));
 }
 
-// maybe need to awaited since it may save the coordinate before going back
-function isLimitToBound(transformState, scale) {
+
+function isLimitToBound({x: x, y: y, scale: scale, setTransform: setTransform}) {
 
   // since the transform wrapper cannot detect the size of div
   // it set limitToBounds to false and set custom transformation to prevent move outside interface
-  var x = transformState.state.positionX;
-  var y = transformState.state.positionY;
+  var x = x;
+  var y = y;
+  var scale = scale;
 
   var originalX = x;
   var originalY = y;
 
   x = (x / scale >= 0) ? 0 : x;
-  x = ((x - window.screen.width) / scale <= -Config.interfaceWidth) ? -Config.interfaceWidth * scale + window.screen.width : x;
+  x = ((x - window.innerWidth) / scale <= -Config.interfaceWidth) ? -Config.interfaceWidth * scale + window.innerWidth : x;
 
   y = (y / scale >= 0) ? 0 : y;
-  y = ((y - window.screen.height) / scale <= -Config.interfaceHeight) ? -Config.interfaceHeight * scale + window.screen.height : y;
-
-  console.log(`x: ${x} ${originalX}    y: ${y} ${originalY}`)
+  y = ((y - window.innerHeight) / scale <= -Config.interfaceHeight) ? -Config.interfaceHeight * scale + window.innerHeight : y;
  
   if (x !== originalX || y !== originalY) {
-    transformState.setTransform(x, y, scale);
-    return false;
+    setTransform(x, y, scale, 100);
   }
 
-  return true;
+  // return the new value of position when it moves outside the canvas
+  // otherwise, return the value from transformState
+  return { x: x, y: y, scale: scale};
 }
 
 

@@ -9,10 +9,11 @@ export default class Interface {
 
 
   // interface configuration
-  static interfaceWidth = 10000;
-  static interfaceHeight = 10000;
+  static interfaceWidth = 5000;
+  static interfaceHeight = 5000;
 
-  static interfaceMinZoomScale = 0.3;
+  static interfaceMinZoomScaleForMobile = 0.3;
+  static interfaceMinZoomScaleForDesktop = 0.5;
   static interfaceMaxZoomScale = 2;
 
 

@@ -1,7 +1,7 @@
 import './Zoom.css'
 import { useControls } from "react-zoom-pan-pinch";
 import Config from '../../config/Config'
-import { useState, useEffect } from 'react'
+import * as rdd from 'react-device-detect';
 
 function Zoom({scale, setScale}) {
   
@@ -41,7 +41,9 @@ function zoomIn(scale, setScale, setTransform){
 
 function zoomOut(scale, setScale, setTransform){
   var newScale = scale;
-  if (scale - 0.1 >= Config.interfaceMinZoomScale) { // Zoom out
+  var minScale = rdd.isMobile === true ? Config.interfaceMinZoomScaleForMobile : Config.interfaceMinZoomScaleForDesktop;
+  
+  if (scale - 0.1 >= minScale) { // Zoom out
     newScale = scale - 0.1;
 
     var element = document.getElementsByClassName('react-transform-component');

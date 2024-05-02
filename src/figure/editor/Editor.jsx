@@ -62,7 +62,7 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
       
       { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
       <div id={id} ref={wrapperRef} style={{width: "100%", height: "100%"}} onMouseUp={(event) => onMouseUp(id)}>
-      <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
+        <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
         <QuillToolbar id={id} />
         <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>
       </div>     
