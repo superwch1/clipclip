@@ -32,12 +32,24 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
   const [previewData, setPreviewData] = useState();
   const wrapperRef = useRef(null);
   
-  useEffect(() => {
-    // it updates the reference of wrapperRef after loading the previewData
-    if (previewData !== null && wrapperRef.current) {
-      onClickOutsideFigure(wrapperRef, id, null, null);  
+  // check for click outside from the figure
+  // it updates the reference of wrapperRef after loading the previewData
+  useEffect( () => {
+    function handleClickOutside (event) { 
+      if (previewData !== null && wrapperRef.current) {
+
+        if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+          document.getElementById(`${id}`).classList.remove('selected-object');
+          const optionBar = document.getElementById(`${id}-optionbar`);
+          optionBar.classList.add('hide-optionbar');
+        }
+      }
     }
-  }, [previewData]);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [wrapperRef, previewData]);
   
 
   if (previewData == null) {

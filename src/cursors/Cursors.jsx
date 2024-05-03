@@ -55,7 +55,7 @@ function Cursors({scale}) {
         }, 100)
         return () => clearInterval(id);    
 
-    }, []);
+    }, [scale]);
   }
 
   return (

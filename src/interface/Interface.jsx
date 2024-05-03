@@ -24,30 +24,70 @@ function Interface() {
     localStorage.setItem('scale', 1);
     storedScale = 1;
   }
-  
-  useEffect(() => {
-    // recalculate the position after adjusting the screen size
-    const checkPosition = debounce((transformRef) => {
-      var state = transformRef.current.instance.transformState;
-      var result = isLimitToBound({x: state.positionX, y: state.positionY, scale: state.scale, setTransform: transformRef.current.setTransform});
-
-      localStorage.setItem('coordinate',  JSON.stringify({x: result.x, y: result.y}));
-      localStorage.setItem('scale', result.scale);
-      setScale(result.scale);
-    }, 200);
-
-    window.onresize = (event) => checkPosition(transformRef);
-  }, []);
 
   const [scale, setScale] = useState(storedScale);
-  const transformRef = useRef(null);
+  const canvasRef = useRef(null);
   var minScale = rdd.isMobile === true ? Config.interfaceMinZoomScaleForMobile : Config.interfaceMinZoomScaleForDesktop;
+  
+  useEffect(() => {
+    // recalculate the position after adjusting the screen size (incl. open and close F12 developer console)
+    const checkPosition = debounce((canvasRef) => {
+      var state = canvasRef.current.instance.transformState;
+      checkInsideBoundAndStoreValue({x: state.positionX, y: state.positionY, scale: state.scale, setScale: null, setTransform: canvasRef.current.setTransform});
+    }, 200);
+    window.onresize = (event) => checkPosition(canvasRef);
+
+
+
+    // use scroll up, down, left and right to move to new position
+    let wheelTimeout;
+
+    function handleWheelStop() {
+      var state = canvasRef.current.instance.transformState;
+      checkInsideBoundAndStoreValue({x: state.positionX, y: state.positionY, scale: state.scale, setScale: null, setTransform: canvasRef.current.setTransform});
+    }
+
+    function handleWheel(event) {
+      if(event.ctrlKey === false) {
+        var state = canvasRef.current.instance.transformState;
+        canvasRef.current.setTransform(state.positionX - event.deltaX, state.positionY - event.deltaY, state.scale, 0);
+        
+        clearTimeout(wheelTimeout);
+        wheelTimeout = setTimeout(handleWheelStop, 100);
+      }
+    }
+    window.addEventListener("wheel", handleWheel);
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, [canvasRef]);
+
+
+
+
+  // prevent user use ctrl + wheel to scale up and down from the control section
+  useEffect(() => {
+    const handleWheel = (event) => {
+      if (event.ctrlKey === true) {
+        event.preventDefault();
+      }
+    };
+    document.getElementById('control').addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      document.getElementById('control').removeEventListener('wheel', handleWheel, { passive: false });
+    };
+  }, []);
+
 
   return (
     <div>
       { /* even the picture is larger than vw and vh, it still constrain everything in the view part of web browser */ }
       <TransformWrapper limitToBounds={false} initialPositionX={storedCoordinate.x} initialPositionY={storedCoordinate.y}
-        ref={transformRef} initialScale={scale} minScale={minScale} maxScale={Config.interfaceMaxZoomScale} 
+
+        // keys for activiation - https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
+        ref={canvasRef} initialScale={scale} minScale={minScale} maxScale={Config.interfaceMaxZoomScale} wheel={{activationKeys: ["Control"]}}
         onZoomStop={(transformState) => onZoomStop(transformState, setScale)} 
         zoomAnimation={{ disabled: true, size: 0.1 }} // prevent scale smaller than minScale while zooming out with ctrl and wheel
         doubleClick={{disabled: true}} pinch={{excluded: ['figure']}} 
@@ -62,8 +102,10 @@ function Interface() {
             </div>
           </TransformComponent>
           { /* these component are placed on top of the Canvas */ }
-          <Create scale={scale} />
-          <Zoom scale={scale} setScale={setScale}/>
+          <div id='control'>
+            <Create scale={scale} />
+            <Zoom scale={scale} setScale={setScale}/>
+          </div>
         </>
       )}
 
@@ -73,27 +115,22 @@ function Interface() {
 }
 
 function onZoomStop (transformState, setScale) {
-  var result = isLimitToBound({x: transformState.state.positionX, y: transformState.state.positionY, scale: transformState.state.scale,
-    setTransform: transformState.setTransform});
-
   // the scale has effects on coordinate so it needs to be saved together
-  localStorage.setItem('coordinate',  JSON.stringify({x: result.x, y: result.y}));
-  localStorage.setItem('scale', result.scale);
-  setScale(result.scale);
+  checkInsideBoundAndStoreValue({x: transformState.state.positionX, y: transformState.state.positionY, scale: transformState.state.scale,
+    setScale: setScale, setTransform: transformState.setTransform});
 }
 
 
 function onPanningStop (transformState) {
-  var result = isLimitToBound({x: transformState.state.positionX, y: transformState.state.positionY, scale: transformState.state.scale,
-    setTransform: transformState.setTransform});
-  localStorage.setItem('coordinate',  JSON.stringify({x: result.x, y: result.y}));
+  checkInsideBoundAndStoreValue({x: transformState.state.positionX, y: transformState.state.positionY, scale: transformState.state.scale,
+    setScale: null, setTransform: transformState.setTransform});
 }
 
 
-function isLimitToBound({x: x, y: y, scale: scale, setTransform: setTransform}) {
-
-  // since the transform wrapper cannot detect the size of div
-  // it set limitToBounds to false and set custom transformation to prevent move outside interface
+// check whether the positionX and positionY is inside or outside the canvas
+// if it is outside the canvas, adjust it back to inside canvas
+// save the x, y and scale value to the local storage
+function checkInsideBoundAndStoreValue({x: x, y: y, scale: scale, setScale: setScale, setTransform: setTransform}) {
   var x = x;
   var y = y;
   var scale = scale;
@@ -108,15 +145,19 @@ function isLimitToBound({x: x, y: y, scale: scale, setTransform: setTransform}) 
   y = ((y - window.innerHeight) / scale <= -Config.interfaceHeight) ? -Config.interfaceHeight * scale + window.innerHeight : y;
  
   if (x !== originalX || y !== originalY) {
+    // return the new value of position when it moves outside the canvas
     setTransform(x, y, scale, 100);
   }
 
-  // return the new value of position when it moves outside the canvas
-  // otherwise, return the value from transformState
-  return { x: x, y: y, scale: scale};
+  // save the suitable value within the canvas into the local storage
+  localStorage.setItem('coordinate',  JSON.stringify({x: x, y: y}));
+    
+  // no need to update the scale if it is just panning, window resizing and moving position by scrolling
+  if (setScale !== null) {
+    localStorage.setItem('scale', scale);
+    setScale(scale);
+  }
 }
-
-
 
 
 
