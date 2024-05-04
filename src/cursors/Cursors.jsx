@@ -15,7 +15,7 @@ function Cursors({scale}) {
   const cursorsMap = useRef(new Map());
   var cursorsArray = Array.from(cursorsMap.current, ([key, value]) => ({ key, value }))
 
-  // if connection is lost, messages are queued up and sent after reconnected
+  // if connection is lost, unsent messages will be discarded
   const { sendMessage } = useWebSocket(`${Config.ws}/cursor?uuid=${cursorUUID.current}`, {
     onMessage: (event) => processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState),
     shouldReconnect: (closeEvent) => true, // it will attempt to reconnect after the connection is closed
@@ -44,6 +44,7 @@ function Cursors({scale}) {
             originalCursorPosition.current = { x: x, y: y }
           }
     
+          // send the updated position of cursor when posotion is different with the previous position
           if (originalCursorPosition.current.x !== cursorPosition.current.x || originalCursorPosition.current.y !== cursorPosition.current.y) {
             originalCursorPosition.current.x = cursorPosition.current.x;
             originalCursorPosition.current.y = cursorPosition.current.y;
@@ -72,6 +73,7 @@ function Cursors({scale}) {
 // no need to rerender since the scale change has no effect on the cursors location
 };
 
+
 function processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState) {
   var cursorsInfoArray = JSON.parse(event.data).cursors;
 
@@ -79,6 +81,8 @@ function processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState) {
   var needRerender = false;
 
   for (var i = 0; i < cursorsInfoArray.length; i++) {
+
+    // ignore for the position of cursor form this client
     if (cursorsInfoArray[i].key === cursorUUID.current) {
       continue;
     }
@@ -95,14 +99,14 @@ function processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState) {
       cursorsCopiedMap.delete(cursorsInfoArray[i].key);
     }
 
-    // if there are cursor cannot be found in Map, it means that some user has connected to clipclip
+    // if there are cursor cannot be found in Map, it means that new user has connected to clipclip
     else {
       needRerender = true;
       break;
     }
   }
 
-  // if there are more than 1 items left in Map, it means that some user has disconnected from clipclip
+  // if there are more than 1 items left in Map, it means that old user has disconnected from clipclip
   if (cursorsCopiedMap.size > 0) {
     needRerender = true;
   }
@@ -117,8 +121,8 @@ function processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState) {
       }
       cursorsNewMap.set(cursorsInfoArray[i].key, cursorsInfoArray[i].value);
     }
-
     cursorsMap.current = cursorsNewMap;
+    
     // setState need a different value than before to trigger rerender
     setState(self.crypto.randomUUID());
   }

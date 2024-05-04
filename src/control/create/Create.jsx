@@ -22,13 +22,30 @@ function Create({scale}) {
   useEffect(() => {
     document.getElementById(controlUrlId).style.display = 'none';
   }, []);
+  
+  useEffect(() => {
+    // need to use debounce to prevent multiple pasting
+    document.onpaste = async (event) => {
+      if (event.clipboardData.types.includes('text/plain')) {
+        
+        console.log('text');
+      }
+      else if (event.clipboardData.types.includes('Files')) {
+        const dataTransfer = event.clipboardData || window.clipboardData;
+        const file = dataTransfer.files[0];
+        if (file !== null) {
+          await uploadImage(null, scale, file);
+        }
+      } 
+    };
+  }, [scale]);
 
   return (
     <>
       <div id="control-create">
         <div className="option-text" ref={previewButtonRef} onClick={(event) => showInput(controlUrlId)}>連結</div>
         <div className="option-text" onClick={createImage}>相片
-          <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage(event, scale)} style={{display: 'none'}} accept=".jpg, .jpeg, .gif, .png, .webp" />
+          <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage(event, scale, event.target.files[0])} style={{display: 'none'}} accept=".jpg, .jpeg, .gif, .png, .webp" />
         </div>
         <div className="option-symbol" onClick={(event) => createEditor(event, scale)}
             onMouseOver={(event) => document.getElementById('option-cross').setAttribute('src', crossBrown)} 
@@ -87,8 +104,7 @@ async function createPreview(event, controlUrlId, scale) {
   }
 }
 
-async function uploadImage(event, scale) {
-  const file = event.target.files[0];
+async function uploadImage(event, scale, file) {
   const formData = new FormData();
   formData.append("image", file);
 
@@ -104,8 +120,11 @@ async function uploadImage(event, scale) {
     }
   });
 
-  // clear the file input's value to allow uploading same file twice for onChange
-  event.target.value = null;
+  if (event !== null) {
+    // only for upload using the button, not for control C + V
+    // clear the file input's value to allow uploading same file twice for onChange
+    event.target.value = null;
+  }
 };
 
 

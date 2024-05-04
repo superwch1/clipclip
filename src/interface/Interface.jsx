@@ -40,6 +40,7 @@ function Interface() {
 
 
     // use scroll up, down, left and right to move to new position
+    // the time for running check is shorter because it usually have residual scroll after wheeling
     let wheelTimeout;
 
     function handleWheelStop() {
@@ -104,7 +105,7 @@ function Interface() {
           { /* these component are placed on top of the Canvas */ }
           <div id='control'>
             <Create scale={scale} />
-            <Zoom scale={scale} setScale={setScale}/>
+            <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStoreValue={checkInsideBoundAndStoreValue}/>
           </div>
         </>
       )}
@@ -152,7 +153,7 @@ function checkInsideBoundAndStoreValue({x: x, y: y, scale: scale, setScale: setS
   // save the suitable value within the canvas into the local storage
   localStorage.setItem('coordinate',  JSON.stringify({x: x, y: y}));
     
-  // no need to update the scale if it is just panning, window resizing and moving position by scrolling
+  // no need to update the scale if it is not zooming
   if (setScale !== null) {
     localStorage.setItem('scale', scale);
     setScale(scale);
