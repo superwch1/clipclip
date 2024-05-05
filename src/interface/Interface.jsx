@@ -8,16 +8,9 @@ import './Interface.css'
 import Config from '../config/Config'
 import { TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
 import * as rdd from 'react-device-detect';
-import { debounce } from 'lodash';
 
 
 function Interface() {
-
-  var storedCoordinate = JSON.parse(localStorage.getItem('coordinate'));
-  if (storedCoordinate === null) {
-    localStorage.setItem('coordinate',  JSON.stringify({x: -Config.interfaceWidth / 2, y: -Config.interfaceWidth / 2}));
-    storedCoordinate = {x: -Config.interfaceWidth / 2, y: -Config.interfaceWidth / 2};
-  }
 
   var storedScale = JSON.parse(localStorage.getItem('scale'));
   if (storedScale === null) {
@@ -25,36 +18,35 @@ function Interface() {
     storedScale = 1;
   }
 
+  var storedPosition = JSON.parse(localStorage.getItem('position'));
+  if (storedPosition === null) {
+    localStorage.setItem('position',  JSON.stringify({x: -Config.interfaceWidth / 2, y: -Config.interfaceWidth / 2}));
+    storedPosition = {x: -Config.interfaceWidth / 2, y: -Config.interfaceWidth / 2};
+  }
+  // ensure the stored position is inside the bound
+  storedPosition = checkInsideBound({x: storedPosition.x, y: storedPosition.y, scale: storedScale});
+
+
   const [scale, setScale] = useState(storedScale);
   const canvasRef = useRef(null);
   var minScale = rdd.isMobile === true ? Config.interfaceMinZoomScaleForMobile : Config.interfaceMinZoomScaleForDesktop;
   
+
   useEffect(() => {
     // recalculate the position after adjusting the screen size (incl. open and close F12 developer console)
-    const checkPosition = debounce((canvasRef) => {
+    window.onresize = (event) => {
       var state = canvasRef.current.instance.transformState;
-      checkInsideBoundAndStoreValue({x: state.positionX, y: state.positionY, scale: state.scale, setScale: null, setTransform: canvasRef.current.setTransform});
-    }, 200);
-    window.onresize = (event) => checkPosition(canvasRef);
-
-
-
-    // use scroll up, down, left and right to move to new position
-    // the time for running check is shorter because it usually have residual scroll after wheeling
-    let wheelTimeout;
-
-    function handleWheelStop() {
-      var state = canvasRef.current.instance.transformState;
-      checkInsideBoundAndStoreValue({x: state.positionX, y: state.positionY, scale: state.scale, setScale: null, setTransform: canvasRef.current.setTransform});
+      checkInsideBoundAndStorePosition({x: state.positionX, y: state.positionY, scale: state.scale, setScale: null, setTransform: canvasRef.current.setTransform});
     }
 
     function handleWheel(event) {
       if(event.ctrlKey === false) {
         var state = canvasRef.current.instance.transformState;
-        canvasRef.current.setTransform(state.positionX - event.deltaX, state.positionY - event.deltaY, state.scale, 0);
-        
-        clearTimeout(wheelTimeout);
-        wheelTimeout = setTimeout(handleWheelStop, 100);
+        var position = checkInsideBound({x: state.positionX - event.deltaX, y: state.positionY - event.deltaY, scale: state.scale})
+        canvasRef.current.setTransform(position.x, position.y, state.scale, 0);
+
+        // it needs to call seave position to storage since it does not use checkInsideBoundAndStorePosition function
+        localStorage.setItem('position',  JSON.stringify({x: position.x, y: position.y}));
       }
     }
     window.addEventListener("wheel", handleWheel);
@@ -63,8 +55,6 @@ function Interface() {
       window.removeEventListener("wheel", handleWheel);
     };
   }, [canvasRef]);
-
-
 
 
   // prevent user use ctrl + wheel to scale up and down from the control section
@@ -84,15 +74,16 @@ function Interface() {
 
   return (
     <div>
-      { /* even the picture is larger than vw and vh, it still constrain everything in the view part of web browser */ }
-      <TransformWrapper limitToBounds={false} initialPositionX={storedCoordinate.x} initialPositionY={storedCoordinate.y}
+      { /* even the picture is larger than vw and vh, it still constrain everything in the view part of web browser  
+           solution for that is to set limitToBounds to false */}
+      <TransformWrapper limitToBounds={false} initialPositionX={storedPosition.x} initialPositionY={storedPosition.y}
 
         // keys for activiation - https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
         ref={canvasRef} initialScale={scale} minScale={minScale} maxScale={Config.interfaceMaxZoomScale} wheel={{activationKeys: ["Control"]}}
-        onZoomStop={(transformState) => onZoomStop(transformState, setScale)} 
+        onZoomStop={(transformState) => onZoomStop(transformState, setScale)} onZoom={(transformState) => onZooming(transformState, setScale)}
         zoomAnimation={{ disabled: true, size: 0.1 }} // prevent scale smaller than minScale while zooming out with ctrl and wheel
         doubleClick={{disabled: true}} pinch={{excluded: ['figure']}} 
-        panning={{allowRightClickPan: true, excluded: ['figure'] }} onPanningStop={(transformState) => onPanningStop(transformState)}>
+        onPanning={(transformState) => onPanning(transformState)} panning={{allowRightClickPan: true, excluded: ['figure'] }} >
 
       {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
         <>
@@ -105,7 +96,7 @@ function Interface() {
           { /* these component are placed on top of the Canvas */ }
           <div id='control'>
             <Create scale={scale} />
-            <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStoreValue={checkInsideBoundAndStoreValue}/>
+            <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStorePosition={checkInsideBoundAndStorePosition}/>
           </div>
         </>
       )}
@@ -115,43 +106,36 @@ function Interface() {
   )
 }
 
-function onZoomStop (transformState, setScale) {
-  // the scale has effects on coordinate so it needs to be saved together
-  checkInsideBoundAndStoreValue({x: transformState.state.positionX, y: transformState.state.positionY, scale: transformState.state.scale,
+function onPanning (transformState) {
+  checkInsideBoundAndStorePosition({ x: transformState.state.positionX, y: transformState.state.positionY, scale: transformState.state.scale, 
+    setScale: null, setTransform: transformState.setTransform});
+}
+
+function onZooming(transformState, setScale) {
+  // the scale has effects on position so it needs to be saved together
+  checkInsideBoundAndStorePosition({ x: transformState.state.positionX, y: transformState.state.positionY, scale: transformState.state.scale, 
     setScale: setScale, setTransform: transformState.setTransform});
 }
 
 
-function onPanningStop (transformState) {
-  checkInsideBoundAndStoreValue({x: transformState.state.positionX, y: transformState.state.positionY, scale: transformState.state.scale,
-    setScale: null, setTransform: transformState.setTransform});
-}
-
-
 // check whether the positionX and positionY is inside or outside the canvas
-// if it is outside the canvas, adjust it back to inside canvas
+// if it is outside the canvas, call the setTranform function
 // save the x, y and scale value to the local storage
-function checkInsideBoundAndStoreValue({x: x, y: y, scale: scale, setScale: setScale, setTransform: setTransform}) {
+function checkInsideBoundAndStorePosition({x: x, y: y, scale: scale, setScale: setScale, setTransform: setTransform}) {
   var x = x;
   var y = y;
   var scale = scale;
 
-  var originalX = x;
-  var originalY = y;
-
-  x = (x / scale >= 0) ? 0 : x;
-  x = ((x - window.innerWidth) / scale <= -Config.interfaceWidth) ? -Config.interfaceWidth * scale + window.innerWidth : x;
-
-  y = (y / scale >= 0) ? 0 : y;
-  y = ((y - window.innerHeight) / scale <= -Config.interfaceHeight) ? -Config.interfaceHeight * scale + window.innerHeight : y;
+  var position = checkInsideBound({x: x, y: y, scale: scale});
  
-  if (x !== originalX || y !== originalY) {
+  // it is true when the value is not inside bound
+  if (x !== position.x || y !== position.y) {
     // return the new value of position when it moves outside the canvas
-    setTransform(x, y, scale, 100);
+    setTransform(position.x, position.y, scale, 0);
   }
 
   // save the suitable value within the canvas into the local storage
-  localStorage.setItem('coordinate',  JSON.stringify({x: x, y: y}));
+  localStorage.setItem('position',  JSON.stringify({x: position.x, y: position.y}));
     
   // no need to update the scale if it is not zooming
   if (setScale !== null) {
@@ -160,6 +144,17 @@ function checkInsideBoundAndStoreValue({x: x, y: y, scale: scale, setScale: setS
   }
 }
 
+// return the original value if it is inside bound
+// otherwise, return the suitable value that should be inside bound
+function checkInsideBound({x: x, y: y, scale: scale}) {
+  x = (x / scale >= 0) ? 0 : x;
+  x = ((x - window.innerWidth) / scale <= -Config.interfaceWidth) ? -Config.interfaceWidth * scale + window.innerWidth : x;
+
+  y = (y / scale >= 0) ? 0 : y;
+  y = ((y - window.innerHeight) / scale <= -Config.interfaceHeight) ? -Config.interfaceHeight * scale + window.innerHeight : y;
+
+  return {x: x, y: y};
+}
 
 
 export default Interface

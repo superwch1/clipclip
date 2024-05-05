@@ -26,9 +26,12 @@ function Create({scale}) {
   useEffect(() => {
     // need to use debounce to prevent multiple pasting
     document.onpaste = async (event) => {
+      console.log(event.clipboardData.types);
+      console.log(event.clipboardData.getData('text/html'))
+
       if (event.clipboardData.types.includes('text/plain')) {
-        
-        console.log('text');
+        const pastedText = event.clipboardData.getData('text/plain');
+        await createEditor(null, scale, pastedText);
       }
       else if (event.clipboardData.types.includes('Files')) {
         const dataTransfer = event.clipboardData || window.clipboardData;
@@ -47,7 +50,7 @@ function Create({scale}) {
         <div className="option-text" onClick={createImage}>相片
           <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage(event, scale, event.target.files[0])} style={{display: 'none'}} accept=".jpg, .jpeg, .gif, .png, .webp" />
         </div>
-        <div className="option-symbol" onClick={(event) => createEditor(event, scale)}
+        <div className="option-symbol" onClick={(event) => createEditor(event, scale, "")}
             onMouseOver={(event) => document.getElementById('option-cross').setAttribute('src', crossBrown)} 
             onMouseOut={(event) => document.getElementById('option-cross').setAttribute('src', crossWhite)}>
           <img src={crossWhite} id='option-cross'/>
@@ -75,13 +78,13 @@ function onClickOutsideColorPicker(urlRef, previewButtonRef, controlUrlId) {
   }, [urlRef, previewButtonRef]);
 }
 
-async function createEditor(event, scale) { 
+async function createEditor(event, scale, pastedText) { 
   // it should be using the value from translate since if the user move out of the bound
   // the value of coordinate may not be saved into the local storage
   var element = document.getElementsByClassName('react-transform-component');
   var style = window.getComputedStyle(element[0]);
   var matrix = new WebKitCSSMatrix(style.transform);  
-  const figure = { type: "editor", x: -(matrix.m41 / scale) + 100, y: -(matrix.m42 / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
+  const figure = { type: "editor", pastedText: pastedText, x: -(matrix.m41 / scale) + 100, y: -(matrix.m42 / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
   await axios.post(`${Config.url}/editor`, figure);
 }
 

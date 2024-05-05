@@ -3,20 +3,20 @@ import { useControls } from "react-zoom-pan-pinch";
 import Config from '../../config/Config'
 import * as rdd from 'react-device-detect';
 
-function Zoom({scale, setScale, checkInsideBoundAndStoreValue}) {
+function Zoom({scale, setScale, checkInsideBoundAndStorePosition}) {
   
   const { setTransform } = useControls();
 
   return (
     <div id="control-zoom">
-      <p className="control-text control-scale" onClick={(event) => zoomIn(scale, setScale, setTransform, checkInsideBoundAndStoreValue)}>+</p>
+      <p className="control-text control-scale" onClick={(event) => zoomIn(scale, setScale, setTransform, checkInsideBoundAndStorePosition)}>+</p>
       <p className="control-text">{Math.round(scale * 100)}%</p>
-      <p className="control-text control-scale" onClick={(event) => zoomOut(scale, setScale, setTransform, checkInsideBoundAndStoreValue)}>-</p>
+      <p className="control-text control-scale" onClick={(event) => zoomOut(scale, setScale, setTransform, checkInsideBoundAndStorePosition)}>-</p>
     </div>
   )
 }
 
-function zoomIn(scale, setScale, setTransform, checkInsideBoundAndStoreValue){
+function zoomIn(scale, setScale, setTransform, checkInsideBoundAndStorePosition){
   var newScale = scale;
   if (scale + 0.1 <= Config.interfaceMaxZoomScale) { // Zoom in
     newScale = scale + 0.1;
@@ -32,11 +32,11 @@ function zoomIn(scale, setScale, setTransform, checkInsideBoundAndStoreValue){
     var y = (matrix.m42 - window.innerHeight / 2 * (1 - scale / newScale)) * ratio
 
     setTransform(x, y, newScale, 0);
-    checkInsideBoundAndStoreValue({x: x, y: y, scale: newScale, setScale: setScale, setTransform: setTransform});
+    checkInsideBoundAndStorePosition({x: x, y: y, scale: newScale, setScale: setScale, setTransform: setTransform});
   } 
 }
 
-function zoomOut(scale, setScale, setTransform, checkInsideBoundAndStoreValue){
+function zoomOut(scale, setScale, setTransform, checkInsideBoundAndStorePosition){
   var newScale = scale;
   var minScale = rdd.isMobile === true ? Config.interfaceMinZoomScaleForMobile : Config.interfaceMinZoomScaleForDesktop;
   
@@ -54,7 +54,7 @@ function zoomOut(scale, setScale, setTransform, checkInsideBoundAndStoreValue){
     var y = (matrix.m42 - window.innerHeight / 2 * (1 - scale / newScale)) * ratio
 
     setTransform(x, y, newScale, 0);
-    checkInsideBoundAndStoreValue({x: x, y: y, scale: newScale, setScale: setScale, setTransform: setTransform});
+    checkInsideBoundAndStorePosition({x: x, y: y, scale: newScale, setScale: setScale, setTransform: setTransform});
   } 
 }
 
