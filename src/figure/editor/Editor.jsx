@@ -61,7 +61,8 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
           onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}>
       
       { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
-      <div id={id} ref={wrapperRef} style={{width: "100%", height: "100%"}} onMouseUp={(event) => onMouseUp(id)}>
+      <div id={id} ref={wrapperRef} style={{width: "100%", height: "100%"}} onMouseUp={(event) => onMouseUp(id)}
+       className='editor'> {/* editor is needed for check not creating new figure in pasting */}
         <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
         <QuillToolbar id={id} />
         <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>

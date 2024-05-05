@@ -4,12 +4,16 @@ import crossBrown from './crossBrown.png'
 import axios from 'axios'
 import { useRef, useEffect } from 'react';
 import Config from '../../config/Config'
+import * as rdd from 'react-device-detect';
+
 
 function Create({scale}) {
 
   const hiddenFileInput = useRef(null);
   const urlRef = useRef(null);
   const previewButtonRef = useRef(null);
+
+  const pastingFigure = useRef(false);
 
   const controlUrlId = 'control-url';
   onClickOutsideColorPicker(urlRef, previewButtonRef, controlUrlId);
@@ -23,34 +27,64 @@ function Create({scale}) {
     document.getElementById(controlUrlId).style.display = 'none';
   }, []);
   
-  useEffect(() => {
-    // need to use debounce to prevent multiple pasting
-    document.onpaste = async (event) => {
-      console.log(event.clipboardData.types);
-      console.log(event.clipboardData.getData('text/html'))
 
-      if (event.clipboardData.types.includes('text/plain')) {
-        const pastedText = event.clipboardData.getData('text/plain');
-        await createEditor(null, scale, pastedText);
-      }
-      else if (event.clipboardData.types.includes('Files')) {
-        const dataTransfer = event.clipboardData || window.clipboardData;
-        const file = dataTransfer.files[0];
-        if (file !== null) {
-          await uploadImage(null, scale, file);
+  // only for desktop user with cursor position
+  if (rdd.isDesktop) {
+    useEffect(() => {
+
+      // it cannot use loudash since the event cannot be passed to the function
+      document.onpaste = async (event) => {     
+
+        // prevent user keep pasting new figure into the canvas
+        if (pastingFigure.current === true) {
+          return;
         }
-      } 
-    };
-  }, [scale]);
+        pastingFigure.current = true;
+        setTimeout(() => pastingFigure.current = false, 1000);
+
+        var controlUrl = document.getElementById('control-url');
+        var selectedObjects = document.getElementsByClassName('selected-object');
+        var isEditorSelected = false;
+
+        for (let i = 0; i < selectedObjects.length; i++) {
+          if (selectedObjects[i].classList.contains('editor')) {
+            isEditorSelected = true;
+          }
+        }
+        
+        // only paste items when user is not pasting url and no figure is current selected
+        if (controlUrl.style.display === 'none' && isEditorSelected === false) {
+          var position = JSON.parse(localStorage.getItem('position'));
+          var cursor = JSON.parse(localStorage.getItem('curosr'));
+          position = { x: -(position.x - cursor.x) / scale, y: -(position.y - cursor.y) / scale};
+    
+          // no idea yet for text/html for converting the style to quill
+          if (event.clipboardData.types.includes('text/plain')) {
+            const pastedText = event.clipboardData.getData('text/plain');
+            await createEditor({event: event, position: position, scale: scale, pastedText: pastedText});
+          }
+
+          else if (event.clipboardData.types.includes('Files')) {
+            const dataTransfer = event.clipboardData;
+            const file = dataTransfer.files[0];
+            if (file !== null) {
+              await uploadImage({event: null, position: position, scale: scale, file: file});
+            }
+          } 
+        }
+      };
+    }, [scale]);
+  }
 
   return (
     <>
       <div id="control-create">
         <div className="option-text" ref={previewButtonRef} onClick={(event) => showInput(controlUrlId)}>連結</div>
         <div className="option-text" onClick={createImage}>相片
-          <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage(event, scale, event.target.files[0])} style={{display: 'none'}} accept=".jpg, .jpeg, .gif, .png, .webp" />
+          <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage({event: event, position: null, scale: scale, file: event.target.files[0]})} 
+                 style={{display: 'none'}} accept=".jpg, .jpeg, .gif, .png, .webp" />
         </div>
-        <div className="option-symbol" onClick={(event) => createEditor(event, scale, "")}
+        <div className="option-symbol" onClick={(event) => createEditor({event: event, position: null, scale: scale, pastedText: ""})}
             onMouseOver={(event) => document.getElementById('option-cross').setAttribute('src', crossBrown)} 
             onMouseOut={(event) => document.getElementById('option-cross').setAttribute('src', crossWhite)}>
           <img src={crossWhite} id='option-cross'/>
@@ -78,13 +112,12 @@ function onClickOutsideColorPicker(urlRef, previewButtonRef, controlUrlId) {
   }, [urlRef, previewButtonRef]);
 }
 
-async function createEditor(event, scale, pastedText) { 
-  // it should be using the value from translate since if the user move out of the bound
-  // the value of coordinate may not be saved into the local storage
-  var element = document.getElementsByClassName('react-transform-component');
-  var style = window.getComputedStyle(element[0]);
-  var matrix = new WebKitCSSMatrix(style.transform);  
-  const figure = { type: "editor", pastedText: pastedText, x: -(matrix.m41 / scale) + 100, y: -(matrix.m42 / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
+async function createEditor({event, position, scale, pastedText}) { 
+  if (position === null) {
+    position = JSON.parse(localStorage.getItem('position'));
+    position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
+  }
+  const figure = { type: "editor", pastedText: pastedText, x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
   await axios.post(`${Config.url}/editor`, figure);
 }
 
@@ -107,14 +140,15 @@ async function createPreview(event, controlUrlId, scale) {
   }
 }
 
-async function uploadImage(event, scale, file) {
+async function uploadImage({event, position, scale, file}) {
   const formData = new FormData();
   formData.append("image", file);
 
-  var element = document.getElementsByClassName('react-transform-component');
-  var style = window.getComputedStyle(element[0]);
-  var matrix = new WebKitCSSMatrix(style.transform);  
-  const figure = { type: "image", x: -(matrix.m41 / scale) + 100, y: -(matrix.m42 / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
+  if (position === null) {
+    position = JSON.parse(localStorage.getItem('position'));
+    position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
+  }
+  const figure = { type: "image", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
   formData.append('figure', JSON.stringify(figure));
 
   await axios.post(`${Config.url}/image`, formData, {

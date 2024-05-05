@@ -30,7 +30,7 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
       onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}
       onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)}>
       
-      <div id={`${id}`} ref={wrapperRef} >
+      <div id={`${id}`} className='image' ref={wrapperRef} >
         <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
         <img draggable={false} src={`${Config.url}/image/?url=${url}`} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
       </div>

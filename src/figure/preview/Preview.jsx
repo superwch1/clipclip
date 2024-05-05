@@ -64,7 +64,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
         onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}
         onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)}>
   
-        <div id={id} ref={wrapperRef} className='preview-container' style={{backgroundColor: `${backgroundColor}`}}>
+        <div id={id} ref={wrapperRef} className='preview-container preview' style={{backgroundColor: `${backgroundColor}`}}>
           <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
           <img src={previewData.image} className='preview-media'draggable={false} />
           <a className={`${id}-noDrag preview-content`} target="_blank" href={previewData.url}>

@@ -8,7 +8,11 @@ import cursorImage from './cursor.png'
 function Cursors({scale}) {
 
   const cursorPosition = useRef({x: 0, y: 0});
-  const originalCursorPosition = useRef(null);
+  const previousCursorPosition = useRef(null);
+
+  const translatePosition = useRef({x: 0, y: 0});
+  const previousTranslatePosition = useRef(null);
+
   const [state, setState] = useState("");
 
   const cursorUUID = useRef(self.crypto.randomUUID());
@@ -31,26 +35,36 @@ function Cursors({scale}) {
         const handleMouseMove = (event) => {
           cursorPosition.current.x = event.clientX;
           cursorPosition.current.y = event.clientY;
+
+          // save cursor position for create figure from onPaste
+          localStorage.setItem('curosr', JSON.stringify({x: event.clientX, y: event.clientY}));
         };
         document.onmousemove = handleMouseMove;
     
         let id = setInterval(() => {
-          var coordiante = JSON.parse(localStorage.getItem('coordinate'));
+          var position = JSON.parse(localStorage.getItem('position'));
+          translatePosition.current = { x: -position.x, y: -position.y};
     
-          var x = (-coordiante.x + cursorPosition.current.x) / scale;
-          var y = (-coordiante.y + cursorPosition.current.y) / scale;
+          var x = (translatePosition.current.x + cursorPosition.current.x) / scale;
+          var y = (translatePosition.current.y + cursorPosition.current.y) / scale;
     
-          if (originalCursorPosition.current === null) {
-            originalCursorPosition.current = { x: x, y: y }
+          if (previousCursorPosition.current === null) {
+            previousCursorPosition.current = { x: cursorPosition.current.x, y: cursorPosition.current.y }
+          }
+
+          if (previousTranslatePosition.current === null) {
+            previousTranslatePosition.current = { x: translatePosition.current.x, y: translatePosition.current.y} 
           }
     
-          // send the updated position of cursor when posotion is different with the previous position
-          if (originalCursorPosition.current.x !== cursorPosition.current.x || originalCursorPosition.current.y !== cursorPosition.current.y) {
-            originalCursorPosition.current.x = cursorPosition.current.x;
-            originalCursorPosition.current.y = cursorPosition.current.y;
-            const jsonString = JSON.stringify({uuid: cursorUUID.current, x: x, y: y});
-            
+          // send the updated position of cursor when translate or cursor posotion is different with the previous
+          if (previousCursorPosition.current.x !== cursorPosition.current.x || previousCursorPosition.current.y !== cursorPosition.current.y ||
+            previousTranslatePosition.current.x !== translatePosition.current.x || previousTranslatePosition.current.y !== translatePosition.current.y) {
+
+            previousCursorPosition.current = { x: cursorPosition.current.x, y: cursorPosition.current.y };
+            previousTranslatePosition.current = { x: translatePosition.current.x, y: translatePosition.current.y };
+                    
             // unsent message will be discarded when the connection is lost
+            const jsonString = JSON.stringify({uuid: cursorUUID.current, x: x, y: y});
             sendMessage(jsonString, false);
           }
         }, 100)

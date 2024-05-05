@@ -79,10 +79,9 @@ function Interface() {
       <TransformWrapper limitToBounds={false} initialPositionX={storedPosition.x} initialPositionY={storedPosition.y}
 
         // keys for activiation - https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
-        ref={canvasRef} initialScale={scale} minScale={minScale} maxScale={Config.interfaceMaxZoomScale} wheel={{activationKeys: ["Control"]}}
-        onZoomStop={(transformState) => onZoomStop(transformState, setScale)} onZoom={(transformState) => onZooming(transformState, setScale)}
-        zoomAnimation={{ disabled: true, size: 0.1 }} // prevent scale smaller than minScale while zooming out with ctrl and wheel
-        doubleClick={{disabled: true}} pinch={{excluded: ['figure']}} 
+        ref={canvasRef} initialScale={scale} minScale={minScale} maxScale={Config.interfaceMaxZoomScale} 
+        onZoom={(transformState) => onZooming(transformState, setScale)} zoomAnimation={{ disabled: true, size: 0.1 }} // set disable true to prevent zoom out of canvas because of library bug
+        doubleClick={{disabled: true}} pinch={{excluded: ['figure']}} wheel={{activationKeys: ["Control"]}}
         onPanning={(transformState) => onPanning(transformState)} panning={{allowRightClickPan: true, excluded: ['figure'] }} >
 
       {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
