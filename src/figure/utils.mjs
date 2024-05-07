@@ -1,3 +1,4 @@
+import { parseInt } from 'lodash';
 import { useEffect } from 'react'
 
 function onClickOutsideFigure(ref, id, beforeFunction, afterFunction) {
@@ -53,7 +54,8 @@ function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPosition, se
   }
   setSizeAndPosition({ x: newSizeAndPosition.x, y: newSizeAndPosition.y, width: newSizeAndPosition.width, height: newSizeAndPosition.height });
 
-  const message = { action: "move", id: id, width: newSizeAndPosition.width, height: newSizeAndPosition.height, x: newSizeAndPosition.x, y: newSizeAndPosition.y }
+  // width and height need to be converted to string from int
+  const message = { action: "move", id: id, width: parseInt(newSizeAndPosition.width), height: parseInt(newSizeAndPosition.height), x: newSizeAndPosition.x, y: newSizeAndPosition.y }
   const jsonString = JSON.stringify(message);
   sendWebSocketMessage(jsonString);
 }

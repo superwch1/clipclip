@@ -95,7 +95,7 @@ function Interface() {
           { /* these component are placed on top of the Canvas */ }
           <div id='control'>
             <Create scale={scale} />
-            <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStorePosition={checkInsideBoundAndStorePosition}/>
+            {rdd.isDesktop === true && <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStorePosition={checkInsideBoundAndStorePosition}/>}
           </div>
         </>
       )}

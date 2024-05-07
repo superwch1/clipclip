@@ -35,6 +35,7 @@ function Create({scale}) {
       // it cannot use loudash since the event cannot be passed to the function
       document.onpaste = async (event) => {     
 
+        
         // prevent user keep pasting new figure into the canvas
         if (pastingFigure.current === true) {
           return;
@@ -53,25 +54,38 @@ function Create({scale}) {
         }
         
         // only paste items when user is not pasting url and no figure is current selected
-        if (controlUrl.style.display === 'none' && isEditorSelected === false) {
-          var position = JSON.parse(localStorage.getItem('position'));
-          var cursor = JSON.parse(localStorage.getItem('curosr'));
-          position = { x: -(position.x - cursor.x) / scale, y: -(position.y - cursor.y) / scale};
-    
-          // no idea yet for text/html for converting the style to quill
-          if (event.clipboardData.types.includes('text/plain')) {
-            const pastedText = event.clipboardData.getData('text/plain');
-            await createEditor({event: event, position: position, scale: scale, pastedText: pastedText});
-          }
-
-          else if (event.clipboardData.types.includes('Files')) {
-            const dataTransfer = event.clipboardData;
-            const file = dataTransfer.files[0];
-            if (file !== null) {
-              await uploadImage({event: null, position: position, scale: scale, file: file});
-            }
-          } 
+        if (controlUrl.style.display !== 'none' || isEditorSelected !== false) {
+          return;
         }
+        
+        var position = JSON.parse(localStorage.getItem('position'));
+        var cursor = JSON.parse(localStorage.getItem('curosr'));
+
+        // 200 for taking the middle position since the default width and height is 400px
+        position = { x: -(position.x - cursor.x) / scale - 200, y: -(position.y - cursor.y) / scale - 200};
+  
+        // no idea yet for text/html for converting the style to quill
+        if (event.clipboardData.types.includes('text/plain')) {
+          const pastedText = event.clipboardData.getData('text/plain');
+
+          var urlPattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/
+          var isUrl = urlPattern.test(pastedText)
+
+          if (isUrl) {
+            await createPreview({event: null, position: position, controlUrlId: controlUrlId, scale: scale, url: pastedText})
+          }
+          else {
+            await createEditor({event: null, position: position, scale: scale, pastedText: pastedText});
+          }
+        }
+
+        else if (event.clipboardData.types.includes('Files')) {
+          const dataTransfer = event.clipboardData;
+          const file = dataTransfer.files[0];
+          if (file !== null) {
+            await uploadImage({event: null, position: position, scale: scale, file: file});
+          }
+        } 
       };
     }, [scale]);
   }
@@ -91,7 +105,8 @@ function Create({scale}) {
         </div>
       </div>
       <div id={`${controlUrlId}`} ref={urlRef}>
-        <input id='option-url' type='text' placeholder="按「回車鍵」傳送連結" onKeyDown={(event) => createPreview(event, controlUrlId, scale)}/>
+        <input id='option-url' type='text' placeholder="按「回車鍵」傳送完整連結" 
+          onKeyDown={(event) => createPreview({event: event, position: null, scale: scale, controlUrlId: controlUrlId, url: document.getElementById('option-url').value})}/>
         </div>  
     </>
   )
@@ -125,17 +140,18 @@ async function showInput(controlUrlId) {
   document.getElementById(controlUrlId).style.display = 'initial';
 }
 
-async function createPreview(event, controlUrlId, scale) {
-  if (event.key === 'Enter' || event.keyCode === 13) {
+async function createPreview({event, controlUrlId, position, scale, url}) {
+  // event is null while using paste, otherwise, user press enter in the url input box
+  if (event === null || event.key === 'Enter' || event.keyCode === 13) {
 
-    var element = document.getElementsByClassName('react-transform-component');
-    var style = window.getComputedStyle(element[0]);
-    var matrix = new WebKitCSSMatrix(style.transform);  
-    const figure = { type: "preview", x: -(matrix.m41 / scale) + 100, y: -(matrix.m42 / scale) + 100, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", 
-                     url: document.getElementById('option-url').value, zIndex: 5}
+    if (position === null) {
+      position = JSON.parse(localStorage.getItem('position'));
+      position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
+    }
+    const figure = { type: "preview", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: url, zIndex: 5}
     await axios.post(`${Config.url}/preview`, figure);
 
-    document.getElementById('option-url').value = '';
+    document.getElementById(controlUrlId).value = '';
     document.getElementById(controlUrlId).style.display = 'none';
   }
 }

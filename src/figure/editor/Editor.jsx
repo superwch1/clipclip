@@ -54,6 +54,7 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
 
   return (
     <Rnd enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
+          //resizeHandleStyles={{bottomRight: {backgroundColor: "#FF0000"}}}
           bounds="#interface" cancel={`.${id}-noDrag`} style={{backgroundColor: `${backgroundColor}`, zIndex: `${zIndex}`}}
           minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
           onMouseDown={(event) => onSelectFigure(event, id, onSelectFigureBeforeFunction, null)} scale={scale} className='figure'
