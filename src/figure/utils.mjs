@@ -1,10 +1,29 @@
 import { parseInt } from 'lodash';
 import { useEffect } from 'react'
 
+// it needs to be similar with unselect object in below onClickOutsideFigure function
+function unselectOtherFigures(id){
+  var selectedObjects = document.getElementsByClassName('selected-object');
+  for (var i = 0; i < selectedObjects.length; i++) {
+    
+    var figureId = selectedObjects[i].id;
+    if(figureId === id) {
+      continue;
+    }
+    
+    document.getElementById(`${figureId}`).classList.remove('selected-object');
+    const optionBar = document.getElementById(`${figureId}-optionbar`); // when you pass selectedObjects[i].id, it will tells you that the properties of id is undefined
+    optionBar.classList.add('hide-optionbar');
+
+    const resizeWrapperClass = document.getElementsByClassName(`${figureId}-resizeHandle`);
+    resizeWrapperClass[0].style.opacity = '0';
+  }
+}
+
+// preview has its own onClickOutsideFigure
 function onClickOutsideFigure(ref, id, beforeFunction, afterFunction) {
   useEffect( () => {
     function handleClickOutside (event) {
-
 
       if (ref.current && !ref.current.contains(event.target)) {
         if (beforeFunction !== null) {
@@ -15,14 +34,19 @@ function onClickOutsideFigure(ref, id, beforeFunction, afterFunction) {
         const optionBar = document.getElementById(`${id}-optionbar`);
         optionBar.classList.add('hide-optionbar');
 
+        var resizeWrapperClass = document.getElementsByClassName(`${id}-resizeHandle`);
+        resizeWrapperClass[0].style.opacity = '0';
+
         if (afterFunction !== null) {
           afterFunction(id);
         }
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
     };
   }, [ref]);
 }
@@ -37,6 +61,9 @@ function onSelectFigure(event, id, beforeFunction, afterFunction) {
   document.getElementById(`${id}`).classList.add('selected-object');
   const optionBar = document.getElementById(`${id}-optionbar`);
   optionBar.classList.remove('hide-optionbar');
+
+  const resizeWrapperClass = document.getElementsByClassName(`${id}-resizeHandle`);
+  resizeWrapperClass[0].style.opacity = "1";
 
   if (afterFunction !== null) {
     afterFunction(id);
@@ -73,4 +100,4 @@ function figureIsEqual(prevProps, nextProps) {
   return isEqualComponenet;
 }
 
-export { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual }
+export { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual, unselectOtherFigures }

@@ -20,8 +20,8 @@ function Interface() {
 
   var storedPosition = JSON.parse(localStorage.getItem('position'));
   if (storedPosition === null) {
-    localStorage.setItem('position',  JSON.stringify({x: -Config.interfaceWidth / 2, y: -Config.interfaceWidth / 2}));
-    storedPosition = {x: -Config.interfaceWidth / 2, y: -Config.interfaceWidth / 2};
+    localStorage.setItem('position',  JSON.stringify({x: (-Config.interfaceWidth + window.innerWidth) / 2, y: (-Config.interfaceHeight + window.innerHeight) / 2}));
+    storedPosition = {x: (-Config.interfaceWidth + window.innerWidth) / 2, y: (-Config.interfaceHeight + window.innerHeight) / 2};
   }
   // ensure the stored position is inside the bound
   storedPosition = checkInsideBound({x: storedPosition.x, y: storedPosition.y, scale: storedScale});
@@ -57,23 +57,35 @@ function Interface() {
   }, [canvasRef]);
 
 
-  // prevent user use ctrl + wheel to scale up and down from the control section
+  // prevent user use ctrl with wheel / ctrl with +- to scale up and down from the control section
   useEffect(() => {
     const handleWheel = (event) => {
       if (event.ctrlKey === true) {
         event.preventDefault();
       }
     };
-    document.getElementById('control').addEventListener('wheel', handleWheel, { passive: false });
+
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && (event.key === '+' || event.key === '-'|| event.key==='=')) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
+
 
     return () => {
-      document.getElementById('control').removeEventListener('wheel', handleWheel, { passive: false });
+      window.removeEventListener('wheel', handleWheel, { passive: false });
+      window.removeEventListener('keydown', handleKeyDown, { passive: false });
     };
   }, []);
 
 
   return (
-    <div>
+    // return to the original location if the virtual keyboard has caused shifted right or bottom on the screen
+    <div style={{position: 'fixed'}}>
+
       { /* even the picture is larger than vw and vh, it still constrain everything in the view part of web browser  
            solution for that is to set limitToBounds to false */}
       <TransformWrapper limitToBounds={false} initialPositionX={storedPosition.x} initialPositionY={storedPosition.y}

@@ -9,15 +9,30 @@ import * as Y from 'yjs'
 import { QuillBinding } from 'y-quill'
 import { WebsocketProvider } from 'y-websocket'
 import { Rnd } from "react-rnd";
-import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual } from '../utils.mjs'
+import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual, unselectOtherFigures } from '../utils.mjs'
 
 
 const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scale, sendWebSocketMessage}) => {
   console.log(`Editor - ${id}`);
+ 
+  const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
+  const wrapperRef = useRef(null);
+  onClickOutsideFigure(wrapperRef, id, onClickOutsideFigureBeforeFunction, null);
 
   // only run after first render
   useEffect(() => {
-    console.log(`Reload quill: ${id}`);
+
+    // reason for using addEventListener instead of onMouseDown in props is because of clicking resize corner won't trigger event
+    // click the resizing corner won't have mouse down event that can't unselect other figure
+    // it may has set something for the event propagation
+    document.getElementById(`${id}-rnd`).addEventListener('mousedown', (event) => {
+      unselectOtherFigures(id);
+      onSelectFigure(event, id, onSelectFigureBeforeFunction, null)
+    });
+    document.getElementById(`${id}-rnd`).addEventListener('touchstart', (event) => {
+      unselectOtherFigures(id);
+      onSelectFigure(event, id, onSelectFigureBeforeFunction, null)
+    });
 
     // Guide on yjs setup - https://docs.yjs.dev/getting-started/a-collaborative-editor
     // Font size and style not save after moving to next line - https://github.com/quilljs/quill/issues/2678 
@@ -45,24 +60,29 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
   useEffect(() => {
     console.log(`Resize Editor - ${id}`);
     setSizeAndPosition({x: x, y: y, width: width, height: height})
+
+    // relocate the resizing handle inside the div for detecting clicks
+    // resolving the issue of either allow to select color in quill toolbar or showing the resizing handle
+    var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`);
+    var container = document.getElementById(`${id}`);
+    container.prepend(resizeHandle[0]); //appendChild();
   }, [x, y, width, height]);
 
-  
-  const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
-  const wrapperRef = useRef(null);
-  onClickOutsideFigure(wrapperRef, id, onClickOutsideFigureBeforeFunction, null);
-
+  // there will be vibrant shaking while resizing on topLeft or bottomLeft corner due to rapid translation and resizing
   return (
-    <Rnd enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
-          //resizeHandleStyles={{bottomRight: {backgroundColor: "#FF0000"}}}
-          bounds="#interface" cancel={`.${id}-noDrag`} style={{backgroundColor: `${backgroundColor}`, zIndex: `${zIndex}`}}
-          minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
-          onMouseDown={(event) => onSelectFigure(event, id, onSelectFigureBeforeFunction, null)} scale={scale} className='figure'
-          onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)} 
-          onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}>
+    <Rnd id={`${id}-rnd`}
+      enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
+      resizeHandleStyles={{bottomRight: Config.resizeHandleStyle, bottomLeft: Config.resizeHandleStyle, topRight: Config.resizeHandleStyle, topLeft: Config.resizeHandleStyle}}
+      resizeHandleWrapperClass={`${id}-resizeHandle`} resizeHandleWrapperStyle={{opacity: '0'}}
+      bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}}
+      minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
+      scale={scale} className='figure'
+      onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)} 
+      onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}>
       
       { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
-      <div id={id} ref={wrapperRef} style={{width: "100%", height: "100%"}} onMouseUp={(event) => onMouseUp(id)}
+      { /* it needs to use zIndex and position relative to allow QuillToolbar to show higher than the resizing corner*/ }
+      <div id={id} ref={wrapperRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`, position: 'relative', zIndex: '10'}} onMouseUp={(event) => onMouseUp(id)}
        className='editor'> {/* editor is needed for check not creating new figure in pasting */}
         <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
         <QuillToolbar id={id} />

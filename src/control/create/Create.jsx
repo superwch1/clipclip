@@ -62,7 +62,8 @@ function Create({scale}) {
         var cursor = JSON.parse(localStorage.getItem('curosr'));
 
         // 200 for taking the middle position since the default width and height is 400px
-        position = { x: -(position.x - cursor.x) / scale - 200, y: -(position.y - cursor.y) / scale - 200};
+        // position = { x: -(position.x - cursor.x) / scale - 200, y: -(position.y - cursor.y) / scale - 200};
+        position = { x: -(position.x - cursor.x) / scale, y: -(position.y - cursor.y) / scale};
   
         // no idea yet for text/html for converting the style to quill
         if (event.clipboardData.types.includes('text/plain')) {

@@ -3,6 +3,7 @@ import useWebSocket from 'react-use-websocket';
 import Config from '../config/Config'
 import * as rdd from 'react-device-detect';
 import cursorImage from './cursor.png'
+import { v4 as uuidv4 } from 'uuid';
 
 
 function Cursors({scale}) {
@@ -15,7 +16,7 @@ function Cursors({scale}) {
 
   const [state, setState] = useState("");
 
-  const cursorUUID = useRef(self.crypto.randomUUID());
+  const cursorUUID = useRef(uuidv4());
   const cursorsMap = useRef(new Map());
   var cursorsArray = Array.from(cursorsMap.current, ([key, value]) => ({ key, value }))
 
@@ -138,7 +139,7 @@ function processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState) {
     cursorsMap.current = cursorsNewMap;
     
     // setState need a different value than before to trigger rerender
-    setState(self.crypto.randomUUID());
+    setState(uuidv4());
   }
 }
 
