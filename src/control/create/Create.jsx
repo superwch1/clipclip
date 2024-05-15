@@ -5,6 +5,8 @@ import axios from 'axios'
 import { useRef, useEffect } from 'react';
 import Config from '../../config/Config'
 import * as rdd from 'react-device-detect';
+import Quill from 'quill'
+import { Buffer } from "buffer";
 
 
 function Create({scale}) {
@@ -33,61 +35,49 @@ function Create({scale}) {
     useEffect(() => {
 
       // it cannot use loudash since the event cannot be passed to the function
-      document.onpaste = async (event) => {     
+      document.onpaste = async (event) => await pasteFigure(event, scale, pastingFigure, controlUrlId);
 
-        
-        // prevent user keep pasting new figure into the canvas
-        if (pastingFigure.current === true) {
-          return;
-        }
-        pastingFigure.current = true;
-        setTimeout(() => pastingFigure.current = false, 1000);
+      // can't use async here
+      document.oncopy = (event) => {
+        // prevent browser copy other things rather than the figures
+        event.preventDefault();
 
-        var controlUrl = document.getElementById('control-url');
         var selectedObjects = document.getElementsByClassName('selected-object');
-        var isEditorSelected = false;
-
-        for (let i = 0; i < selectedObjects.length; i++) {
-          if (selectedObjects[i].classList.contains('editor')) {
-            isEditorSelected = true;
-          }
-        }
-        
-        // only paste items when user is not pasting url and no figure is current selected
-        if (controlUrl.style.display !== 'none' || isEditorSelected !== false) {
+        if (selectedObjects.length !== 1) {
           return;
         }
-        
-        var position = JSON.parse(localStorage.getItem('position'));
-        var cursor = JSON.parse(localStorage.getItem('curosr'));
 
-        // 200 for taking the middle position since the default width and height is 400px
-        // position = { x: -(position.x - cursor.x) / scale - 200, y: -(position.y - cursor.y) / scale - 200};
-        position = { x: -(position.x - cursor.x) / scale, y: -(position.y - cursor.y) / scale};
-  
-        // no idea yet for text/html for converting the style to quill
-        if (event.clipboardData.types.includes('text/plain')) {
-          const pastedText = event.clipboardData.getData('text/plain');
+        var figureElement = document.getElementById(selectedObjects[0].id);
 
-          var urlPattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/
-          var isUrl = urlPattern.test(pastedText)
-
-          if (isUrl) {
-            await createPreview({event: null, position: position, controlUrlId: controlUrlId, scale: scale, url: pastedText})
-          }
-          else {
-            await createEditor({event: null, position: position, scale: scale, pastedText: pastedText});
-          }
+        var figure = {
+          type: figureElement.getAttribute("data-type"),
+          width: parseInt(figureElement.getAttribute("data-width")),
+          height: parseInt(figureElement.getAttribute("data-height")),
+          x: parseInt(figureElement.getAttribute("data-x")),
+          y: parseInt(figureElement.getAttribute("data-y")),
+          zIndex: parseInt(figureElement.getAttribute("data-zindex")),
+          url: figureElement.getAttribute("data-url"),
+          backgroundColor: figureElement.getAttribute("data-backgroundcolor")
         }
 
-        else if (event.clipboardData.types.includes('Files')) {
-          const dataTransfer = event.clipboardData;
-          const file = dataTransfer.files[0];
-          if (file !== null) {
-            await uploadImage({event: null, position: position, scale: scale, file: file});
-          }
-        } 
-      };
+        event.clipboardData.setData("clipclip/figure", JSON.stringify(figure));
+        
+        if (figure.type === "editor") {
+          const container = document.querySelector(`#${figureElement.id}-quill`);
+          const quill = Quill.find(container)
+          const delta = quill.getContents();
+
+          event.clipboardData.setData("clipclip/editor", JSON.stringify(delta.ops));
+        }
+        else if (figure.type === 'image') {
+          
+          var imageElement = document.getElementById(`${selectedObjects[0].id}-image`)
+          event.clipboardData.setData("clipclip/image", imageElement.src);
+        }
+        else if (figure.type === 'preview') {
+          event.clipboardData.setData("clipclip/preview", figure.url);
+        }
+      }
     }, [scale]);
   }
 
@@ -111,6 +101,86 @@ function Create({scale}) {
         </div>  
     </>
   )
+}
+
+async function pasteFigure(event, scale, pastingFigure, controlUrlId){
+  // prevent user keep pasting new figure into the canvas
+  if (pastingFigure.current === true) {
+    return;
+  }
+  pastingFigure.current = true;
+  setTimeout(() => pastingFigure.current = false, 1000); // prevent spamming ctrl+v
+
+  if (isUrlEditedOrEditorSelected() === true) {
+    return;
+  }
+  
+  var position = JSON.parse(localStorage.getItem('position'));
+  var cursor = JSON.parse(localStorage.getItem('curosr'));
+
+  // 200 for taking the middle position since the default width and height is 400px
+  // position = { x: -(position.x - cursor.x) / scale - 200, y: -(position.y - cursor.y) / scale - 200};
+  position = { x: -(position.x - cursor.x) / scale, y: -(position.y - cursor.y) / scale};
+
+  if (event.clipboardData.types.includes('clipclip/figure')) {
+    
+    var figure = JSON.parse(event.clipboardData.getData('clipclip/figure'));
+    figure.x = position.x;
+    figure.y = position.y;
+
+    if (event.clipboardData.types.includes('clipclip/editor')) {
+      var pastedText = JSON.parse(event.clipboardData.getData('clipclip/editor'));
+      await axios.post(`${Config.url}/pasteEditor`, {figure: figure, pastedText: pastedText});
+    }
+    else if (event.clipboardData.types.includes('clipclip/preview')) {
+      var url = event.clipboardData.getData('clipclip/preview');
+      await axios.post(`${Config.url}/pastePreview`, {figure: figure, url: url});
+    }
+    else if (event.clipboardData.types.includes('clipclip/image')) {
+      var base64 = event.clipboardData.getData('clipclip/image');
+      await axios.post(`${Config.url}/pasteImage`, {figure: figure, base64: base64});
+    }
+  }
+  else if (event.clipboardData.types.includes('text/plain')) {
+
+    // no idea yet for text/html for converting the style to quill
+    const pastedText = event.clipboardData.getData('text/plain');
+
+    var urlPattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/
+    var isUrl = urlPattern.test(pastedText)
+
+    if (isUrl) {
+      await createPreview({event: null, position: position, controlUrlId: controlUrlId, scale: scale, url: pastedText})
+    }
+    else {
+      await createEditor({event: null, position: position, scale: scale, pastedText: pastedText});
+    }
+  }
+  else if (event.clipboardData.types.includes('Files')) {
+    const dataTransfer = event.clipboardData;
+    const file = dataTransfer.files[0];
+    if (file !== null) {
+      await uploadImage({event: null, position: position, scale: scale, file: file});
+    }
+  } 
+}
+
+function isUrlEditedOrEditorSelected() {
+  var controlUrl = document.getElementById('control-url');
+  var selectedObjects = document.getElementsByClassName('selected-object');
+  var isEditorSelected = false;
+
+  for (let i = 0; i < selectedObjects.length; i++) {
+    if (selectedObjects[i].classList.contains('editor')) {
+      isEditorSelected = true;
+    }
+  }
+  
+  // only paste items when user is not pasting url and no editor is current selected
+  if (controlUrl.style.display !== 'none' || isEditorSelected !== false) {
+    return true;
+  }
+  return false;
 }
 
 function onClickOutsideColorPicker(urlRef, previewButtonRef, controlUrlId) {
@@ -175,7 +245,7 @@ async function uploadImage({event, position, scale, file}) {
   });
 
   if (event !== null) {
-    // only for upload using the button, not for control C + V
+    // only for upload using the button, not for pasting
     // clear the file input's value to allow uploading same file twice for onChange
     event.target.value = null;
   }

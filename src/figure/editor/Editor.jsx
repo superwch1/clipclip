@@ -13,6 +13,7 @@ import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIs
 
 
 const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scale, sendWebSocketMessage}) => {
+
   console.log(`Editor - ${id}`);
  
   const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
@@ -41,7 +42,8 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
         toolbar: `#${id}-toolbar`
       },
       placeholder: 'Write something here...',
-      theme: 'bubble'
+      theme: 'bubble',
+      bounds: '#interface' // prevent the ql-flip css appears when double click and text selection cause having not enough space
     }, [])
 
     const ydoc = new Y.Doc();
@@ -62,7 +64,7 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
     setSizeAndPosition({x: x, y: y, width: width, height: height})
 
     // relocate the resizing handle inside the div for detecting clicks
-    // resolving the issue of either allow to select color in quill toolbar or showing the resizing handle
+    // resolving the issue of either allow to select color in quill toolbar or showing the resizing handle if they are not nested together
     var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`);
     var container = document.getElementById(`${id}`);
     container.prepend(resizeHandle[0]); //appendChild();
@@ -83,7 +85,7 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
       { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
       { /* it needs to use zIndex and position relative to allow QuillToolbar to show higher than the resizing corner*/ }
       <div id={id} ref={wrapperRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`, position: 'relative', zIndex: '10'}} onMouseUp={(event) => onMouseUp(id)}
-       className='editor'> {/* editor is needed for check not creating new figure in pasting */}
+       className='editor' data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor}> {/* editor is needed for check not creating new figure in pasting */}
         <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
         <QuillToolbar id={id} />
         <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>

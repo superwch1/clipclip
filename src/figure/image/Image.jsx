@@ -4,6 +4,8 @@ import '../../config/Config.css'
 import Config from '../../config/Config'
 import OptionBar from '../optionBar/OptionBar'
 import { Rnd } from "react-rnd";
+import axios from 'axios';
+import { Buffer } from "buffer";
 import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual, unselectOtherFigures } from '../utils.mjs'
 
 
@@ -26,6 +28,15 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
       unselectOtherFigures(id);
       onSelectFigure(event, id, null, null)
     });
+
+    // reason for converting src to base64 here is because oncopy can't process axios or else it return [] for types
+    var imageElement = document.getElementById(`${id}-image`);
+    axios.get(`${Config.url}/image/?url=${url}`, { responseType: 'arraybuffer' }).then(response => {
+      const base64Data = Buffer.from(response.data, 'binary').toString('base64');
+      const contentType = response.headers['content-type'] || response.headers['Content-Type'];
+      const base64 = `data:${contentType};base64,${base64Data}`;
+      imageElement.src = base64;
+    });
   }, []);
 
   // run when change in value of x, y, width, height
@@ -36,7 +47,7 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
     // relocate the resizing handle inside the div for detecting clicks
     var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`);
     var container = document.getElementById(`${id}`);
-    container.prepend(resizeHandle[0]); //appendChild();
+    container.prepend(resizeHandle[0]);
   }, [x, y, width, height]);  
 
   return (
@@ -53,9 +64,10 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
       onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}
       onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)}>
       
-      <div id={`${id}`} className='image' ref={wrapperRef} >
+      <div id={`${id}`} className='image' ref={wrapperRef} 
+           data-type={"image"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor}>
         <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
-        <img draggable={false} src={`${Config.url}/image/?url=${url}`} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
+        <img id={`${id}-image`} src={`${Config.url}/image/?url=${url}`} draggable={false} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
       </div>
     </Rnd>
   )

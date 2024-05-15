@@ -21,7 +21,7 @@ function Cursors({scale}) {
   var cursorsArray = Array.from(cursorsMap.current, ([key, value]) => ({ key, value }))
 
   // if connection is lost, unsent messages will be discarded
-  const { sendMessage } = useWebSocket(`${Config.ws}/cursor?uuid=${cursorUUID.current}`, {
+  const { sendMessage } = useWebSocket(`${Config.ws}/cursor?uuid=${cursorUUID.current}&isDesktop=${rdd.isDesktop}`, {
     onMessage: (event) => processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState),
     shouldReconnect: (closeEvent) => true, // it will attempt to reconnect after the connection is closed
     reconnectInterval: () => 5000,
@@ -45,10 +45,7 @@ function Cursors({scale}) {
         let id = setInterval(() => {
           var position = JSON.parse(localStorage.getItem('position'));
           translatePosition.current = { x: -position.x, y: -position.y};
-    
-          var x = (translatePosition.current.x + cursorPosition.current.x) / scale;
-          var y = (translatePosition.current.y + cursorPosition.current.y) / scale;
-    
+                  
           if (previousCursorPosition.current === null) {
             previousCursorPosition.current = { x: cursorPosition.current.x, y: cursorPosition.current.y }
           }
@@ -63,6 +60,9 @@ function Cursors({scale}) {
 
             previousCursorPosition.current = { x: cursorPosition.current.x, y: cursorPosition.current.y };
             previousTranslatePosition.current = { x: translatePosition.current.x, y: translatePosition.current.y };
+
+            var x = (translatePosition.current.x + cursorPosition.current.x) / scale;
+            var y = (translatePosition.current.y + cursorPosition.current.y) / scale;
                     
             // unsent message will be discarded when the connection is lost
             const jsonString = JSON.stringify({uuid: cursorUUID.current, x: x, y: y});

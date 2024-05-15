@@ -1,6 +1,6 @@
 /* it use of column-reverse and descending order to allow top element shrink before bottom element */
 
-.preview-container {
+.preview {
   height: 100%;
   width: 100%; 
   overflow: hidden;

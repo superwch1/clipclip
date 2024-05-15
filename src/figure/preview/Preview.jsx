@@ -10,7 +10,6 @@ import axios from 'axios';
 
 const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scale, sendWebSocketMessage}) => {
 
-  // since when the component move or resize, it will rerender once, then the websocket rerender twice
   console.log(`Preview - ${id}`);
 
   const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
@@ -65,7 +64,8 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
       onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}
       onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)}>
 
-      <div id={id} ref={wrapperRef} className='preview-container preview' style={{backgroundColor: `${backgroundColor}`}}>
+      <div id={id} ref={wrapperRef} className='preview' style={{backgroundColor: `${backgroundColor}`}}
+           data-type={"preview"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor}>
         <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
         {previewData !== null && previewData !== undefined && 
         <>
@@ -80,7 +80,6 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
     </Rnd>
   )
 
-  
 }, figureIsEqual);
 
 
