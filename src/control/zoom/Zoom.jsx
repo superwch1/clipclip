@@ -8,7 +8,7 @@ function Zoom({scale, setScale, checkInsideBoundAndStorePosition}) {
   const { setTransform } = useControls();
 
   return (
-    <div id="control-zoom">
+    <div id="control-zoom" className='control'>
       <p className="control-text control-scale" onClick={(event) => zoomIn(scale, setScale, setTransform, checkInsideBoundAndStorePosition)}>+</p>
       <p className="control-text">{Math.round(scale * 100)}%</p>
       <p className="control-text control-scale" onClick={(event) => zoomOut(scale, setScale, setTransform, checkInsideBoundAndStorePosition)}>-</p>

@@ -46,6 +46,13 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
       bounds: '#interface' // prevent the ql-flip css appears when double click and text selection cause having not enough space
     }, [])
 
+    setInterval(() => {
+      const range = quill.getSelection();
+      console.log(`Range:${range?.index} ${range?.length} ${quill.hasFocus()}`);
+    }, 1000);
+
+
+
     const ydoc = new Y.Doc();
     const ytext = ydoc.getText('quill');
     const binding = new QuillBinding(ytext, quill);
@@ -130,7 +137,10 @@ function onClickOutsideFigureBeforeFunction(id) {
   quillTooltip[0].classList.remove('ql-display')
   
   // remove highlighted text after click outside since selected text is draggable and cause error
+  // this cause user can't copy text after right click to show the menu
+  /*
   const container = document.querySelector(`#${id}-quill`);
   const quill = Quill.find(container)
   quill.setSelection(null);
+  */
 }

@@ -4,6 +4,7 @@ import React, {  } from "react";
 import Create from '../control/create/Create'
 import Zoom from '../control/zoom/Zoom'
 import Cursors from '../cursors/Cursors'
+import CopyAndPaste from '../control/copyAndPaste/CopyAndPaste';
 import './Interface.css'
 import Config from '../config/Config'
 import { TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
@@ -107,6 +108,7 @@ function Interface() {
           { /* these component are placed on top of the Canvas */ }
           <div id='control'>
             <Create scale={scale} />
+            <CopyAndPaste scale={scale} />
             {rdd.isDesktop === true && <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStorePosition={checkInsideBoundAndStorePosition}/>}
           </div>
         </>

@@ -84,8 +84,6 @@ function Cursors({scale}) {
       }
     </div>
   );
-
-// no need to rerender since the scale change has no effect on the cursors location
 };
 
 
