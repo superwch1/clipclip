@@ -23,6 +23,11 @@ function CopyAndPaste({scale}) {
 
 
 function copyFigure(event) {
+
+  if (isUrlEditedOrEditorFocused() === true) {
+    return;
+  }
+
   // prevent browser copy other things rather than the figures
   event.preventDefault();
 
@@ -71,7 +76,7 @@ async function pasteFigure(event, scale, pastingFigure){
   pastingFigure.current = true;
   setTimeout(() => pastingFigure.current = false, 1000); // prevent spamming ctrl+v
 
-  if (isUrlEditedOrEditorSelected() === true) {
+  if (isUrlEditedOrEditorFocused() === true) {
     return;
   }
   
@@ -153,19 +158,22 @@ async function pasteOrdinaryType(event, position) {
 }
 
   
-function isUrlEditedOrEditorSelected() {
+function isUrlEditedOrEditorFocused() {
   var controlUrl = document.getElementById('control-url');
   var selectedObjects = document.getElementsByClassName('selected-object');
-  var isEditorSelected = false;
+  var isEditorFocused = false;
 
   for (let i = 0; i < selectedObjects.length; i++) {
     if (selectedObjects[i].classList.contains('editor')) {
-      isEditorSelected = true;
+
+      const container = document.querySelector(`#${selectedObjects[i].id}-quill`);
+      const quill = Quill.find(container);
+      isEditorFocused = quill.hasFocus();
     }
   }
   
   // only paste items when user is not pasting url and no editor is current selected
-  if (controlUrl.style.display !== 'none' || isEditorSelected !== false) {
+  if (controlUrl.style.display !== 'none' || isEditorFocused !== false) {
     return true;
   }
   return false;

@@ -9,7 +9,7 @@ import * as Y from 'yjs'
 import { QuillBinding } from 'y-quill'
 import { WebsocketProvider } from 'y-websocket'
 import { Rnd } from "react-rnd";
-import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual, unselectOtherFigures } from '../utils.mjs'
+import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual } from '../utils.mjs'
 
 
 const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scale, sendWebSocketMessage}) => {
@@ -22,18 +22,9 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
 
   // only run after first render
   useEffect(() => {
-
-    // reason for using addEventListener instead of onMouseDown in props is because of clicking resize corner won't trigger event
-    // click the resizing corner won't have mouse down event that can't unselect other figure
-    // it may has set something for the event propagation
-    document.getElementById(`${id}-rnd`).addEventListener('mousedown', (event) => {
-      unselectOtherFigures(id);
-      onSelectFigure(event, id, onSelectFigureBeforeFunction, null)
-    });
-    document.getElementById(`${id}-rnd`).addEventListener('touchstart', (event) => {
-      unselectOtherFigures(id);
-      onSelectFigure(event, id, onSelectFigureBeforeFunction, null)
-    });
+    // the resize handles need to trigger mousedown and event propagation manually
+    // unselect all figures by dispatching event then run onSelectFigure
+    addEventForResizeHandle(id);    
 
     // Guide on yjs setup - https://docs.yjs.dev/getting-started/a-collaborative-editor
     // Font size and style not save after moving to next line - https://github.com/quilljs/quill/issues/2678 
@@ -42,16 +33,12 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
         toolbar: `#${id}-toolbar`
       },
       placeholder: 'Write something here...',
+      formats: [
+        'background', 'bold', 'color', 'font', 'italic', 'link', 'size', 'strike', 
+        'script', 'underline', 'header', 'align'], // not allow user to pasteimage or video
       theme: 'bubble',
       bounds: '#interface' // prevent the ql-flip css appears when double click and text selection cause having not enough space
     }, [])
-
-    setInterval(() => {
-      const range = quill.getSelection();
-      console.log(`Range:${range?.index} ${range?.length} ${quill.hasFocus()}`);
-    }, 1000);
-
-
 
     const ydoc = new Y.Doc();
     const ytext = ydoc.getText('quill');
@@ -70,11 +57,11 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
     console.log(`Resize Editor - ${id}`);
     setSizeAndPosition({x: x, y: y, width: width, height: height})
 
-    // relocate the resizing handle inside the div for detecting clicks
-    // resolving the issue of either allow to select color in quill toolbar or showing the resizing handle if they are not nested together
+    // since the resize handle is the children of rnd and sibilings of div, it affect the clicking options when quilltoolbar overlaps with corners
+    // it resolves the issue by relocating the reisze handle inside div and earlier than the quilltoolbar
     var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`);
     var container = document.getElementById(`${id}`);
-    container.prepend(resizeHandle[0]); //appendChild();
+    container.prepend(resizeHandle[0]); 
   }, [x, y, width, height]);
 
   // there will be vibrant shaking while resizing on topLeft or bottomLeft corner due to rapid translation and resizing
@@ -86,6 +73,7 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
       bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}}
       minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
       scale={scale} className='figure'
+      onMouseDown={(e) => onSelectFigure(id, onSelectFigureBeforeFunction, null)}
       onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)} 
       onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}>
       
@@ -104,6 +92,22 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
 
 export default Editor
 
+function addEventForResizeHandle(id) {
+  var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`)[0];
+
+  resizeHandle.addEventListener('mousedown', (event) => {
+    const outerEvent = new Event('mousedown', { bubbles: true });
+    document.dispatchEvent(outerEvent); // it needs to use document here and nother parent of resize handle, or else it will become shakey in resizing
+    onSelectFigure(id, onSelectFigureBeforeFunction, null); // it need to be last to select again after having identified as clicking outside
+  });
+  
+  resizeHandle.addEventListener('touchstart', (event) => { 
+    const outerEvent = new Event('touchstart', { bubbles: true });
+    document.dispatchEvent(outerEvent);
+    onSelectFigure(id, onSelectFigureBeforeFunction, null);
+  });
+}
+
 
 function onSelectFigureBeforeFunction(id) {
   if(document.getElementById(`${id}`).classList.contains('selected-object')) {
@@ -118,6 +122,7 @@ function onSelectFigureBeforeFunction(id) {
   const quillTooltip = document.getElementById(`${id}`).getElementsByClassName('ql-tooltip');
   quillTooltip[0].classList.add('ql-display')
 }
+
 
 function onMouseUp(id) {
   const figure = document.getElementById(`${id}`);

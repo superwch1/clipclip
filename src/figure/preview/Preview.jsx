@@ -4,7 +4,7 @@ import '../../config/Config.css'
 import Config from '../../config/Config'
 import OptionBar from '../optionBar/OptionBar'
 import { Rnd } from "react-rnd";
-import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual, unselectOtherFigures } from '../utils.mjs'
+import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual } from '../utils.mjs'
 import axios from 'axios';
 
 
@@ -15,6 +15,12 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
   const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
   const [previewData, setPreviewData] = useState(null);
   const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    // the resize handles need to trigger mousedown and event propagation manually
+    // unselect all figures by dispatching event then run onSelectFigure
+    addEventForResizeHandle(id);
+  }, []);
 
   useEffect(() => {
     const getInfo = async () => {
@@ -28,25 +34,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
   useEffect(() => {
     console.log(`Resize Preview - ${id}`);
     setSizeAndPosition({x: x, y: y, width: width, height: height});
-
-    // relocate the resizing handle inside the div for detecting clicks
-    var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`);
-    var container = document.getElementById(`${id}`);
-    container.prepend(resizeHandle[0]); //appendChild();
   }, [x, y, width, height]);
-
-  // reason for using addEventListener instead of onMouseDown in props is because of clicking resize corner won't trigger event
-  // click the resizing corner won't have mouse down event that can't unselect other figure
-  useEffect(() => {
-    document.getElementById(`${id}-rnd`).addEventListener('mousedown', (event) => {
-      unselectOtherFigures(id);
-      onSelectFigure(event, id, null, null)
-    });
-    document.getElementById(`${id}-rnd`).addEventListener('touchstart', (event) => {
-      unselectOtherFigures(id);
-      onSelectFigure(event, id, null, null)
-    });
-  }, []);
   
   // make sure the prevewData elements will not be used or it will crash since element cannot be found
   onClickOutsideFigure(wrapperRef, id, null, null);  
@@ -61,6 +49,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
       bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}} 
       minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight}  
       draggable={false} scale={scale} className='figure'
+      onMouseDown={(e) => onSelectFigure(id, null, null)}
       onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}
       onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)}>
 
@@ -81,6 +70,23 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
   )
 
 }, figureIsEqual);
+
+
+function addEventForResizeHandle(id) {
+  var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`)[0];
+
+  resizeHandle.addEventListener('mousedown', (event) => {
+    const outerEvent = new Event('mousedown', { bubbles: true });
+    document.dispatchEvent(outerEvent); // it needs to use document here and nother parent of resize handle, or else it will become shakey in resizing
+    onSelectFigure(id, null, null); // it need to be last to select again after having identified as clicking outside
+  });
+  
+  resizeHandle.addEventListener('touchstart', (event) => { 
+    const outerEvent = new Event('touchstart', { bubbles: true });
+    document.dispatchEvent(outerEvent);
+    onSelectFigure(id, null, null);
+  });
+}
 
 
 export default Preview

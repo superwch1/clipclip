@@ -1,30 +1,11 @@
-import { parseInt } from 'lodash';
+import { parseInt } from 'lodash'
 import { useEffect } from 'react'
-
-// it needs to be similar with unselect object in below onClickOutsideFigure function
-function unselectOtherFigures(id){
-  var selectedObjects = document.getElementsByClassName('selected-object');
-  for (var i = 0; i < selectedObjects.length; i++) {
-    
-    var figureId = selectedObjects[i].id;
-    if(figureId === id) {
-      continue;
-    }
-    
-    document.getElementById(`${figureId}`).classList.remove('selected-object');
-    const optionBar = document.getElementById(`${figureId}-optionbar`); // when you pass selectedObjects[i].id, it will tells you that the properties of id is undefined
-    optionBar.classList.add('hide-optionbar');
-
-    const resizeWrapperClass = document.getElementsByClassName(`${figureId}-resizeHandle`);
-    resizeWrapperClass[0].style.opacity = '0';
-  }
-}
 
 // preview has its own onClickOutsideFigure
 function onClickOutsideFigure(ref, id, beforeFunction, afterFunction) {
   useEffect( () => {
     function handleClickOutside (event) {
-
+      
       if (ref.current && !ref.current.contains(event.target)) {
         if (beforeFunction !== null) {
           beforeFunction(id);
@@ -53,7 +34,7 @@ function onClickOutsideFigure(ref, id, beforeFunction, afterFunction) {
 
 
 
-function onSelectFigure(event, id, beforeFunction, afterFunction) {
+function onSelectFigure(id, beforeFunction, afterFunction) {
   if (beforeFunction !== null) {
     beforeFunction(id);
   }
@@ -100,4 +81,4 @@ function figureIsEqual(prevProps, nextProps) {
   return isEqualComponenet;
 }
 
-export { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual, unselectOtherFigures }
+export { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual }

@@ -5,13 +5,13 @@ import Create from '../control/create/Create'
 import Zoom from '../control/zoom/Zoom'
 import Cursors from '../cursors/Cursors'
 import CopyAndPaste from '../control/copyAndPaste/CopyAndPaste';
-import './Interface.css'
+import './App.css'
 import Config from '../config/Config'
 import { TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
 import * as rdd from 'react-device-detect';
 
 
-function Interface() {
+function App() {
 
   var storedScale = JSON.parse(localStorage.getItem('scale'));
   if (storedScale === null) {
@@ -75,7 +75,6 @@ function Interface() {
     window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('keydown', handleKeyDown, { passive: false });
 
-
     return () => {
       window.removeEventListener('wheel', handleWheel, { passive: false });
       window.removeEventListener('keydown', handleKeyDown, { passive: false });
@@ -85,7 +84,7 @@ function Interface() {
 
   return (
     // return to the original location if the virtual keyboard has caused shifted right or bottom on the screen
-    <div style={{position: 'fixed'}}>
+    <div id={"app"} style={{position: 'fixed'}}>
 
       { /* even the picture is larger than vw and vh, it still constrain everything in the view part of web browser  
            solution for that is to set limitToBounds to false */}
@@ -97,23 +96,19 @@ function Interface() {
         doubleClick={{disabled: true}} pinch={{excluded: ['figure']}} wheel={{activationKeys: ["Control"]}}
         onPanning={(transformState) => onPanning(transformState)} panning={{allowRightClickPan: true, excluded: ['figure'] }} >
 
-      {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
-        <>
-          <TransformComponent>
-            <div id="interface" style={{ width: `${Config.interfaceWidth}px`, height: `${Config.interfaceHeight}px`}}>
-              <Canvas scale={scale} />  
-              <Cursors scale={scale}/> {/* cursor needs to stay inside div otherwise the position will be incorrect */}
-            </div>
-          </TransformComponent>
-          { /* these component are placed on top of the Canvas */ }
-          <div id='control'>
-            <Create scale={scale} />
-            <CopyAndPaste scale={scale} />
-            {rdd.isDesktop === true && <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStorePosition={checkInsideBoundAndStorePosition}/>}
+        <TransformComponent>
+          <div id="interface" style={{ width: `${Config.interfaceWidth}px`, height: `${Config.interfaceHeight}px`}}>
+            <Canvas scale={scale} />  
+            <Cursors scale={scale}/> {/* cursor needs to stay inside interface otherwise the position will be incorrect */}
           </div>
-        </>
-      )}
+        </TransformComponent>
 
+        { /* the following components are placed on top of the Canvas */ }
+        <div id='control'>
+          <Create scale={scale} />
+          <CopyAndPaste scale={scale} />
+          {rdd.isDesktop === true && <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStorePosition={checkInsideBoundAndStorePosition}/>}
+        </div>
       </TransformWrapper>
     </div>
   )
@@ -170,4 +165,4 @@ function checkInsideBound({x: x, y: y, scale: scale}) {
 }
 
 
-export default Interface
+export default App

@@ -1,4 +1,6 @@
 function QuillToolbar ({id}) {
+
+  // when adding new options or button, make sure the format is supported in Editor.jsx
   return (
     <div id={`${id}-toolbar`} className={`${id}-noDrag`}>
       <select className="ql-font"></select>
@@ -7,12 +9,13 @@ function QuillToolbar ({id}) {
         <option value="large"></option>
         <option value="huge"></option>
       </select>
-      { /* unable to reverse bold / italic / underline, it is worked after removeal of useRef and react-rnd
+      
       <button className="ql-bold"></button>
       <button className="ql-italic"></button>
-      <button className="ql-underline"></button> */ }
+      <button className="ql-underline"></button>
+      <button class="ql-strike"></button>
       <select className="ql-align"></select>
-
+      
       <select className="ql-color">
         <option value="#000000">Black</option>
         <option value="#FFFF77">Yellow</option>

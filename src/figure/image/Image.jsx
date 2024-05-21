@@ -6,7 +6,7 @@ import OptionBar from '../optionBar/OptionBar'
 import { Rnd } from "react-rnd";
 import axios from 'axios';
 import { Buffer } from "buffer";
-import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual, unselectOtherFigures } from '../utils.mjs'
+import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual } from '../utils.mjs'
 
 
 const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scale, sendWebSocketMessage}) => {
@@ -17,17 +17,10 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
   const wrapperRef = useRef(null);
   onClickOutsideFigure(wrapperRef, id, null, null);  
 
-  // reason for using addEventListener instead of onMouseDown in props is because of clicking resize corner won't trigger event
-  // click the resizing corner won't have mouse down event that can't unselect other figure
   useEffect(() => {
-    document.getElementById(`${id}-rnd`).addEventListener('mousedown', (event) => {
-      unselectOtherFigures(id);
-      onSelectFigure(event, id, null, null)
-    });
-    document.getElementById(`${id}-rnd`).addEventListener('touchstart', (event) => {
-      unselectOtherFigures(id);
-      onSelectFigure(event, id, null, null)
-    });
+    // the resize handles need to trigger mousedown and event propagation manually
+    // unselect all figures by dispatching event then run onSelectFigure
+    addEventForResizeHandle(id);
 
     // reason for converting src to base64 here is because oncopy can't process axios or else it return [] for types
     var imageElement = document.getElementById(`${id}-image`);
@@ -43,11 +36,6 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
   useEffect(() => {
     console.log(`Resize Image - ${id}`);
     setSizeAndPosition({x: x, y: y, width: width, height: height})
-
-    // relocate the resizing handle inside the div for detecting clicks
-    var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`);
-    var container = document.getElementById(`${id}`);
-    container.prepend(resizeHandle[0]);
   }, [x, y, width, height]);  
 
   return (
@@ -61,18 +49,35 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
       bounds="#interface" lockAspectRatio={true} style={{zIndex: `${zIndex}`}} cancel={`.${id}-noDrag`}
       minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
       scale={scale} className='figure'
+      onMouseDown={(e) => onSelectFigure(id, null, null)}
       onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}
       onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)}>
       
-      <div id={`${id}`} className='image' ref={wrapperRef} 
+      <div id={`${id}`} className='image' ref={wrapperRef} style={{ width: '100%', height: '100%'}}
            data-type={"image"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor}>
         <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
-        <img id={`${id}-image`} src={`${Config.url}/image/?url=${url}`} draggable={false} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
+        <img id={`${id}-image`} draggable={false} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
       </div>
     </Rnd>
   )
 }, figureIsEqual);
 
+
+function addEventForResizeHandle(id) {
+  var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`)[0];
+
+  resizeHandle.addEventListener('mousedown', (event) => {
+    const outerEvent = new Event('mousedown', { bubbles: true });
+    document.dispatchEvent(outerEvent); // it needs to use document here and nother parent of resize handle, or else it will become shakey in resizing
+    onSelectFigure(id, null, null); // it need to be last to select again after having identified as clicking outside
+  });
+  
+  resizeHandle.addEventListener('touchstart', (event) => { 
+    const outerEvent = new Event('touchstart', { bubbles: true });
+    document.dispatchEvent(outerEvent);
+    onSelectFigure(id, null, null);
+  });
+}
 
 
 export default Image

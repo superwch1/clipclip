@@ -32,7 +32,7 @@ function Create({scale}) {
         <div className="option-text" ref={previewButtonRef} onClick={(event) => showInput(controlUrlId)}>連結</div>
         <div className="option-text" onClick={createImage}>相片
           <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage({event: event, position: null, scale: scale, file: event.target.files[0]})} 
-                 style={{display: 'none'}} accept=".jpg, .jpeg, .gif, .png, .webp" />
+                 style={{display: 'none'}} accept=".jpg, .jpeg, .heif, .png, .webp, .heic, .gif" />
         </div>
         <div className="option-symbol" onClick={(event) => createEditor({event: event, position: null, scale: scale, pastedText: ""})}
             onMouseOver={(event) => document.getElementById('option-cross').setAttribute('src', crossBrown)} 
