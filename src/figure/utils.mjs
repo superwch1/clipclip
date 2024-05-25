@@ -1,35 +1,39 @@
 import { parseInt } from 'lodash'
 import { useEffect } from 'react'
+import FigureApi from '../services/webServer/figureApi.mjs'
 
 // preview has its own onClickOutsideFigure
-function onClickOutsideFigure(ref, id, beforeFunction, afterFunction) {
-  useEffect( () => {
+function onClickOutsideFigure(containerRef, barRef, id, beforeFunction, afterFunction) {
+  useEffect(() => {
     function handleClickOutside (event) {
-      
-      if (ref.current && !ref.current.contains(event.target)) {
+
+      // all returns true when the click is not inside either in container or bar div
+      if (containerRef.current && barRef.current && !containerRef.current.contains(event.target) && !barRef.current.contains(event.target)) {
+
         if (beforeFunction !== null) {
           beforeFunction(id);
         }
-
+  
         document.getElementById(`${id}`).classList.remove('selected-object');
         const optionBar = document.getElementById(`${id}-optionbar`);
         optionBar.classList.add('hide-optionbar');
-
+  
         var resizeWrapperClass = document.getElementsByClassName(`${id}-resizeHandle`);
         resizeWrapperClass[0].style.opacity = '0';
-
+  
         if (afterFunction !== null) {
           afterFunction(id);
         }
-      }
+      }  
     }
+
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("touchstart", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.addEventListener("touchstart", handleClickOutside);
     };
-  }, [ref]);
+  }, [containerRef, barRef]);
 }
 
 
@@ -52,20 +56,45 @@ function onSelectFigure(id, beforeFunction, afterFunction) {
 }
 
 
+function hideOptionBarAndToolBar(id) {
+  var bar = document.getElementById(`${id}-bar`);
+  var optionBar = document.getElementById(`${id}-optionbar`);
+  optionBar.classList.add("hide-optionbar");
 
-function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPosition, setSizeAndPosition, id, sendWebSocketMessage) {
-  // since enlarge the object using left corner will result in change in position
-  // use position.x and position.y of instead of sizeAndPosition.x  
-  if (originalSizeAndPosition.x === newSizeAndPosition.x && originalSizeAndPosition.y === newSizeAndPosition.y 
-      && originalSizeAndPosition.width === newSizeAndPosition.width && originalSizeAndPosition.height === newSizeAndPosition.height) {
+  const quillTooltip = bar.getElementsByClassName('ql-tooltip')[0];
+  if (quillTooltip !== undefined) {
+    quillTooltip.classList.remove('ql-display');
+    quillTooltip.classList.add('ql-hidden'); // in case there are selected text and tooltip not hide automatically
+  }
+}
+
+function showOptionBarAndToolBar(id) {
+  var bar = document.getElementById(`${id}-bar`);
+  var optionBar = document.getElementById(`${id}-optionbar`);
+  optionBar.classList.remove("hide-optionbar");
+
+  const quillTooltip = bar.getElementsByClassName('ql-tooltip')[0];
+  if (quillTooltip !== undefined) {
+    quillTooltip.classList.add('ql-display')
+  }
+}
+
+async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPosition, setSizeAndPosition, id, sendWebSocketMessage) {
+  // there will be 0.001 difference for between the position (x, y) value for original and new position
+  if (Math.abs(originalSizeAndPosition.x - newSizeAndPosition.x) < 0.01 && Math.abs(originalSizeAndPosition.y - newSizeAndPosition.y) < 0.01
+    && originalSizeAndPosition.width === newSizeAndPosition.width && originalSizeAndPosition.height === newSizeAndPosition.height) {
     return;
   }
+
+  showOptionBarAndToolBar(id)
+  var optionBarElement = document.getElementById(`${id}-bar`);
+  optionBarElement.style.transform = `translate(${newSizeAndPosition.x}px, ${newSizeAndPosition.y}px)`;
+
   setSizeAndPosition({ x: newSizeAndPosition.x, y: newSizeAndPosition.y, width: newSizeAndPosition.width, height: newSizeAndPosition.height });
 
   // width and height need to be converted to string from int
-  const message = { action: "move", id: id, width: parseInt(newSizeAndPosition.width), height: parseInt(newSizeAndPosition.height), x: newSizeAndPosition.x, y: newSizeAndPosition.y }
-  const jsonString = JSON.stringify(message);
-  sendWebSocketMessage(jsonString);
+  const figure = { id: id, width: parseInt(newSizeAndPosition.width), height: parseInt(newSizeAndPosition.height), x: newSizeAndPosition.x, y: newSizeAndPosition.y }
+  await FigureApi.updatePositionAndSize(figure);
 }
 
 
@@ -81,4 +110,4 @@ function figureIsEqual(prevProps, nextProps) {
   return isEqualComponenet;
 }
 
-export { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual }
+export { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual, hideOptionBarAndToolBar }

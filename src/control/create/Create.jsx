@@ -4,6 +4,7 @@ import crossBrown from './crossBrown.png'
 import axios from 'axios'
 import { useRef, useEffect } from 'react';
 import Config from '../../config/Config'
+import FigureApi from '../../services/webServer/figureApi.mjs'
 
 
 
@@ -34,7 +35,7 @@ function Create({scale}) {
           <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage({event: event, position: null, scale: scale, file: event.target.files[0]})} 
                  style={{display: 'none'}} accept=".jpg, .jpeg, .heif, .png, .webp, .heic, .gif" />
         </div>
-        <div className="option-symbol" onClick={(event) => createEditor({event: event, position: null, scale: scale, pastedText: ""})}
+        <div className="option-symbol" onClick={(event) => createEditor({event: event, position: null, scale: scale})}
             onMouseOver={(event) => document.getElementById('option-cross').setAttribute('src', crossBrown)} 
             onMouseOut={(event) => document.getElementById('option-cross').setAttribute('src', crossWhite)}>
           <img src={crossWhite} id='option-cross'/>
@@ -65,13 +66,13 @@ function onClickOutsideColorPicker(urlRef, previewButtonRef, controlUrlId) {
 }
 
 
-async function createEditor({event, position, scale, pastedText}) { 
+async function createEditor({event, position, scale}) { 
   if (position === null) {
     position = JSON.parse(localStorage.getItem('position'));
     position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
   }
-  const figure = { type: "editor", pastedText: pastedText, x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
-  await axios.post(`${Config.url}/editor`, figure);
+  const figure = { type: "editor", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5};
+  await FigureApi.createEditor(figure, null, null);
 }
 
 
@@ -87,8 +88,8 @@ async function createPreview({event, controlUrlId, position, scale, url}) {
       position = JSON.parse(localStorage.getItem('position'));
       position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
     }
-    const figure = { type: "preview", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: url, zIndex: 5}
-    await axios.post(`${Config.url}/preview`, figure);
+    const figure = { type: "preview", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", zIndex: 5}
+    await FigureApi.createPreview(figure, url);
 
     document.getElementById(controlUrlId).value = '';
     document.getElementById(controlUrlId).style.display = 'none';
@@ -97,21 +98,17 @@ async function createPreview({event, controlUrlId, position, scale, url}) {
 
 
 async function uploadImage({event, position, scale, file}) {
-  const formData = new FormData();
-  formData.append("image", file);
-
-  if (position === null) {
-    position = JSON.parse(localStorage.getItem('position'));
-    position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
-  }
-  const figure = { type: "image", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
-  formData.append('figure', JSON.stringify(figure));
-
-  await axios.post(`${Config.url}/image`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
+  var reader = new FileReader();
+  reader.readAsDataURL(file); // turn the file into base64 string
+  reader.onload = async function () {
+    if (position === null) {
+      position = JSON.parse(localStorage.getItem('position'));
+      position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
     }
-  });
+
+    const figure = { type: "image", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
+    await FigureApi.createImage(figure, reader.result, true);
+  };
 
   // clear the file input's value to allow uploading same file twice for onChange
   event.target.value = null;

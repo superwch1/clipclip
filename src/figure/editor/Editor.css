@@ -11,12 +11,14 @@
   display: none;  /* Safari and Chrome - hide scrollbar */
 }
 
+
+/* remove the mechanism on hiding quill toolbar when the text is not selected */
 .ql-display {
-  /* remove the mechanism on hiding quill toolbar when the text is not selected */
   display: initial !important; 
 }
 
 .ql-tooltip {
+  position: fixed !important;
   background-color: #444444;
   padding: 8px;
   width: 450px;

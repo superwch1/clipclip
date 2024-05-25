@@ -6,7 +6,7 @@ import OptionBar from '../optionBar/OptionBar'
 import { Rnd } from "react-rnd";
 import axios from 'axios';
 import { Buffer } from "buffer";
-import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual } from '../utils.mjs'
+import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureIsEqual } from '../utils.mjs'
 
 
 const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scale, sendWebSocketMessage}) => {
@@ -14,8 +14,9 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
   console.log(`Image - ${id}`);
 
   const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
-  const wrapperRef = useRef(null);
-  onClickOutsideFigure(wrapperRef, id, null, null);  
+  const containerRef = useRef(null);
+  const barRef = useRef(null);
+  onClickOutsideFigure(containerRef, barRef, id, null, null);  
 
   useEffect(() => {
     // the resize handles need to trigger mousedown and event propagation manually
@@ -34,31 +35,38 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scal
 
   // run when change in value of x, y, width, height
   useEffect(() => {
-    console.log(`Resize Image - ${id}`);
     setSizeAndPosition({x: x, y: y, width: width, height: height})
   }, [x, y, width, height]);  
 
   return (
     // Rnd cannot be used to pass the ref
-    <Rnd
-      id={`${id}-rnd`} 
-      enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
-      resizeHandleStyles={{bottomRight: Config.resizeHandleStyle, bottomLeft: Config.resizeHandleStyle, topRight: Config.resizeHandleStyle, topLeft: Config.resizeHandleStyle}}
-      resizeHandleWrapperClass={`${id}-resizeHandle`} resizeHandleWrapperStyle={{opacity: '0'}}
-      
-      bounds="#interface" lockAspectRatio={true} style={{zIndex: `${zIndex}`}} cancel={`.${id}-noDrag`}
-      minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
-      scale={scale} className='figure'
-      onMouseDown={(e) => onSelectFigure(id, null, null)}
-      onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}
-      onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)}>
-      
-      <div id={`${id}`} className='image' ref={wrapperRef} style={{ width: '100%', height: '100%'}}
-           data-type={"image"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor}>
-        <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
-        <img id={`${id}-image`} draggable={false} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
+    // reason for using onDrag and onResize instead of start is because even clicking figure will invoke start event
+    <>
+      <Rnd
+        id={`${id}-rnd`} 
+        enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
+        resizeHandleStyles={{bottomRight: Config.resizeHandleStyle, bottomLeft: Config.resizeHandleStyle, topRight: Config.resizeHandleStyle, topLeft: Config.resizeHandleStyle}}
+        resizeHandleWrapperClass={`${id}-resizeHandle`} resizeHandleWrapperStyle={{opacity: '0'}}
+        
+        bounds="#interface" lockAspectRatio={true} style={{zIndex: `${zIndex}`}} cancel={`.${id}-noDrag`}
+        minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
+        scale={scale} className='figure'
+        onMouseDown={(e) => onSelectFigure(id, null, null)}
+        onDrag={(e, data) => hideOptionBarAndToolBar(id)}
+        onResize={(e, direction, ref, delta, position) => hideOptionBarAndToolBar(id)}
+        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)}
+        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", ""))}, setSizeAndPosition, id, sendWebSocketMessage)}>
+        
+        <div id={`${id}`} className='image' ref={containerRef} style={{ width: '100%', height: '100%'}}
+            data-type={"image"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor}>
+          
+          <img id={`${id}-image`} draggable={false} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
+        </div>
+      </Rnd>
+      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`}}>
+        <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} sizeAndPosition={sizeAndPosition} />
       </div>
-    </Rnd>
+    </>
   )
 }, figureIsEqual);
 

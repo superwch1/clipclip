@@ -93,8 +93,8 @@ function App() {
         // keys for activiation - https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
         ref={canvasRef} initialScale={scale} minScale={minScale} maxScale={Config.interfaceMaxZoomScale} 
         onZoom={(transformState) => onZooming(transformState, setScale)} zoomAnimation={{ disabled: true, size: 0.1 }} // set disable true to prevent zoom out of canvas because of library bug
-        doubleClick={{disabled: true}} pinch={{excluded: ['figure']}} wheel={{activationKeys: ["Control"]}}
-        onPanning={(transformState) => onPanning(transformState)} panning={{allowRightClickPan: true, excluded: ['figure'] }} >
+        doubleClick={{disabled: true}} pinch={{excluded: ['figure', 'optionbar', 'toolbar']}} wheel={{activationKeys: ["Control"]}}
+        onPanning={(transformState) => onPanning(transformState)} panning={{allowRightClickPan: true, excluded: ['figure', 'optionbar', 'toolbar'] }} >
 
         <TransformComponent>
           <div id="interface" style={{ width: `${Config.interfaceWidth}px`, height: `${Config.interfaceHeight}px`}}>

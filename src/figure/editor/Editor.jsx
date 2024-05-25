@@ -9,7 +9,7 @@ import * as Y from 'yjs'
 import { QuillBinding } from 'y-quill'
 import { WebsocketProvider } from 'y-websocket'
 import { Rnd } from "react-rnd";
-import { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual } from '../utils.mjs'
+import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureIsEqual } from '../utils.mjs'
 
 
 const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scale, sendWebSocketMessage}) => {
@@ -17,8 +17,9 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
   console.log(`Editor - ${id}`);
  
   const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
-  const wrapperRef = useRef(null);
-  onClickOutsideFigure(wrapperRef, id, onClickOutsideFigureBeforeFunction, null);
+  const containerRef = useRef(null);
+  const barRef = useRef(null);
+  onClickOutsideFigure(containerRef, barRef, id, onClickOutsideFigureBeforeFunction, null);
 
   // only run after first render
   useEffect(() => {
@@ -44,6 +45,11 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
     const ytext = ydoc.getText('quill');
     const binding = new QuillBinding(ytext, quill);
     const provider = new WebsocketProvider(`${Config.ws}`, `${id}`, ydoc);
+
+    var barElement = document.getElementById(`${id}-bar`);
+    var optionBarElement = document.getElementById(`${id}-optionbar`);
+    var toolbarElement = document.getElementById(`${id}`).getElementsByClassName(`ql-tooltip`)[0];
+    barElement.insertBefore(toolbarElement, optionBarElement);
     
     return () => {
       // the reference of quill will be removed by it self for garbage collection
@@ -54,38 +60,37 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
 
   // run when change in value of x, y, width, height
   useEffect(() => {
-    console.log(`Resize Editor - ${id}`);
     setSizeAndPosition({x: x, y: y, width: width, height: height})
-
-    // since the resize handle is the children of rnd and sibilings of div, it affect the clicking options when quilltoolbar overlaps with corners
-    // it resolves the issue by relocating the reisze handle inside div and earlier than the quilltoolbar
-    var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`);
-    var container = document.getElementById(`${id}`);
-    container.prepend(resizeHandle[0]); 
   }, [x, y, width, height]);
 
   // there will be vibrant shaking while resizing on topLeft or bottomLeft corner due to rapid translation and resizing
+  // reason for using onDrag and onResize instead of start is because even clicking figure will invoke start event
   return (
-    <Rnd id={`${id}-rnd`}
-      enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
-      resizeHandleStyles={{bottomRight: Config.resizeHandleStyle, bottomLeft: Config.resizeHandleStyle, topRight: Config.resizeHandleStyle, topLeft: Config.resizeHandleStyle}}
-      resizeHandleWrapperClass={`${id}-resizeHandle`} resizeHandleWrapperStyle={{opacity: '0'}}
-      bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}}
-      minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
-      scale={scale} className='figure'
-      onMouseDown={(e) => onSelectFigure(id, onSelectFigureBeforeFunction, null)}
-      onDragStop={(e, data) => onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)} 
-      onResizeStop={(e, direction, ref, delta, position) => onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: ref.style.width.replace("px", ""), height: ref.style.height.replace("px", "") }, setSizeAndPosition, id, sendWebSocketMessage)}>
-      
-      { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
-      { /* it needs to use zIndex and position relative to allow QuillToolbar to show higher than the resizing corner*/ }
-      <div id={id} ref={wrapperRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`, position: 'relative', zIndex: '10'}} onMouseUp={(event) => onMouseUp(id)}
-       className='editor' data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor}> {/* editor is needed for check not creating new figure in pasting */}
-        <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} />
-        <QuillToolbar id={id} />
-        <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>
-      </div>     
-    </Rnd>
+    <>
+      <Rnd id={`${id}-rnd`}
+        enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
+        resizeHandleStyles={{bottomRight: Config.resizeHandleStyle, bottomLeft: Config.resizeHandleStyle, topRight: Config.resizeHandleStyle, topLeft: Config.resizeHandleStyle}}
+        resizeHandleWrapperClass={`${id}-resizeHandle`} resizeHandleWrapperStyle={{opacity: '0'}}
+        bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}}
+        minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
+        scale={scale} className='figure'
+        onMouseDown={(e) => onSelectFigure(id, onSelectFigureBeforeFunction, null)}
+        onDrag={(e, data) => hideOptionBarAndToolBar(id)}
+        onResize={(e, direction, ref, delta, position) => hideOptionBarAndToolBar(id)}
+        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)} 
+        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id, sendWebSocketMessage)}>
+        
+        { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
+        <div id={id} ref={containerRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`}} onMouseUp={(event) => onMouseUp(id)}
+          className='editor' data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor}>
+          <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>
+          <QuillToolbar id={id} />
+        </div>     
+      </Rnd>
+      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`}}>
+        <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} sizeAndPosition={sizeAndPosition} />
+      </div>
+    </>
   )
 }, figureIsEqual);
 
@@ -110,42 +115,45 @@ function addEventForResizeHandle(id) {
 
 
 function onSelectFigureBeforeFunction(id) {
-  if(document.getElementById(`${id}`).classList.contains('selected-object')) {
-    const figure = document.getElementById(`${id}`);
-    const quillEditor = figure.getElementsByClassName('ql-editor');
+  const figure = document.getElementById(`${id}`);
+  if(figure.classList.contains('selected-object')) {
+
+    const quillEditor = figure.getElementsByClassName('ql-editor')[0];
 
     // only add noDrag class to the ql-editor since the div take up the whole size of Rnd and not able to drag on the border
-    quillEditor[0].classList.add(`${id}-noDrag`);
-    quillEditor[0].setAttribute('contenteditable', true);
+    quillEditor.classList.add(`${id}-noDrag`);
+    quillEditor.setAttribute('contenteditable', true);
   }
 
-  const quillTooltip = document.getElementById(`${id}`).getElementsByClassName('ql-tooltip');
-  quillTooltip[0].classList.add('ql-display')
+  const bar = document.getElementById(`${id}-bar`);
+  const quillTooltip = bar.getElementsByClassName('ql-tooltip')[0];
+  quillTooltip.classList.add('ql-display')
 }
 
 
 function onMouseUp(id) {
   const figure = document.getElementById(`${id}`);
-  const quillEditor = figure.getElementsByClassName('ql-editor');
-  quillEditor[0].classList.remove(`drag-started`);
+  const quillEditor = figure.getElementsByClassName('ql-editor')[0];
+  quillEditor.classList.remove(`drag-started`);
 }
 
 
 function onClickOutsideFigureBeforeFunction(id) {
   const figure = document.getElementById(`${id}`);
-  const quillEditor = figure.getElementsByClassName('ql-editor');
-  quillEditor[0].classList.remove(`${id}-noDrag`);
-  quillEditor[0].classList.add(`drag-started`);
-  quillEditor[0].setAttribute('contenteditable', false);
+  const quillEditor = figure.getElementsByClassName('ql-editor')[0];
+  quillEditor.classList.remove(`${id}-noDrag`);
+  quillEditor.classList.add(`drag-started`);
+  quillEditor.setAttribute('contenteditable', false);
 
-  const quillTooltip = figure.getElementsByClassName('ql-tooltip');
-  quillTooltip[0].classList.remove('ql-display')
+  const bar = document.getElementById(`${id}-bar`);
+  const quillTooltip = bar.getElementsByClassName('ql-tooltip')[0];
+  quillTooltip.classList.remove('ql-display');
   
   // remove highlighted text after click outside since selected text is draggable and cause error
   // this cause user can't copy text after right click to show the menu
   /*
-  const container = document.querySelector(`#${id}-quill`);
+  const container = document.getElementById(`${id}-quill`);
   const quill = Quill.find(container)
-  quill.setSelection(null);
+  quill.setSelection(null); // it set selection to null for all quill editor instead of just the specific editor
   */
 }

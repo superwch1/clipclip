@@ -3,6 +3,7 @@ import Quill from 'quill'
 import { useRef, useEffect } from 'react';
 import axios from 'axios'
 import Config from '../../config/Config'
+import FigureApi from '../../services/webServer/figureApi.mjs';
 
 function CopyAndPaste({scale}) {
 
@@ -74,8 +75,9 @@ async function pasteFigure(event, scale, pastingFigure){
     return;
   }
   pastingFigure.current = true;
-  setTimeout(() => pastingFigure.current = false, 1000); // prevent spamming ctrl+v
+  setTimeout(() => pastingFigure.current = false, 500); // prevent spamming ctrl+v
 
+  // todo - need to be url focused, not openeded
   if (isUrlEditedOrEditorFocused() === true) {
     return;
   }
@@ -102,16 +104,16 @@ async function pasteClipClipType(event, position) {
   figure.y = position.y;
 
   if (event.clipboardData.types.includes('clipclip/editor')) {
-    var pastedText = JSON.parse(event.clipboardData.getData('clipclip/editor'));
-    await axios.post(`${Config.url}/pasteEditor`, {figure: figure, pastedText: pastedText});
+    var quillDelta = JSON.parse(event.clipboardData.getData('clipclip/editor'));
+    await FigureApi.createEditor(figure, null, quillDelta);
   }
   else if (event.clipboardData.types.includes('clipclip/preview')) {
     var url = event.clipboardData.getData('clipclip/preview');
-    await axios.post(`${Config.url}/pastePreview`, {figure: figure, url: url});
+    await FigureApi.createPreview(figure, url);
   }
   else if (event.clipboardData.types.includes('clipclip/image')) {
     var base64 = event.clipboardData.getData('clipclip/image');
-    await axios.post(`${Config.url}/pasteImage`, {figure: figure, base64: base64});
+    await FigureApi.createImage(figure, base64, false);
   }
 }
 
@@ -128,13 +130,11 @@ async function pasteOrdinaryType(event, position) {
 
     if (isUrl) {
       figure.type = "preview";
-      figure.url = pastedText;
-      await axios.post(`${Config.url}/preview`, figure);
+      await FigureApi.createPreview(figure, pastedText);
     }
     else {
       figure.type = "editor";
-      figure.pastedText = pastedText;
-      await axios.post(`${Config.url}/editor`, figure);
+      await FigureApi.createEditor(figure, pastedText, null);
     }
   }
   else if (event.clipboardData.types.includes('Files')) {
@@ -142,17 +142,12 @@ async function pasteOrdinaryType(event, position) {
     const file = dataTransfer.files[0];
 
     if (file !== null) {
-      const formData = new FormData();
-      formData.append("image", file);
-
-      figure.type = "image";
-      formData.append('figure', JSON.stringify(figure));
-
-      await axios.post(`${Config.url}/image`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      var reader = new FileReader();
+      reader.readAsDataURL(file); // turn the file into base64 string
+      reader.onload = async function () {
+        figure.type = "image";
+        await FigureApi.createImage(figure, reader.result, true);
+      };
     }
   } 
 }

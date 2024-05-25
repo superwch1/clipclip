@@ -5,6 +5,8 @@ import { useState, useRef, useEffect } from 'react'
 import useWebSocket from 'react-use-websocket';
 import axios from 'axios';
 import Config from './config/Config'
+import * as rdd from 'react-device-detect';
+import Quill from 'quill';
 
 
 function Canvas({scale}) {
@@ -40,6 +42,13 @@ function Canvas({scale}) {
     }
   });
 
+  // only for desktop user with cursor position
+  if (rdd.isDesktop) {
+    useEffect(() => {
+      document.onkeydown = async (event) => await keyDownToDelete(event, sendMessage);
+    }, [scale]);
+  }
+
 
   return (
     <>
@@ -59,6 +68,41 @@ function Canvas({scale}) {
       })}
     </>
   );
+}
+
+function keyDownToDelete(event, sendWebSocketMessage) {
+
+  if (isEditorFocused() === true || event.key !== 'Delete') {
+    return;
+  }
+  
+  var selectedObjects = document.getElementsByClassName('selected-object');
+  if (selectedObjects.length !== 1) {
+      return;
+  }
+
+  var figureElement = document.getElementById(selectedObjects[0].id);
+  sendWebSocketMessage(JSON.stringify({ action: "delete", id: figureElement.id }))
+}
+
+function isEditorFocused() {
+  var selectedObjects = document.getElementsByClassName('selected-object');
+  var isEditorFocused = false;
+
+  for (let i = 0; i < selectedObjects.length; i++) {
+    if (selectedObjects[i].classList.contains('editor')) {
+
+      const container = document.querySelector(`#${selectedObjects[i].id}-quill`);
+      const quill = Quill.find(container);
+      isEditorFocused = quill.hasFocus();
+    }
+  }
+  
+  // only paste items when user is not pasting url and no editor is current selected
+  if (isEditorFocused !== false) {
+    return true;
+  }
+  return false;
 }
 
 
