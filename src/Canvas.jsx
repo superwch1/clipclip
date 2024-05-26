@@ -5,9 +5,6 @@ import { useState, useRef, useEffect } from 'react'
 import useWebSocket from 'react-use-websocket';
 import axios from 'axios';
 import Config from './config/Config'
-import * as rdd from 'react-device-detect';
-import Quill from 'quill';
-
 
 function Canvas({scale}) {
 
@@ -42,67 +39,25 @@ function Canvas({scale}) {
     }
   });
 
-  // only for desktop user with cursor position
-  if (rdd.isDesktop) {
-    useEffect(() => {
-      document.onkeydown = async (event) => await keyDownToDelete(event, sendMessage);
-    }, [scale]);
-  }
-
-
+ 
   return (
     <>
       {figures.map((item, index) => {
         if (item.type === "editor") {
-          return ( <Editor key={item.id} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url}
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} sendWebSocketMessage={sendMessage} scale={scale} />)
+          return ( <Editor key={item.id} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} scale={scale} />)
         }
         else if (item.type === "preview") {
           return ( <Preview key={item.id} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} sendWebSocketMessage={sendMessage} scale={scale} />)
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} scale={scale} />)
         }
         else if (item.type === "image") {
           return (<Image key={item.id} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url}
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} sendWebSocketMessage={sendMessage} scale={scale} />)
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} scale={scale} />)
         }
       })}
     </>
   );
-}
-
-function keyDownToDelete(event, sendWebSocketMessage) {
-
-  if (isEditorFocused() === true || event.key !== 'Delete') {
-    return;
-  }
-  
-  var selectedObjects = document.getElementsByClassName('selected-object');
-  if (selectedObjects.length !== 1) {
-      return;
-  }
-
-  var figureElement = document.getElementById(selectedObjects[0].id);
-  sendWebSocketMessage(JSON.stringify({ action: "delete", id: figureElement.id }))
-}
-
-function isEditorFocused() {
-  var selectedObjects = document.getElementsByClassName('selected-object');
-  var isEditorFocused = false;
-
-  for (let i = 0; i < selectedObjects.length; i++) {
-    if (selectedObjects[i].classList.contains('editor')) {
-
-      const container = document.querySelector(`#${selectedObjects[i].id}-quill`);
-      const quill = Quill.find(container);
-      isEditorFocused = quill.hasFocus();
-    }
-  }
-  
-  // only paste items when user is not pasting url and no editor is current selected
-  if (isEditorFocused !== false) {
-    return true;
-  }
-  return false;
 }
 
 
@@ -110,8 +65,8 @@ async function getFigureFromServer() {
   const response = await axios.get(`${Config.url}/figures`);
 
   const figureList = response.data.map((figure, index) => ({
-    id: figure._id, type: figure.type, x: figure.x, y: figure.y, width: figure.width,
-    height: figure.height, backgroundColor: figure.backgroundColor, url: figure.url, zIndex: figure.zIndex
+    id: figure._id, type: figure.type, x: figure.x, y: figure.y, width: figure.width, height: figure.height, backgroundColor: figure.backgroundColor, 
+    url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned
   }));
   return figureList;
 }
@@ -152,7 +107,7 @@ function deleteFigure(deletedFigure, figures, setFigures) {
 
 function createFigure(receivedFigure, figures, setFigures) {
   const newFigure = { id: receivedFigure._id, x: receivedFigure.x, y: receivedFigure.y, width: receivedFigure.width, height: receivedFigure.height, 
-    type: receivedFigure.type, backgroundColor: receivedFigure.backgroundColor, url: receivedFigure.url, zIndex: receivedFigure.zIndex };
+    type: receivedFigure.type, backgroundColor: receivedFigure.backgroundColor, url: receivedFigure.url, zIndex: receivedFigure.zIndex, isPinned: receivedFigure.isPinned };
     setFigures([...figures, newFigure]);
 }
 
@@ -161,7 +116,7 @@ function updateFigure(receivedFigure, figures, setFigures) {
   const updatedFigures = figures.map((fig) => {
     if (fig.id === receivedFigure._id) {
       return { id: receivedFigure._id, x: receivedFigure.x, y: receivedFigure.y, width: receivedFigure.width, height: receivedFigure.height, 
-        type: receivedFigure.type, backgroundColor: receivedFigure.backgroundColor, url: receivedFigure.url, zIndex: receivedFigure.zIndex 
+        type: receivedFigure.type, backgroundColor: receivedFigure.backgroundColor, url: receivedFigure.url, zIndex: receivedFigure.zIndex, isPinned: receivedFigure.isPinned 
       };
     }
     return fig;

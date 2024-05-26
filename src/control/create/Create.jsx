@@ -42,8 +42,8 @@ function Create({scale}) {
         </div>
       </div>
       <div id={`${controlUrlId}`} ref={urlRef}>
-        <input id='option-url' type='text' placeholder="按「回車鍵」傳送完整連結" 
-          onKeyDown={(event) => createPreview({event: event, position: null, scale: scale, controlUrlId: controlUrlId, url: document.getElementById('option-url').value})}/>
+        <input id={`${controlUrlId}-input`} type='text' placeholder="按「回車鍵」傳送完整連結" 
+          onKeyDown={(event) => createPreview({event: event, position: null, scale: scale, controlUrlId: controlUrlId, url: document.getElementById(`${controlUrlId}-input`).value})}/>
       </div>  
     </>
   )
@@ -71,7 +71,7 @@ async function createEditor({event, position, scale}) {
     position = JSON.parse(localStorage.getItem('position'));
     position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
   }
-  const figure = { type: "editor", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5};
+  const figure = { type: "editor", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
   await FigureApi.createEditor(figure, null, null);
 }
 
@@ -88,7 +88,7 @@ async function createPreview({event, controlUrlId, position, scale, url}) {
       position = JSON.parse(localStorage.getItem('position'));
       position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
     }
-    const figure = { type: "preview", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", zIndex: 5}
+    const figure = { type: "preview", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", zIndex: 5, isPinned: false}
     await FigureApi.createPreview(figure, url);
 
     document.getElementById(controlUrlId).value = '';
@@ -106,7 +106,7 @@ async function uploadImage({event, position, scale, file}) {
       position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
     }
 
-    const figure = { type: "image", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5}
+    const figure = { type: "image", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false}
     await FigureApi.createImage(figure, reader.result, true);
   };
 

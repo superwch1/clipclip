@@ -79,7 +79,7 @@ function showOptionBarAndToolBar(id) {
   }
 }
 
-async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPosition, setSizeAndPosition, id, sendWebSocketMessage) {
+async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPosition, setSizeAndPosition, id) {
   // there will be 0.001 difference for between the position (x, y) value for original and new position
   if (Math.abs(originalSizeAndPosition.x - newSizeAndPosition.x) < 0.01 && Math.abs(originalSizeAndPosition.y - newSizeAndPosition.y) < 0.01
     && originalSizeAndPosition.width === newSizeAndPosition.width && originalSizeAndPosition.height === newSizeAndPosition.height) {
@@ -93,7 +93,7 @@ async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPositi
   setSizeAndPosition({ x: newSizeAndPosition.x, y: newSizeAndPosition.y, width: newSizeAndPosition.width, height: newSizeAndPosition.height });
 
   // width and height need to be converted to string from int
-  const figure = { id: id, width: parseInt(newSizeAndPosition.width), height: parseInt(newSizeAndPosition.height), x: newSizeAndPosition.x, y: newSizeAndPosition.y }
+  const figure = { id: id, width: parseInt(newSizeAndPosition.width), height: parseInt(newSizeAndPosition.height), x: parseInt(newSizeAndPosition.x), y: parseInt(newSizeAndPosition.y) }
   await FigureApi.updatePositionAndSize(figure);
 }
 
@@ -101,10 +101,10 @@ async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPositi
 function figureIsEqual(prevProps, nextProps) {
   var isEqualComponenet = prevProps.id === nextProps.id && prevProps.x === nextProps.x && prevProps.y === nextProps.y &&
     prevProps.backgroundColor === nextProps.backgroundColor && prevProps.width === nextProps.width && prevProps.scale === nextProps.scale &&
-    prevProps.height === nextProps.height && prevProps.url === nextProps.url && prevProps.zIndex === nextProps.zIndex;
+    prevProps.height === nextProps.height && prevProps.url === nextProps.url && prevProps.zIndex === nextProps.zIndex && prevProps.isPinned === nextProps.isPinned;
 
   if (isEqualComponenet) {
-    console.log(`No need to rerender - ${prevProps.id}`);
+    // console.log(`No need to rerender - ${prevProps.id}`);
   }
 
   return isEqualComponenet;

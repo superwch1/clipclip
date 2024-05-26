@@ -3,12 +3,14 @@ import { useState, useEffect, useRef } from 'react'
 import React, {  } from "react";
 import Create from '../control/create/Create'
 import Zoom from '../control/zoom/Zoom'
+import Delete from '../control/cutAndDelete/CutAndDelete'
 import Cursors from '../cursors/Cursors'
 import CopyAndPaste from '../control/copyAndPaste/CopyAndPaste';
 import './App.css'
 import Config from '../config/Config'
 import { TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
 import * as rdd from 'react-device-detect';
+import CutAndDelete from '../control/cutAndDelete/CutAndDelete';
 
 
 function App() {
@@ -107,6 +109,7 @@ function App() {
         <div id='control'>
           <Create scale={scale} />
           <CopyAndPaste scale={scale} />
+          <CutAndDelete />
           {rdd.isDesktop === true && <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStorePosition={checkInsideBoundAndStorePosition}/>}
         </div>
       </TransformWrapper>

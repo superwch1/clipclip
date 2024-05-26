@@ -12,11 +12,12 @@ import { Rnd } from "react-rnd";
 import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureIsEqual } from '../utils.mjs'
 
 
-const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scale, sendWebSocketMessage}) => {
+const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale}) => {
 
-  console.log(`Editor - ${id}`);
+  // console.log(`Editor - ${id}`);
  
   const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
+  const [pin, setPin] = useState({enableResizing: !isPinned === true ? Config.objectResizingDirection : false, disableDragging: isPinned});
   const containerRef = useRef(null);
   const barRef = useRef(null);
   onClickOutsideFigure(containerRef, barRef, id, onClickOutsideFigureBeforeFunction, null);
@@ -58,6 +59,10 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
     }
   }, []);
 
+  useEffect(() => {
+    setPin({enableResizing: !isPinned === true ? Config.objectResizingDirection : false, disableDragging: isPinned});
+  }, [isPinned]);
+
   // run when change in value of x, y, width, height
   useEffect(() => {
     setSizeAndPosition({x: x, y: y, width: width, height: height})
@@ -67,8 +72,8 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
   // reason for using onDrag and onResize instead of start is because even clicking figure will invoke start event
   return (
     <>
-      <Rnd id={`${id}-rnd`}
-        enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
+      <Rnd id={`${id}-rnd`} enableResizing={pin.enableResizing} disableDragging={pin.disableDragging} 
+        size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
         resizeHandleStyles={{bottomRight: Config.resizeHandleStyle, bottomLeft: Config.resizeHandleStyle, topRight: Config.resizeHandleStyle, topLeft: Config.resizeHandleStyle}}
         resizeHandleWrapperClass={`${id}-resizeHandle`} resizeHandleWrapperStyle={{opacity: '0'}}
         bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}}
@@ -77,18 +82,18 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sca
         onMouseDown={(e) => onSelectFigure(id, onSelectFigureBeforeFunction, null)}
         onDrag={(e, data) => hideOptionBarAndToolBar(id)}
         onResize={(e, direction, ref, delta, position) => hideOptionBarAndToolBar(id)}
-        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)} 
-        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id, sendWebSocketMessage)}>
+        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id)} 
+        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id)}>
         
         { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
         <div id={id} ref={containerRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`}} onMouseUp={(event) => onMouseUp(id)}
-          className='editor' data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor}>
+          className='editor' data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor} data-ispinned={isPinned}>
           <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>
           <QuillToolbar id={id} />
         </div>     
       </Rnd>
       <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`}}>
-        <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} sizeAndPosition={sizeAndPosition} />
+        <OptionBar id={id} backgroundColor={backgroundColor} sizeAndPosition={sizeAndPosition} />
       </div>
     </>
   )

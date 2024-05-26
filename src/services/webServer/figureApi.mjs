@@ -49,4 +49,35 @@ export default class figureApi {
 
     }
   }
+
+  static async updatePinStatus(id, action) {
+    try {
+      var response = await axios.put(`${Config.url}/pin`, {id: id});
+    }
+    catch (error) {
+      console.log(error);
+
+    }
+  }
+
+  static async copyFigure(id) {
+    try {
+      // it needs to use copyFigure since figure is used for creating new figure
+      var response = await axios.post(`${Config.url}/copyFigure`, {id: id});
+    }
+    catch (error) {
+      console.log(error);
+
+    }
+  }
+
+  static async deleteFigure(id) {
+    try {
+      var response = await axios.delete(`${Config.url}/figure`, {data: { id: id }});
+    }
+    catch (error) {
+      console.log(error);
+
+    }
+  }
 }

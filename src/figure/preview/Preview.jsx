@@ -8,12 +8,13 @@ import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChange
 import axios from 'axios';
 
 
-const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, scale, sendWebSocketMessage}) => {
+const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale}) => {
 
-  console.log(`Preview - ${id}`);
+  // console.log(`Preview - ${id}`);
 
   const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
   const [previewData, setPreviewData] = useState(null);
+  const [pin, setPin] = useState({enableResizing: !isPinned === true ? Config.objectResizingDirection : false, disableDragging: isPinned});
   const containerRef = useRef(null);
   const barRef = useRef(null);
 
@@ -31,6 +32,10 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
     getInfo();
   }, [url])
 
+  useEffect(() => {
+    setPin({enableResizing: !isPinned === true ? Config.objectResizingDirection : false, disableDragging: isPinned});
+  }, [isPinned]);
+
   // run when change in value of x, y, width, height
   useEffect(() => {
     setSizeAndPosition({x: x, y: y, width: width, height: height});
@@ -43,26 +48,26 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
   // reason for using onDrag and onResize instead of start is because even clicking figure will invoke start event
   return (
     <>
-      <Rnd id={`${id}-rnd`}
-        enableResizing={Config.objectResizingDirection} size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
+      <Rnd id={`${id}-rnd`} enableResizing={pin.enableResizing} disableDragging={pin.disableDragging}
+        size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
         resizeHandleStyles={{bottomRight: Config.resizeHandleStyle, bottomLeft: Config.resizeHandleStyle, topRight: Config.resizeHandleStyle, topLeft: Config.resizeHandleStyle}}
         resizeHandleWrapperClass={`${id}-resizeHandle`} resizeHandleWrapperStyle={{opacity: '0'}}
-
+        
         bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}} 
         minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight}  
-        draggable={false} scale={scale} className='figure'
+        scale={scale} className='figure'
         onMouseDown={(e) => onSelectFigure(id, null, null)}
         onDrag={(e, data) => hideOptionBarAndToolBar(id)}
         onResize={(e, direction, ref, delta, position) => hideOptionBarAndToolBar(id)}
-        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id, sendWebSocketMessage)}
-        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, sendWebSocketMessage)}>
+        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id)}
+        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id)}>
 
         <div id={id} ref={containerRef} className='preview' style={{backgroundColor: `${backgroundColor}`}}
-            data-type={"preview"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor}>
+            data-type={"preview"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor} data-ispinned={isPinned}> 
           
           {previewData !== null && previewData !== undefined && 
           <>
-            <img src={previewData.image} className='preview-media'draggable={false} />
+            <img src={previewData.image} className='preview-media' draggable={false} />
             <a className={`${id}-noDrag preview-content`} target="_blank" href={previewData.url}>
               <p className='preview-text preview-title'>{previewData.title}</p>
               {/* <p className='preview-text'>{previewData.description}</p> */}
@@ -72,7 +77,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, sc
         </div>   
       </Rnd>
       <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`}}>
-        <OptionBar id={id} backgroundColor={backgroundColor} sendWebSocketMessage={sendWebSocketMessage} sizeAndPosition={sizeAndPosition} />
+        <OptionBar id={id} backgroundColor={backgroundColor} sizeAndPosition={sizeAndPosition} />
       </div>
     </>
   )

@@ -1,9 +1,8 @@
 import * as rdd from 'react-device-detect';
 import Quill from 'quill'
 import { useRef, useEffect } from 'react';
-import axios from 'axios'
-import Config from '../../config/Config'
 import FigureApi from '../../services/webServer/figureApi.mjs';
+import { isUrlFocusedOrEditorFocused } from '../utlis.mjs';
 
 function CopyAndPaste({scale}) {
 
@@ -25,7 +24,7 @@ function CopyAndPaste({scale}) {
 
 function copyFigure(event) {
 
-  if (isUrlEditedOrEditorFocused() === true) {
+  if (isUrlFocusedOrEditorFocused() === true) {
     return;
   }
 
@@ -47,10 +46,11 @@ function copyFigure(event) {
     y: parseInt(figureElement.getAttribute("data-y")),
     zIndex: parseInt(figureElement.getAttribute("data-zindex")),
     url: figureElement.getAttribute("data-url"),
-    backgroundColor: figureElement.getAttribute("data-backgroundcolor")
+    backgroundColor: figureElement.getAttribute("data-backgroundcolor"),
+    isPinned: figureElement.getAttribute("data-ispinned")
   }
 
-    event.clipboardData.setData("clipclip/figure", JSON.stringify(figure));
+  event.clipboardData.setData("clipclip/figure", JSON.stringify(figure));
   
   if (figure.type === "editor") {
     const container = document.querySelector(`#${figureElement.id}-quill`);
@@ -78,7 +78,7 @@ async function pasteFigure(event, scale, pastingFigure){
   setTimeout(() => pastingFigure.current = false, 500); // prevent spamming ctrl+v
 
   // todo - need to be url focused, not openeded
-  if (isUrlEditedOrEditorFocused() === true) {
+  if (isUrlFocusedOrEditorFocused() === true) {
     return;
   }
   
@@ -119,7 +119,7 @@ async function pasteClipClipType(event, position) {
 
 async function pasteOrdinaryType(event, position) {
 
-  var figure = { type: "", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5};
+  var figure = { type: "", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
 
   if (event.clipboardData.types.includes('text/plain')) {
     // no idea yet for text/html for converting the style to quill
@@ -152,27 +152,6 @@ async function pasteOrdinaryType(event, position) {
   } 
 }
 
-  
-function isUrlEditedOrEditorFocused() {
-  var controlUrl = document.getElementById('control-url');
-  var selectedObjects = document.getElementsByClassName('selected-object');
-  var isEditorFocused = false;
-
-  for (let i = 0; i < selectedObjects.length; i++) {
-    if (selectedObjects[i].classList.contains('editor')) {
-
-      const container = document.querySelector(`#${selectedObjects[i].id}-quill`);
-      const quill = Quill.find(container);
-      isEditorFocused = quill.hasFocus();
-    }
-  }
-  
-  // only paste items when user is not pasting url and no editor is current selected
-  if (controlUrl.style.display !== 'none' || isEditorFocused !== false) {
-    return true;
-  }
-  return false;
-}
 
 export default CopyAndPaste
 
