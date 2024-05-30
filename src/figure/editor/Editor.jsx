@@ -22,6 +22,9 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
   const barRef = useRef(null);
   onClickOutsideFigure(containerRef, barRef, id, onClickOutsideFigureBeforeFunction, null);
 
+  // use props to retain original properties of figure
+  var props = { x: x, y: y, backgroundColor: backgroundColor, width: width, height: height, id: id, url: url, zIndex: zIndex, isPinned: isPinned }; 
+
   // only run after first render
   useEffect(() => {
     // the resize handles need to trigger mousedown and event propagation manually
@@ -76,7 +79,7 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
         size={{ width: sizeAndPosition.width, height: sizeAndPosition.height }} position={{ x: sizeAndPosition.x, y: sizeAndPosition.y }} 
         resizeHandleStyles={{bottomRight: Config.resizeHandleStyle, bottomLeft: Config.resizeHandleStyle, topRight: Config.resizeHandleStyle, topLeft: Config.resizeHandleStyle}}
         resizeHandleWrapperClass={`${id}-resizeHandle`} resizeHandleWrapperStyle={{opacity: '0'}}
-        bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}}
+        bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`, touchAction: "none"}}
         minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
         scale={scale} className='figure'
         onMouseDown={(e) => onSelectFigure(id, onSelectFigureBeforeFunction, null)}
@@ -92,8 +95,8 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
           <QuillToolbar id={id} />
         </div>     
       </Rnd>
-      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`}}>
-        <OptionBar id={id} backgroundColor={backgroundColor} sizeAndPosition={sizeAndPosition} />
+      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none"}}>
+        <OptionBar id={id} backgroundColor={backgroundColor} props={props}/>
       </div>
     </>
   )
@@ -161,4 +164,6 @@ function onClickOutsideFigureBeforeFunction(id) {
   const quill = Quill.find(container)
   quill.setSelection(null); // it set selection to null for all quill editor instead of just the specific editor
   */
+
+  //figure.style.userSelect = 'none';
 }

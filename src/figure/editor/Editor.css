@@ -1,12 +1,13 @@
 .ql-editor {
   padding: 0px !important;
-  
   height: auto;
   max-height: 100%;
+  touch-action: none !important;
 
   -ms-overflow-style: none;  /* Internet Explorer 10+  - hide scrollbar */
   scrollbar-width: none;  /* Firefox - hide scrollbar */
 }
+
 .ql-editor::-webkit-scrollbar { 
   display: none;  /* Safari and Chrome - hide scrollbar */
 }

@@ -1,16 +1,18 @@
-import Canvas from '../Canvas'
+import Canvas from '../figure/Canvas'
 import { useState, useEffect, useRef } from 'react'
 import React, {  } from "react";
-import Create from '../control/create/Create'
+import Menu from '../control/menu/Menu'
 import Zoom from '../control/zoom/Zoom'
-import Delete from '../control/cutAndDelete/CutAndDelete'
 import Cursors from '../cursors/Cursors'
 import CopyAndPaste from '../control/copyAndPaste/CopyAndPaste';
+import CutAndDelete from '../control/cutAndDelete/CutAndDelete';
 import './App.css'
 import Config from '../config/Config'
 import { TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
 import * as rdd from 'react-device-detect';
-import CutAndDelete from '../control/cutAndDelete/CutAndDelete';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 
 function App() {
@@ -32,6 +34,7 @@ function App() {
 
   const [scale, setScale] = useState(storedScale);
   const canvasRef = useRef(null);
+  const userActions = useRef([]);
   var minScale = rdd.isMobile === true ? Config.interfaceMinZoomScaleForMobile : Config.interfaceMinZoomScaleForDesktop;
   
 
@@ -107,12 +110,13 @@ function App() {
 
         { /* the following components are placed on top of the Canvas */ }
         <div id='control'>
-          <Create scale={scale} />
+          <Menu scale={scale} />
           <CopyAndPaste scale={scale} />
           <CutAndDelete />
           {rdd.isDesktop === true && <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStorePosition={checkInsideBoundAndStorePosition}/>}
         </div>
       </TransformWrapper>
+      <ToastContainer position="top-left" autoClose={5000} draggable theme="light" />
     </div>
   )
 }

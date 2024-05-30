@@ -19,6 +19,9 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
   const barRef = useRef(null);
   onClickOutsideFigure(containerRef, barRef, id, null, null);  
 
+  // use props to retain original properties of figure
+  var props = { x: x, y: y, backgroundColor: backgroundColor, width: width, height: height, id: id, url: url, zIndex: zIndex, isPinned: isPinned }; 
+
   useEffect(() => {
     // the resize handles need to trigger mousedown and event propagation manually
     // unselect all figures by dispatching event then run onSelectFigure
@@ -53,7 +56,7 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
         resizeHandleStyles={{bottomRight: Config.resizeHandleStyle, bottomLeft: Config.resizeHandleStyle, topRight: Config.resizeHandleStyle, topLeft: Config.resizeHandleStyle}}
         resizeHandleWrapperClass={`${id}-resizeHandle`} resizeHandleWrapperStyle={{opacity: '0'}}
         
-        bounds="#interface" lockAspectRatio={true} style={{zIndex: `${zIndex}`}} cancel={`.${id}-noDrag`}
+        bounds="#interface" lockAspectRatio={true} style={{zIndex: `${zIndex}`, touchAction: "none"}} cancel={`.${id}-noDrag`}
         minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
         scale={scale} className='figure'
         onMouseDown={(e) => onSelectFigure(id, null, null)}
@@ -68,8 +71,8 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
           <img id={`${id}-image`} draggable={false} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
         </div>
       </Rnd>
-      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`}}>
-        <OptionBar id={id} backgroundColor={backgroundColor} sizeAndPosition={sizeAndPosition} />
+      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none"}}>
+        <OptionBar id={id} backgroundColor={backgroundColor} props={props} />
       </div>
     </>
   )

@@ -18,6 +18,9 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
   const containerRef = useRef(null);
   const barRef = useRef(null);
 
+  // use props to retain original properties of figure
+  var props = { x: x, y: y, backgroundColor: backgroundColor, width: width, height: height, id: id, url: url, zIndex: zIndex, isPinned: isPinned }; 
+
   useEffect(() => {
     // the resize handles need to trigger mousedown and event propagation manually
     // unselect all figures by dispatching event then run onSelectFigure
@@ -53,7 +56,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
         resizeHandleStyles={{bottomRight: Config.resizeHandleStyle, bottomLeft: Config.resizeHandleStyle, topRight: Config.resizeHandleStyle, topLeft: Config.resizeHandleStyle}}
         resizeHandleWrapperClass={`${id}-resizeHandle`} resizeHandleWrapperStyle={{opacity: '0'}}
         
-        bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`}} 
+        bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`, touchAction: "none"}} 
         minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight}  
         scale={scale} className='figure'
         onMouseDown={(e) => onSelectFigure(id, null, null)}
@@ -76,8 +79,8 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
           </>}
         </div>   
       </Rnd>
-      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`}}>
-        <OptionBar id={id} backgroundColor={backgroundColor} sizeAndPosition={sizeAndPosition} />
+      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none"}}>
+        <OptionBar id={id} backgroundColor={backgroundColor} props={props} />
       </div>
     </>
   )

@@ -1,10 +1,10 @@
-import Editor from './figure/editor/Editor'
-import Image from './figure/image/Image'
-import Preview from './figure/preview/Preview'
+import Editor from './editor/Editor'
+import Image from './image/Image'
+import Preview from './preview/Preview'
 import { useState, useRef, useEffect } from 'react'
 import useWebSocket from 'react-use-websocket';
 import axios from 'axios';
-import Config from './config/Config'
+import Config from '../config/Config'
 
 function Canvas({scale}) {
 
@@ -44,16 +44,16 @@ function Canvas({scale}) {
     <>
       {figures.map((item, index) => {
         if (item.type === "editor") {
-          return ( <Editor key={item.id} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} scale={scale} />)
+          return ( <Editor key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned}  />)
         }
         else if (item.type === "preview") {
-          return ( <Preview key={item.id} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} scale={scale} />)
+          return ( <Preview key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned}  />)
         }
         else if (item.type === "image") {
-          return (<Image key={item.id} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url}
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} scale={scale} />)
+          return (<Image key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url}
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned}  />)
         }
       })}
     </>

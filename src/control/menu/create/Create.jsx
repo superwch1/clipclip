@@ -1,10 +1,7 @@
 import './Create.css'
-import crossWhite from './crossWhite.png'
-import crossBrown from './crossBrown.png'
-import axios from 'axios'
 import { useRef, useEffect } from 'react';
-import Config from '../../config/Config'
-import FigureApi from '../../services/webServer/figureApi.mjs'
+import FigureApi from '../../../services/webServer/figureApi.mjs'
+import EditorButton from './editorButton.png'
 
 
 
@@ -26,24 +23,24 @@ function Create({scale}) {
     document.getElementById(controlUrlId).style.display = 'none';
   }, []);
   
-
   return (
     <>
       <div id="control-create" className='control'>
-        <div className="option-text" ref={previewButtonRef} onClick={(event) => showInput(controlUrlId)}>連結</div>
-        <div className="option-text" onClick={createImage}>相片
-          <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage({event: event, position: null, scale: scale, file: event.target.files[0]})} 
+        <div onClick={(event) => createEditor({event: event, scale: scale})}>
+          <img className="option-button" src={EditorButton} />
+        </div>
+        <div onClick={createImage}>
+          <img className="option-button" src={EditorButton} />
+          <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage({event: event, scale: scale, file: event.target.files[0]})} 
                  style={{display: 'none'}} accept=".jpg, .jpeg, .heif, .png, .webp, .heic, .gif" />
         </div>
-        <div className="option-symbol" onClick={(event) => createEditor({event: event, position: null, scale: scale})}
-            onMouseOver={(event) => document.getElementById('option-cross').setAttribute('src', crossBrown)} 
-            onMouseOut={(event) => document.getElementById('option-cross').setAttribute('src', crossWhite)}>
-          <img src={crossWhite} id='option-cross'/>
+        <div ref={previewButtonRef} onClick={(event) => showInput(controlUrlId)}>
+          <img className="option-button" src={EditorButton} />
         </div>
       </div>
       <div id={`${controlUrlId}`} ref={urlRef}>
         <input id={`${controlUrlId}-input`} type='text' placeholder="按「回車鍵」傳送完整連結" 
-          onKeyDown={(event) => createPreview({event: event, position: null, scale: scale, controlUrlId: controlUrlId, url: document.getElementById(`${controlUrlId}-input`).value})}/>
+          onKeyDown={(event) => createPreview({event: event, scale: scale, controlUrlId: controlUrlId, url: document.getElementById(`${controlUrlId}-input`).value})}/>
       </div>  
     </>
   )
@@ -66,12 +63,11 @@ function onClickOutsideColorPicker(urlRef, previewButtonRef, controlUrlId) {
 }
 
 
-async function createEditor({event, position, scale}) { 
-  if (position === null) {
-    position = JSON.parse(localStorage.getItem('position'));
-    position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
-  }
-  const figure = { type: "editor", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
+async function createEditor({event, scale}) { 
+  var position = JSON.parse(localStorage.getItem('position'));
+  var figurePosition = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
+  
+  const figure = { type: "editor", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
   await FigureApi.createEditor(figure, null, null);
 }
 
@@ -84,11 +80,10 @@ async function showInput(controlUrlId) {
 async function createPreview({event, controlUrlId, position, scale, url}) {
   if (event.key === 'Enter' || event.keyCode === 13) {
 
-    if (position === null) {
-      position = JSON.parse(localStorage.getItem('position'));
-      position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
-    }
-    const figure = { type: "preview", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", zIndex: 5, isPinned: false}
+    var position = JSON.parse(localStorage.getItem('position'));
+    var figurePosition = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
+
+    const figure = { type: "preview", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", zIndex: 5, isPinned: false}
     await FigureApi.createPreview(figure, url);
 
     document.getElementById(controlUrlId).value = '';
@@ -97,16 +92,14 @@ async function createPreview({event, controlUrlId, position, scale, url}) {
 }
 
 
-async function uploadImage({event, position, scale, file}) {
+async function uploadImage({event, scale, file}) {
   var reader = new FileReader();
   reader.readAsDataURL(file); // turn the file into base64 string
   reader.onload = async function () {
-    if (position === null) {
-      position = JSON.parse(localStorage.getItem('position'));
-      position = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
-    }
+    var position = JSON.parse(localStorage.getItem('position'));
+    var figurePosition = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
 
-    const figure = { type: "image", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false}
+    const figure = { type: "image", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false}
     await FigureApi.createImage(figure, reader.result, true);
   };
 
