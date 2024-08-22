@@ -9,30 +9,43 @@ import * as Y from 'yjs'
 import { QuillBinding } from 'y-quill'
 import { WebsocketProvider } from 'y-websocket'
 import { Rnd } from "react-rnd";
-import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureIsEqual } from '../utils.mjs'
+import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureHasEqualProps } from '../utils.mjs'
 
 
 const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale}) => {
 
-  // console.log(`Editor - ${id}`);
- 
+  // easier to pass the properties of figure
+  var props = { x: x, y: y, backgroundColor: backgroundColor, width: width, height: height, id: id, url: url, zIndex: zIndex, isPinned: isPinned }; 
+
+  // x, y, width, height, enableResizing, disableDragging are used for react rnd in div
+  // (x, y, width, height) and (enableResizing, disableDragging) have their own useEffect for receiving udpates
   const [sizeAndPosition, setSizeAndPosition] = useState({x: x, y: y, width: width, height: height});
-  const [pin, setPin] = useState({enableResizing: !isPinned === true ? Config.objectResizingDirection : false, disableDragging: isPinned});
+  const [pin, setPin] = useState({enableResizing: isPinned === true ? Config.disableResizingDirection : Config.enableResizingDirection, disableDragging: isPinned});
+
+  useEffect(() => {
+    setPin({enableResizing: isPinned === true ? Config.disableResizingDirection : Config.enableResizingDirection, disableDragging: isPinned});
+  }, [isPinned]);
+
+  useEffect(() => {
+    setSizeAndPosition({x: x, y: y, width: width, height: height})
+  }, [x, y, width, height]);
+
+
+
+  // containerRef and barRef are used to check whether the click are inside the rnd and bar 
   const containerRef = useRef(null);
   const barRef = useRef(null);
   onClickOutsideFigure(containerRef, barRef, id, onClickOutsideFigureBeforeFunction, null);
 
-  // use props to retain original properties of figure
-  var props = { x: x, y: y, backgroundColor: backgroundColor, width: width, height: height, id: id, url: url, zIndex: zIndex, isPinned: isPinned }; 
+  
 
-  // only run after first render
+  
   useEffect(() => {
     // the resize handles need to trigger mousedown and event propagation manually
-    // unselect all figures by dispatching event then run onSelectFigure
     addEventForResizeHandle(id);    
 
     // Guide on yjs setup - https://docs.yjs.dev/getting-started/a-collaborative-editor
-    // Font size and style not save after moving to next line - https://github.com/quilljs/quill/issues/2678 
+    // font size and style will not be saved after entering next line - https://github.com/quilljs/quill/issues/2678 
     var quill = new Quill(document.querySelector(`#${id}-quill`), {
       modules: {
         toolbar: `#${id}-toolbar`
@@ -42,7 +55,8 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
         'background', 'bold', 'color', 'font', 'italic', 'link', 'size', 'strike', 
         'script', 'underline', 'header', 'align'], // not allow user to pasteimage or video
       theme: 'bubble',
-      bounds: '#interface' // prevent the ql-flip css appears when double click and text selection cause having not enough space
+      // not sure it purpose??
+      bounds: '#interface' // prevent the quill option being moved up after double click / select text then (due to the property of css ql-flip)  
     }, [])
 
     const ydoc = new Y.Doc();
@@ -50,10 +64,20 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
     const binding = new QuillBinding(ytext, quill);
     const provider = new WebsocketProvider(`${Config.ws}`, `${id}`, ydoc);
 
+    // move the DOM location of ql-tooltip as a children of bar
     var barElement = document.getElementById(`${id}-bar`);
-    var optionBarElement = document.getElementById(`${id}-optionbar`);
     var toolbarElement = document.getElementById(`${id}`).getElementsByClassName(`ql-tooltip`)[0];
-    barElement.insertBefore(toolbarElement, optionBarElement);
+    barElement.appendChild(toolbarElement);
+
+    // not allow to edit and select text before having the second click in quill
+    const quillEditor = document.getElementById(`${id}`).getElementsByClassName('ql-editor')[0];
+    quillEditor.classList.add(`move-cursor`);
+    quillEditor.setAttribute('contenteditable', false);
+    quillEditor.style.userSelect = 'none';
+
+    // set auto display for quill toolbar
+    const quillTooltip = barElement.getElementsByClassName('ql-tooltip')[0];
+    quillTooltip.classList.add('ql-display')
     
     return () => {
       // the reference of quill will be removed by it self for garbage collection
@@ -62,17 +86,10 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
     }
   }, []);
 
-  useEffect(() => {
-    setPin({enableResizing: !isPinned === true ? Config.objectResizingDirection : false, disableDragging: isPinned});
-  }, [isPinned]);
+  
 
-  // run when change in value of x, y, width, height
-  useEffect(() => {
-    setSizeAndPosition({x: x, y: y, width: width, height: height})
-  }, [x, y, width, height]);
-
-  // there will be vibrant shaking while resizing on topLeft or bottomLeft corner due to rapid translation and resizing
-  // reason for using onDrag and onResize instead of start is because even clicking figure will invoke start event
+  // Rnd cannot be used to pass the ref
+  // reason for using onDrag and onResize instead of onDragStart and onResizeStart is because even clicking figure will invoke start event
   return (
     <>
       <Rnd id={`${id}-rnd`} enableResizing={pin.enableResizing} disableDragging={pin.disableDragging} 
@@ -95,75 +112,71 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
           <QuillToolbar id={id} />
         </div>     
       </Rnd>
-      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none"}}>
+      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none", display: "none"}}>
         <OptionBar id={id} backgroundColor={backgroundColor} props={props}/>
       </div>
     </>
   )
-}, figureIsEqual);
+}, figureHasEqualProps);
 
 
 export default Editor
 
+
+
+// simulate on clicking outside to unselect other figures then select current figure
+// it needs to use document insted of resizeHandle to dispatch event or else it will keep looping for event
 function addEventForResizeHandle(id) {
   var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`)[0];
 
   resizeHandle.addEventListener('mousedown', (event) => {
     const outerEvent = new Event('mousedown', { bubbles: true });
-    document.dispatchEvent(outerEvent); // it needs to use document here and nother parent of resize handle, or else it will become shakey in resizing
-    onSelectFigure(id, onSelectFigureBeforeFunction, null); // it need to be last to select again after having identified as clicking outside
+    document.dispatchEvent(outerEvent);
+    onSelectFigure(id, onSelectFigureBeforeFunction, null);
   });
   
   resizeHandle.addEventListener('touchstart', (event) => { 
     const outerEvent = new Event('touchstart', { bubbles: true });
-    document.dispatchEvent(outerEvent);
+    document.dispatchEvent(outerEvent); 
     onSelectFigure(id, onSelectFigureBeforeFunction, null);
   });
 }
 
 
+
 function onSelectFigureBeforeFunction(id) {
   const figure = document.getElementById(`${id}`);
+
+  // check whether this is the second click of the figure
   if(figure.classList.contains('selected-object')) {
 
     const quillEditor = figure.getElementsByClassName('ql-editor')[0];
-
-    // only add noDrag class to the ql-editor since the div take up the whole size of Rnd and not able to drag on the border
-    quillEditor.classList.add(`${id}-noDrag`);
+    quillEditor.classList.add(`${id}-noDrag`); // .${id}-noDrag disable for drag in rnd but outer part can continue to be dragged in rnd
     quillEditor.setAttribute('contenteditable', true);
-  }
 
-  const bar = document.getElementById(`${id}-bar`);
-  const quillTooltip = bar.getElementsByClassName('ql-tooltip')[0];
-  quillTooltip.classList.add('ql-display')
+    // allow the user to select text
+    figure.style.userSelect = 'auto';
+  }
 }
 
 
+
+// change cursor status after finish dragging figure
 function onMouseUp(id) {
   const figure = document.getElementById(`${id}`);
   const quillEditor = figure.getElementsByClassName('ql-editor')[0];
-  quillEditor.classList.remove(`drag-started`);
+  quillEditor.classList.remove(`move-cursor`); // change cursor back to pointer, default is move
 }
+
 
 
 function onClickOutsideFigureBeforeFunction(id) {
   const figure = document.getElementById(`${id}`);
   const quillEditor = figure.getElementsByClassName('ql-editor')[0];
-  quillEditor.classList.remove(`${id}-noDrag`);
-  quillEditor.classList.add(`drag-started`);
+  quillEditor.classList.remove(`${id}-noDrag`); // .${id}-noDrag disable for drag in rnd but outer part can continue to be dragged in rnd
+  quillEditor.classList.add(`move-cursor`);
   quillEditor.setAttribute('contenteditable', false);
-
-  const bar = document.getElementById(`${id}-bar`);
-  const quillTooltip = bar.getElementsByClassName('ql-tooltip')[0];
-  quillTooltip.classList.remove('ql-display');
   
-  // remove highlighted text after click outside since selected text is draggable and cause error
-  // this cause user can't copy text after right click to show the menu
-  /*
-  const container = document.getElementById(`${id}-quill`);
-  const quill = Quill.find(container)
-  quill.setSelection(null); // it set selection to null for all quill editor instead of just the specific editor
-  */
-
-  //figure.style.userSelect = 'none';
+  // unselect the text inside quill and not allow use to select text
+  quillEditor.style.userSelect = 'none';
 }

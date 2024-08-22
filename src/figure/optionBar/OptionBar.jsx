@@ -14,7 +14,7 @@ import { ToastContainer, toast } from 'react-toastify';
 
 function OptionBar({id, backgroundColor, props}) {
 
-  // execute the function after it has not been called for 100 milliseconds. 
+  // execute the function after it has not been called for 200 milliseconds. 
   const changeColor = debounce(async (newColor) => {
     const figure = { id: id, backgroundColor: newColor }
     await FigureApi.updateBackgroundColor(figure);
@@ -25,7 +25,7 @@ function OptionBar({id, backgroundColor, props}) {
   const rgba = backgroundColor.replace(/rgba|\(|\)/g, '').split(',');
 
   return (
-    <div id={`${id}-optionbar`} className={`optionbar hide-optionbar ${id}-noDrag`}>
+    <div id={`${id}-optionbar`} className={`optionbar ${id}-noDrag`}>
       <img src={props.isPinned === true ? pinnedButton : notpinnedButton} className='option' style={{height: "32px", width: "26px"}} alt="pin" onClick={async (event) => await FigureApi.updatePinStatus(id)} />
       <div className='option-backgroundColor' style={{background: `${backgroundColor}`}} 
            onClick={(event) => document.getElementById(`${id}-colorpicker`).classList.remove('colorpicker-hide')}></div>

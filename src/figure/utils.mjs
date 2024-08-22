@@ -2,7 +2,7 @@ import { parseInt } from 'lodash'
 import { useEffect } from 'react'
 import FigureApi from '../services/webServer/figureApi.mjs'
 
-// preview has its own onClickOutsideFigure
+
 function onClickOutsideFigure(containerRef, barRef, id, beforeFunction, afterFunction) {
   useEffect(() => {
     function handleClickOutside (event) {
@@ -13,10 +13,10 @@ function onClickOutsideFigure(containerRef, barRef, id, beforeFunction, afterFun
         if (beforeFunction !== null) {
           beforeFunction(id);
         }
-  
+          
         document.getElementById(`${id}`).classList.remove('selected-object');
-        const optionBar = document.getElementById(`${id}-optionbar`);
-        optionBar.classList.add('hide-optionbar');
+        const bar = document.getElementById(`${id}-bar`);
+        bar.style.display = "none";
   
         var resizeWrapperClass = document.getElementsByClassName(`${id}-resizeHandle`);
         resizeWrapperClass[0].style.opacity = '0';
@@ -44,8 +44,8 @@ function onSelectFigure(id, beforeFunction, afterFunction) {
   }
 
   document.getElementById(`${id}`).classList.add('selected-object');
-  const optionBar = document.getElementById(`${id}-optionbar`);
-  optionBar.classList.remove('hide-optionbar');
+  const bar = document.getElementById(`${id}-bar`);
+  bar.style.display = "initial";
 
   const resizeWrapperClass = document.getElementsByClassName(`${id}-resizeHandle`);
   resizeWrapperClass[0].style.opacity = "1";
@@ -56,28 +56,20 @@ function onSelectFigure(id, beforeFunction, afterFunction) {
 }
 
 
-function hideOptionBarAndToolBar(id) {
-  var bar = document.getElementById(`${id}-bar`);
-  var optionBar = document.getElementById(`${id}-optionbar`);
-  optionBar.classList.add("hide-optionbar");
 
-  const quillTooltip = bar.getElementsByClassName('ql-tooltip')[0];
-  if (quillTooltip !== undefined) {
-    quillTooltip.classList.remove('ql-display');
-    quillTooltip.classList.add('ql-hidden'); // in case there are selected text and tooltip not hide automatically
-  }
+function hideOptionBarAndToolBar(id) {
+  const bar = document.getElementById(`${id}-bar`);
+  bar.style.display = "none";
 }
+
+
 
 function showOptionBarAndToolBar(id) {
-  var bar = document.getElementById(`${id}-bar`);
-  var optionBar = document.getElementById(`${id}-optionbar`);
-  optionBar.classList.remove("hide-optionbar");
-
-  const quillTooltip = bar.getElementsByClassName('ql-tooltip')[0];
-  if (quillTooltip !== undefined) {
-    quillTooltip.classList.add('ql-display')
-  }
+  const bar = document.getElementById(`${id}-bar`);
+  bar.style.display = "initial";
 }
+
+
 
 async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPosition, setSizeAndPosition, id) {
   // there will be 0.001 difference for between the position (x, y) value for original and new position
@@ -90,6 +82,9 @@ async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPositi
   var optionBarElement = document.getElementById(`${id}-bar`);
   optionBarElement.style.transform = `translate(${newSizeAndPosition.x}px, ${newSizeAndPosition.y}px)`;
 
+  newSizeAndPosition.x = newSizeAndPosition.x.toFixed(2);
+  newSizeAndPosition.y = newSizeAndPosition.y.toFixed(2);
+  console.log(newSizeAndPosition);
   setSizeAndPosition({ x: newSizeAndPosition.x, y: newSizeAndPosition.y, width: newSizeAndPosition.width, height: newSizeAndPosition.height });
 
   // width and height need to be converted to string from int
@@ -98,7 +93,8 @@ async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPositi
 }
 
 
-function figureIsEqual(prevProps, nextProps) {
+
+function figureHasEqualProps(prevProps, nextProps) {
   var isEqualComponenet = prevProps.id === nextProps.id && prevProps.x === nextProps.x && prevProps.y === nextProps.y &&
     prevProps.backgroundColor === nextProps.backgroundColor && prevProps.width === nextProps.width && prevProps.scale === nextProps.scale &&
     prevProps.height === nextProps.height && prevProps.url === nextProps.url && prevProps.zIndex === nextProps.zIndex && prevProps.isPinned === nextProps.isPinned;
@@ -110,4 +106,4 @@ function figureIsEqual(prevProps, nextProps) {
   return isEqualComponenet;
 }
 
-export { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureIsEqual, hideOptionBarAndToolBar }
+export { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureHasEqualProps, hideOptionBarAndToolBar }

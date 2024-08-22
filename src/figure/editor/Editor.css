@@ -4,7 +4,7 @@
   max-height: 100%;
   touch-action: none !important;
 
-  -ms-overflow-style: none;  /* Internet Explorer 10+  - hide scrollbar */
+  -ms-overflow-style: none;  /* Internet Explorer 10+ - hide scrollbar */
   scrollbar-width: none;  /* Firefox - hide scrollbar */
 }
 
@@ -38,6 +38,6 @@
   display: none !important;
 }
 
-.drag-started p:hover{
+.move-cursor p:hover{
   cursor: move;
 }

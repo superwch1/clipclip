@@ -12,10 +12,6 @@
   gap: 15px;
 }
 
-.hide-optionbar {
-  display: none;
-}
-
 /* https://github.com/BetterTyped/react-zoom-pan-pinch/issues/135 */
 /* pointer-events is set to none in the zoom and pinch package */
 .option {
