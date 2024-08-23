@@ -9,10 +9,7 @@ import { Buffer } from "buffer";
 import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureHasEqualProps } from '../utils.mjs'
 
 
-const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale}) => {
-
-  // easier to pass the properties of figure
-  var props = { x: x, y: y, backgroundColor: backgroundColor, width: width, height: height, id: id, url: url, zIndex: zIndex, isPinned: isPinned }; 
+const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActions}) => {
 
   // x, y, width, height, enableResizing, disableDragging are used for react rnd in div
   // (x, y, width, height) and (enableResizing, disableDragging) have their own useEffect for receiving udpates
@@ -69,8 +66,8 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
         onMouseDown={(e) => onSelectFigure(id, null, null)}
         onDrag={(e, data) => hideOptionBarAndToolBar(id)}
         onResize={(e, direction, ref, delta, position) => hideOptionBarAndToolBar(id)}
-        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id)}
-        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", ""))}, setSizeAndPosition, id)}>
+        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, reverseActions)}
+        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", ""))}, setSizeAndPosition, id, reverseActions)}>
         
         <div id={`${id}`} className='image' ref={containerRef} style={{ width: '100%', height: '100%'}}
             data-type={"image"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor} data-ispinned={isPinned}>
@@ -80,7 +77,7 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
       </Rnd>
 
       <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none", display: "none"}}>
-        <OptionBar id={id} backgroundColor={backgroundColor} props={props} />
+        <OptionBar id={id} backgroundColor={backgroundColor} isPinned={isPinned} reverseActions={reverseActions} />
       </div>
     </>
   )

@@ -3,68 +3,88 @@ import Config from '../../config/Config'
 
 export default class figureApi {
 
-  static async createEditor(figure, plainText, quillDelta){
+  static async readFigures() {
     try {
-      var response = await axios.post(`${Config.url}/editor`, {figure: figure, plainText: plainText, quillDelta: quillDelta});
+      var response = await axios.get(`${Config.url}/figures`);
       return response;
     }
-    catch (axiosError) { // status code 400 or 500 will throw error
+    catch (axiosError) { // status code 400 or 500 will throw errorx
       if(axiosError.code === "ERR_NETWORK"){ // no connection to the network
-        return { data: "No connection to the server" };
+        return { status: 404, data: "No connection to the server" };
       }
-      return axiosError.response;
+      return { status: 500, data: "Server Error" };
     }
   }
 
-  static async createPreview(figure, url){  
+  static async createEditor(x, y, width, height, type, backgroundColor, url, zIndex, isPinned, plainText, quillDelta) {
     try {
-      var response = await axios.post(`${Config.url}/preview`, {figure: figure, url: url});
+      var response = await axios.post(`${Config.url}/editor`, 
+      { 
+        figure: { x: x, y: y, width: width, height: height, type: type, backgroundColor: backgroundColor, url: url, zIndex: zIndex, isPinned: isPinned }, 
+        plainText: plainText, 
+        quillDelta: quillDelta 
+      });
       return response;
     }
     catch (axiosError) { // status code 400 or 500 will throw error
+      console.log(axiosError);
       if(axiosError.code === "ERR_NETWORK"){ // no connection to the network
-        return { data: "No connection to the server" };
+        return { status: 404, data: "No connection to the server" };
       }
-      return axiosError.response;
+      return { status: 500, data: "Server Error" };
     }
   }
 
-  static async createImage(figure, base64, isDefaultSize){
+  static async createPreview(x, y, width, height, type, backgroundColor, url, zIndex, isPinned){  
     try {
-      var response = await axios.post(`${Config.url}/image`, {figure: figure, base64: base64, isDefaultSize: isDefaultSize});
+      var response = await axios.post(`${Config.url}/preview`, {figure: {x: x, y: y, width: width, height: height, type: type, backgroundColor: backgroundColor, url: url, zIndex: zIndex, isPinned: isPinned }, url: url});
       return response;
     }
     catch (axiosError) { // status code 400 or 500 will throw error
       if(axiosError.code === "ERR_NETWORK"){ // no connection to the network
-        return { data: "No connection to the server" };
+        return { status: 404, data: "No connection to the server" };
       }
-      return axiosError.response;
+      return { status: 500, data: "Server Error" };
     }
   }
 
-  static async updatePositionAndSize(figure) {
+  static async createImage(x, y, width, height, type, backgroundColor, url, zIndex, isPinned, base64, isDefaultSize){
     try {
-      var response = await axios.put(`${Config.url}/positionAndSize`, {figure: figure});
+      var response = await axios.post(`${Config.url}/image`, {figure: {x: x, y: y, width: width, height: height, type: type, backgroundColor: backgroundColor, url: url, zIndex: zIndex, isPinned: isPinned }, base64: base64, isDefaultSize: isDefaultSize});
       return response;
     }
     catch (axiosError) { // status code 400 or 500 will throw error
       if(axiosError.code === "ERR_NETWORK"){ // no connection to the network
-        return { data: "No connection to the server" };
+        return { status: 404, data: "No connection to the server" };
       }
-      return axiosError.response;
+      return { status: 500, data: "Server Error" };
     }
   }
 
-  static async updateBackgroundColor(figure) {
+  static async updatePositionAndSize(id, x, y, width, height) {
     try {
-      var response = await axios.put(`${Config.url}/backgroundColor`, {figure: figure});
+      var response = await axios.put(`${Config.url}/positionAndSize`, {figure: {id: id, x: x, y: y, width: width, height: height}});
       return response;
     }
     catch (axiosError) { // status code 400 or 500 will throw error
       if(axiosError.code === "ERR_NETWORK"){ // no connection to the network
-        return { data: "No connection to the server" };
+        return { status: 404, data: "No connection to the server" };
       }
-      return axiosError.response;
+      return { status: 500, data: "Server Error" };
+    }
+  }
+
+  static async updateBackgroundColor(id, backgroundColor) {
+    console.log(backgroundColor)
+    try {
+      var response = await axios.put(`${Config.url}/backgroundColor`, {figure: { id: id, backgroundColor: backgroundColor }});
+      return response;
+    }
+    catch (axiosError) { // status code 400 or 500 will throw error
+      if(axiosError.code === "ERR_NETWORK"){ // no connection to the network
+        return { status: 404, data: "No connection to the server" };
+      }
+      return { status: 500, data: "Server Error" };
     }
   }
 
@@ -75,9 +95,9 @@ export default class figureApi {
     }
     catch (axiosError) { // status code 400 or 500 will throw error
       if(axiosError.code === "ERR_NETWORK"){ // no connection to the network
-        return { data: "No connection to the server" };
+        return { status: 404, data: "No connection to the server" };
       }
-      return axiosError.response;
+      return { status: 500, data: "Server Error" };
     }
   }
 
@@ -88,9 +108,9 @@ export default class figureApi {
     }
     catch (axiosError) { // status code 400 or 500 will throw error
       if(axiosError.code === "ERR_NETWORK"){ // no connection to the network
-        return { data: "No connection to the server" };
+        return { status: 404, data: "No connection to the server" };
       }
-      return axiosError.response;
+      return { status: 500, data: "Server Error" };
     }
   }
 
@@ -102,9 +122,9 @@ export default class figureApi {
     }
     catch (axiosError) { // status code 400 or 500 will throw error
       if(axiosError.code === "ERR_NETWORK"){ // no connection to the network
-        return { data: "No connection to the server" };
+        return { status: 404, data: "No connection to the server" };
       }
-      return axiosError.response;
+      return { status: 500, data: "Server Error" };
     }
   }
 
@@ -115,9 +135,9 @@ export default class figureApi {
     }
     catch (axiosError) { // status code 400 or 500 will throw error
       if(axiosError.code === "ERR_NETWORK"){ // no connection to the network
-        return { data: "No connection to the server" };
+        return { status: 404, data: "No connection to the server" };
       }
-      return axiosError.response;
+      return { status: 500, data: "Server Error" };
     }
   }
 }

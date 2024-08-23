@@ -1,6 +1,6 @@
-import { parseInt } from 'lodash'
 import { useEffect } from 'react'
 import FigureApi from '../services/webServer/figureApi.mjs'
+import { ToastContainer, toast } from 'react-toastify';
 
 
 function onClickOutsideFigure(containerRef, barRef, id, beforeFunction, afterFunction) {
@@ -71,39 +71,54 @@ function showOptionBarAndToolBar(id) {
 
 
 
-async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPosition, setSizeAndPosition, id) {
+async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPosition, setSizeAndPosition, id, reverseActions) {
   // there will be 0.001 difference for between the position (x, y) value for original and new position
   if (Math.abs(originalSizeAndPosition.x - newSizeAndPosition.x) < 0.01 && Math.abs(originalSizeAndPosition.y - newSizeAndPosition.y) < 0.01
     && originalSizeAndPosition.width === newSizeAndPosition.width && originalSizeAndPosition.height === newSizeAndPosition.height) {
     return;
   }
 
-  showOptionBarAndToolBar(id)
-  var optionBarElement = document.getElementById(`${id}-bar`);
-  optionBarElement.style.transform = `translate(${newSizeAndPosition.x}px, ${newSizeAndPosition.y}px)`;
+  showOptionBarAndToolBar(id); //option will be hided during dragging, it needs to show again after finished
 
-  newSizeAndPosition.x = newSizeAndPosition.x.toFixed(2);
-  newSizeAndPosition.y = newSizeAndPosition.y.toFixed(2);
-  console.log(newSizeAndPosition);
+  // update the position and size for bar and figure
+  var barElement = document.getElementById(`${id}-bar`);
+  barElement.style.transform = `translate(${newSizeAndPosition.x}px, ${newSizeAndPosition.y}px)`;
   setSizeAndPosition({ x: newSizeAndPosition.x, y: newSizeAndPosition.y, width: newSizeAndPosition.width, height: newSizeAndPosition.height });
 
-  // width and height need to be converted to string from int
-  const figure = { id: id, width: parseInt(newSizeAndPosition.width), height: parseInt(newSizeAndPosition.height), x: parseInt(newSizeAndPosition.x), y: parseInt(newSizeAndPosition.y) }
-  await FigureApi.updatePositionAndSize(figure);
+  newSizeAndPosition.x = newSizeAndPosition.x.toFixed(2);
+  newSizeAndPosition.y = newSizeAndPosition.y.toFixed(2);  
+  var response = await FigureApi.updatePositionAndSize(id, newSizeAndPosition.x, newSizeAndPosition.y, newSizeAndPosition.width, newSizeAndPosition.height);
+
+  // return to original position and size if there is connection error
+  if (response.status !== 200) {
+    var optionBarElement = document.getElementById(`${id}-bar`);
+    optionBarElement.style.transform = `translate(${originalSizeAndPosition.x}px, ${originalSizeAndPosition.y}px)`;
+
+    setSizeAndPosition({ x: originalSizeAndPosition.x, y: originalSizeAndPosition.y, width: originalSizeAndPosition.width, height: originalSizeAndPosition.height });
+    toast(response.data);
+  }
+
+  else {
+    if (reverseActions.current.length === 20) {
+      reverseActions.current.shift();
+    }
+
+    reverseActions.current.push({action: "update-positionAndSize", id: id, x: originalSizeAndPosition.x, y: originalSizeAndPosition.y, width: originalSizeAndPosition.width, height: originalSizeAndPosition.height});
+  }
 }
 
 
 
 function figureHasEqualProps(prevProps, nextProps) {
+  // check whether it needs to rerender because of having different props
   var isEqualComponenet = prevProps.id === nextProps.id && prevProps.x === nextProps.x && prevProps.y === nextProps.y &&
     prevProps.backgroundColor === nextProps.backgroundColor && prevProps.width === nextProps.width && prevProps.scale === nextProps.scale &&
     prevProps.height === nextProps.height && prevProps.url === nextProps.url && prevProps.zIndex === nextProps.zIndex && prevProps.isPinned === nextProps.isPinned;
 
-  if (isEqualComponenet) {
-    // console.log(`No need to rerender - ${prevProps.id}`);
-  }
-
   return isEqualComponenet;
 }
+
+
+
 
 export { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureHasEqualProps, hideOptionBarAndToolBar }

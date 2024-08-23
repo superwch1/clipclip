@@ -5,13 +5,13 @@ import { isUrlFocusedOrEditorFocused } from '../utlis.mjs';
 import Quill from 'quill'
 
 
-function CutAndDelete() {
+function CutAndDelete({reverseActions}) {
 
   // only for desktop user
   if (rdd.isDesktop) {
     useEffect(() => {
-      document.onkeydown = async (event) => await deleteFigure(event);
-      document.oncut = async (event) => await cutFigure(event);
+      document.onkeydown = async (event) => await deleteFigure(event, reverseActions);
+      document.oncut = async (event) => await cutFigure(event, reverseActions);
     }, []);
   }
 
@@ -20,7 +20,7 @@ function CutAndDelete() {
   )
 }
 
-async function deleteFigure(event) {
+async function deleteFigure(event, reverseActions) {
 
   if (isUrlFocusedOrEditorFocused() === true || event.key !== 'Delete') {
     return;
@@ -32,11 +32,56 @@ async function deleteFigure(event) {
   }
 
   var figureElement = document.getElementById(selectedObjects[0].id);
-  await FigureApi.deleteFigure(figureElement.id);
+  var figure = {
+    type: figureElement.getAttribute("data-type"),
+    width: parseInt(figureElement.getAttribute("data-width")),
+    height: parseInt(figureElement.getAttribute("data-height")),
+    x: parseInt(figureElement.getAttribute("data-x")),
+    y: parseInt(figureElement.getAttribute("data-y")),
+    zIndex: parseInt(figureElement.getAttribute("data-zindex")),
+    url: figureElement.getAttribute("data-url"),
+    backgroundColor: figureElement.getAttribute("data-backgroundcolor"),
+    isPinned: figureElement.getAttribute("data-ispinned")
+  }
+
+  if (figure.type === "editor") {
+    const container = document.querySelector(`#${figureElement.id}-quill`);
+    const quill = Quill.find(container)
+    const delta = quill.getContents();
+    figure.quillDelta = JSON.stringify(delta.ops);
+  }
+  else if (figure.type === 'image') {
+    var imageElement = document.getElementById(`${selectedObjects[0].id}-image`)
+    figure.base64 = imageElement.src;
+  }
+
+  var response = await FigureApi.deleteFigure(figureElement.id);
+
+  if (response.status === 200) {
+    if (reverseActions.current.length === 20) {
+      reverseActions.current.shift();
+    }
+
+    if (figure.type === "editor") {
+      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+                                   width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, quillDelta: figure.quillDelta});
+    }
+    else if (figure.type === "image") {
+      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+                                   width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, base64: figure.base64});
+    }
+    else if (figure.type === "preview") {
+      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+                                   width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned});
+    }
+  }
+  else {
+    toast(response.data);
+  }
 }
 
 
-async function cutFigure(event) {
+async function cutFigure(event, reverseActions) {
   if (isUrlFocusedOrEditorFocused() === true) {
     return;
   }
@@ -50,7 +95,6 @@ async function cutFigure(event) {
   }
 
   var figureElement = document.getElementById(selectedObjects[0].id);
-
   var figure = {
     type: figureElement.getAttribute("data-type"),
     width: parseInt(figureElement.getAttribute("data-width")),
@@ -71,16 +115,40 @@ async function cutFigure(event) {
     const delta = quill.getContents();
 
     event.clipboardData.setData("clipclip/editor", JSON.stringify(delta.ops));
+    figure.quillDelta = JSON.stringify(delta.ops);
   }
   else if (figure.type === 'image') {
     var imageElement = document.getElementById(`${selectedObjects[0].id}-image`)
     event.clipboardData.setData("clipclip/image", imageElement.src);
+    figure.base64 = imageElement.src;
   }
   else if (figure.type === 'preview') {
     event.clipboardData.setData("clipclip/preview", figure.url);
   }
 
-  await FigureApi.deleteFigure(figureElement.id);
+  var response = await FigureApi.deleteFigure(figureElement.id);
+
+  if (response.status === 200) {
+    if (reverseActions.current.length === 20) {
+      reverseActions.current.shift();
+    }
+
+    if (figure.type === "editor") {
+      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+                                   width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, quillDelta: figure.quillDelta});
+    }
+    else if (figure.type === "image") {
+      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+                                   width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, base64: figure.base64});
+    }
+    else if (figure.type === "preview") {
+      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+                                   width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned});
+    }
+  }
+  else {
+    toast(response.data);
+  }
 }
 
 

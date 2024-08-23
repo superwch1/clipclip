@@ -5,7 +5,7 @@ import UploadButton from './uploadButton.png'
 
 
 
-function Upload({scale}) {
+function Upload({scale, reverseActions}) {
 
   const hiddenFileInput = useRef(null);
   const previewButtonRef = useRef(null);
@@ -34,7 +34,7 @@ function Upload({scale}) {
         <img style={{width: "60px", height: "60px"}} src={UploadButton} />
       </div>
         
-      <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage({event: event, scale: scale, file: event.target.files[0]})} 
+      <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage(event, scale, event.target.files[0], reverseActions)} 
               style={{display: 'none'}} accept=".jpg, .jpeg, .heif, .png, .webp, .heic, .gif" />   
 
       <div id={controlChoiceId} ref={choiceRef}>
@@ -44,7 +44,7 @@ function Upload({scale}) {
 
       <div id={controlUrlId} ref={urlRef}>
         <input id={`${controlUrlId}-input`} type='text' placeholder="按「回車鍵」傳送完整連結" 
-          onKeyDown={(event) => createPreview({event: event, scale: scale, controlUrlId: controlUrlId, url: document.getElementById(`${controlUrlId}-input`).value})}/>
+          onKeyDown={(event) => createPreview(event, controlUrlId, scale, document.getElementById(`${controlUrlId}-input`).value, reverseActions)}/>
       </div>  
     </>
   )
@@ -77,22 +77,36 @@ function showInput(controlUrlId, controlChoiceId) {
 }
 
 
-async function createPreview({event, controlUrlId, position, scale, url}) {
+async function createPreview(event, controlUrlId, scale, url, reverseActions) {
   if (event.key === 'Enter' || event.keyCode === 13) {
 
     var position = JSON.parse(localStorage.getItem('position'));
     var figurePosition = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
 
-    const figure = { type: "preview", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", zIndex: 5, isPinned: false}
-    await FigureApi.createPreview(figure, url);
+    const figure = { type: "preview", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: url, zIndex: 5, isPinned: false}
+    var response = await FigureApi.createPreview(figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
+
+    console.log(controlUrlId);
 
     document.getElementById(controlUrlId).value = '';
     document.getElementById(controlUrlId).style.display = 'none';
+
+
+    if (response.status === 200) {
+      if (reverseActions.current.length === 20) {
+        reverseActions.current.shift();
+      }
+  
+      reverseActions.current.push({ action: "delete", id: response.data._id });
+    }
+    else {
+      toast(response.data);
+    }
   }
 }
 
 
-async function uploadImage({event, scale, file}) {
+async function uploadImage(event, scale, file, reverseActions) {
   var reader = new FileReader();
   reader.readAsDataURL(file); // turn the file into base64 string
   reader.onload = async function () {
@@ -100,7 +114,18 @@ async function uploadImage({event, scale, file}) {
     var figurePosition = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
 
     const figure = { type: "image", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false}
-    await FigureApi.createImage(figure, reader.result, true);
+    var response = await FigureApi.createImage(figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, reader.result, true);
+
+    if (response.status === 200) {
+      if (reverseActions.current.length === 20) {
+        reverseActions.current.shift();
+      }
+  
+      reverseActions.current.push({ action: "delete", id: response.data._id });
+    }
+    else {
+      toast(response.data);
+    }
   };
 
   // clear the file input's value to allow uploading same file twice for onChange

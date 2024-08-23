@@ -5,7 +5,7 @@ import Reverse from "./reverse/Reverse"
 import MenuIcon from "./menu.png"
 import { useState } from 'react'
 
-function Menu({scale}) {
+function Menu({scale, reverseActions}) {
 
   const [visibility, setVisibility] = useState("visible");
 
@@ -15,10 +15,10 @@ function Menu({scale}) {
            style={{position: 'fixed', top: '20px', left: '20px', width: "60px", height: "60px"}}></img>
       <div id="control-menu" 
            style={{position: 'fixed', top: '20px', left: '100px', flexDirection: "row", gap: '10px', display: 'flex', alignItems: "flex-start", visibility: `${visibility}`}}>
-        <Upload scale={scale} />
+        <Upload scale={scale} reverseActions={reverseActions} />
         <Gesture />
-        <Reverse />
-        <Editor scale={scale} />
+        <Reverse reverseActions={reverseActions} />
+        <Editor scale={scale} reverseActions={reverseActions} />
       </div>
     </>
   )

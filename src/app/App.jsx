@@ -17,6 +17,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
 
+  // set the position and scale into storage if no value is found
   var storedScale = JSON.parse(localStorage.getItem('scale'));
   if (storedScale === null) {
     localStorage.setItem('scale', 1);
@@ -31,16 +32,15 @@ function App() {
   // ensure the stored position is inside the bound
   storedPosition = checkInsideBound({x: storedPosition.x, y: storedPosition.y, scale: storedScale});
 
-
   const [scale, setScale] = useState(storedScale);
-  const canvasRef = useRef(null);
-  const userActions = useRef([]);
-  var minScale = rdd.isMobile === true ? Config.interfaceMinZoomScaleForMobile : Config.interfaceMinZoomScaleForDesktop;
   
 
+  
+  // allows scroll wheel to move up and down and reposition the inteface after resize of web browser
+  const canvasRef = useRef(null);
   useEffect(() => {
     // recalculate the position after adjusting the screen size (incl. open and close F12 developer console)
-    window.onresize = (event) => {
+    function resize(event) {
       var state = canvasRef.current.instance.transformState;
       checkInsideBoundAndStorePosition({x: state.positionX, y: state.positionY, scale: state.scale, setScale: null, setTransform: canvasRef.current.setTransform});
     }
@@ -51,19 +51,22 @@ function App() {
         var position = checkInsideBound({x: state.positionX - event.deltaX, y: state.positionY - event.deltaY, scale: state.scale})
         canvasRef.current.setTransform(position.x, position.y, state.scale, 0);
 
-        // it needs to call seave position to storage since it does not use checkInsideBoundAndStorePosition function
+        // it needs to save position to storage since it does not use checkInsideBoundAndStorePosition function
         localStorage.setItem('position',  JSON.stringify({x: position.x, y: position.y}));
       }
     }
     window.addEventListener("wheel", handleWheel);
+    window.addEventListener("resize", resize);
 
     return () => {
       window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("resize", resize);
     };
   }, [canvasRef]);
 
 
-  // prevent user use ctrl with wheel / ctrl with +- to scale up and down from the control section
+
+  // prevent use of ctrl with wheel or ctrl with +- to scale up and down for the whole web page
   useEffect(() => {
     const handleWheel = (event) => {
       if (event.ctrlKey === true) {
@@ -87,6 +90,12 @@ function App() {
   }, []);
 
 
+
+  // store the reversed actions after performing create / update / delete figures
+  // the actions will be manipulated inside reverse.jsx inside menu
+  const reverseActions = useRef([]);
+
+
   return (
     // return to the original location if the virtual keyboard has caused shifted right or bottom on the screen
     <div id={"app"} style={{position: 'fixed'}}>
@@ -96,27 +105,27 @@ function App() {
       <TransformWrapper limitToBounds={false} initialPositionX={storedPosition.x} initialPositionY={storedPosition.y}
 
         // keys for activiation - https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
-        ref={canvasRef} initialScale={scale} minScale={minScale} maxScale={Config.interfaceMaxZoomScale} 
+        ref={canvasRef} initialScale={scale} minScale={rdd.isMobile === true ? Config.interfaceMinZoomScaleForMobile : Config.interfaceMinZoomScaleForDesktop} maxScale={Config.interfaceMaxZoomScale} 
         onZoom={(transformState) => onZooming(transformState, setScale)} zoomAnimation={{ disabled: true, size: 0.1 }} // set disable true to prevent zoom out of canvas because of library bug
         doubleClick={{disabled: true}} pinch={{excluded: ['figure', 'optionbar', 'toolbar']}} wheel={{activationKeys: ["Control"]}}
         onPanning={(transformState) => onPanning(transformState)} panning={{allowRightClickPan: true, excluded: ['figure', 'optionbar', 'toolbar'] }} >
 
         <TransformComponent>
           <div id="interface" style={{ width: `${Config.interfaceWidth}px`, height: `${Config.interfaceHeight}px`}}>
-            <Canvas scale={scale} />  
+            <Canvas scale={scale} reverseActions={reverseActions} />  
             <Cursors scale={scale}/> {/* cursor needs to stay inside interface otherwise the position will be incorrect */}
           </div>
         </TransformComponent>
 
         { /* the following components are placed on top of the Canvas */ }
         <div id='control'>
-          <Menu scale={scale} />
-          <CopyAndPaste scale={scale} />
-          <CutAndDelete />
+          <Menu scale={scale} reverseActions={reverseActions} />
+          <CopyAndPaste scale={scale} reverseActions={reverseActions} />
+          <CutAndDelete reverseActions={reverseActions} />
           {rdd.isDesktop === true && <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStorePosition={checkInsideBoundAndStorePosition}/>}
         </div>
       </TransformWrapper>
-      <ToastContainer position="top-left" autoClose={5000} draggable theme="light" />
+      <ToastContainer position="bottom-left" autoClose={5000} draggable theme="light" />
     </div>
   )
 }

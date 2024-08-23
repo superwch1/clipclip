@@ -3,15 +3,16 @@ import Quill from 'quill'
 import { useRef, useEffect } from 'react';
 import FigureApi from '../../services/webServer/figureApi.mjs';
 import { isUrlFocusedOrEditorFocused } from '../utlis.mjs';
+import { ToastContainer, toast } from 'react-toastify';
 
-function CopyAndPaste({scale}) {
+function CopyAndPaste({scale, reverseActions}) {
 
   const pastingFigure = useRef(false);
 
   // only for desktop user with cursor position
   if (rdd.isDesktop) {
     useEffect(() => {
-      document.onpaste = async (event) => await pasteFigure(event, scale, pastingFigure); // can't use loudash since the event cannot be passed to the function in loudash
+      document.onpaste = async (event) => await pasteFigure(event, scale, pastingFigure, reverseActions); // can't use loudash since the event cannot be passed to the function in loudash
       document.oncopy = (event) => copyFigure(event); // can't use async here
     }, [scale]);
   }
@@ -69,7 +70,7 @@ function copyFigure(event) {
 }
 
 
-async function pasteFigure(event, scale, pastingFigure){
+async function pasteFigure(event, scale, pastingFigure, reverseActions){
   // prevent user keep pasting new figure into the canvas
   if (pastingFigure.current === true) {
     return;
@@ -90,34 +91,39 @@ async function pasteFigure(event, scale, pastingFigure){
   position = { x: -(position.x - cursor.x) / scale, y: -(position.y - cursor.y) / scale};
 
   if (event.clipboardData.types.includes('clipclip/figure')) {
-    pasteClipClipType(event, position);
+    pasteClipClipType(event, position, reverseActions);
   }
   else {
-    pasteOrdinaryType(event, position);
+    pasteOrdinaryType(event, position, reverseActions);
   }
   
 }
 
-async function pasteClipClipType(event, position) {
+async function pasteClipClipType(event, position, reverseActions) {
   var figure = JSON.parse(event.clipboardData.getData('clipclip/figure'));
   figure.x = position.x;
   figure.y = position.y;
 
   if (event.clipboardData.types.includes('clipclip/editor')) {
     var quillDelta = JSON.parse(event.clipboardData.getData('clipclip/editor'));
-    await FigureApi.createEditor(figure, null, quillDelta);
+    var response = await FigureApi.createEditor(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, null, quillDelta);
+    addReverseActions(response, reverseActions);
   }
+
   else if (event.clipboardData.types.includes('clipclip/preview')) {
     var url = event.clipboardData.getData('clipclip/preview');
-    await FigureApi.createPreview(figure, url);
+    var response = await FigureApi.createPreview(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
+    addReverseActions(response, reverseActions);
   }
+
   else if (event.clipboardData.types.includes('clipclip/image')) {
     var base64 = event.clipboardData.getData('clipclip/image');
-    await FigureApi.createImage(figure, base64, false);
+    var response = await FigureApi.createImage(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, base64, false);
+    addReverseActions(response, reverseActions);
   }
 }
 
-async function pasteOrdinaryType(event, position) {
+async function pasteOrdinaryType(event, position, reverseActions) {
 
   var figure = { type: "", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
 
@@ -130,11 +136,14 @@ async function pasteOrdinaryType(event, position) {
 
     if (isUrl) {
       figure.type = "preview";
-      await FigureApi.createPreview(figure, pastedText);
+      figure.url = pastedText;
+      var response = await FigureApi.createPreview(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
+      addReverseActions(response, reverseActions);
     }
     else {
       figure.type = "editor";
-      await FigureApi.createEditor(figure, pastedText, null);
+      var response = await FigureApi.createEditor(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, pastedText, null);
+      addReverseActions(response, reverseActions);
     }
   }
   else if (event.clipboardData.types.includes('Files')) {
@@ -146,10 +155,26 @@ async function pasteOrdinaryType(event, position) {
       reader.readAsDataURL(file); // turn the file into base64 string
       reader.onload = async function () {
         figure.type = "image";
-        await FigureApi.createImage(figure, reader.result, true);
+        var response = await FigureApi.createImage(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, reader.result, true);
+        addReverseActions(response, reverseActions);
       };
     }
   } 
+}
+
+
+
+function addReverseActions(response, reverseActions) {
+
+  if (response.status === 200) {
+    if (reverseActions.current.length === 20) {
+      reverseActions.current.shift();
+    }
+    reverseActions.current.push({ action: "delete", id: response.data._id });
+  }
+  else {
+    toast(response.data);
+  }
 }
 
 

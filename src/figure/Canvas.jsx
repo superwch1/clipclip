@@ -3,10 +3,10 @@ import Image from './image/Image'
 import Preview from './preview/Preview'
 import { useState, useRef, useEffect } from 'react'
 import useWebSocket from 'react-use-websocket';
-import axios from 'axios';
 import Config from '../config/Config'
+import figureApi from '../services/webServer/figureApi.mjs';
 
-function Canvas({scale}) {
+function Canvas({scale, reverseActions}) {
 
   const [figures, setFigures] = useState([]);
   const isFirstConnection = useRef(true);
@@ -38,22 +38,21 @@ function Canvas({scale}) {
       }
     }
   });
-
  
   return (
     <>
       {figures.map((item, index) => {
         if (item.type === "editor") {
           return ( <Editor key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned}  />)
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} />)
         }
         else if (item.type === "preview") {
           return ( <Preview key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned}  />)
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} />)
         }
         else if (item.type === "image") {
           return (<Image key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url}
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned}  />)
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} />)
         }
       })}
     </>
@@ -62,13 +61,18 @@ function Canvas({scale}) {
 
 
 async function getFigureFromServer() {
-  const response = await axios.get(`${Config.url}/figures`);
+  const response = await figureApi.readFigures();
 
-  const figureList = response.data.map((figure, index) => ({
-    id: figure._id, type: figure.type, x: figure.x, y: figure.y, width: figure.width, height: figure.height, backgroundColor: figure.backgroundColor, 
-    url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned
-  }));
-  return figureList;
+  if (response.status === 200) {
+    const figureList = response.data.map((figure, index) => ({
+      id: figure._id, type: figure.type, x: figure.x, y: figure.y, width: figure.width, height: figure.height, backgroundColor: figure.backgroundColor, 
+      url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned
+    }));
+    return figureList;
+  }
+  else {
+    return [];
+  }
 }
 
 
@@ -99,10 +103,12 @@ function processMessageFromWebSocket(event, figures, setFigures) {
 }
 
 
+
 function deleteFigure(deletedFigure, figures, setFigures) {
   const updatedFigures = figures.filter((fig) => fig.id !== deletedFigure._id);
   setFigures(updatedFigures);
 }
+
 
 
 function createFigure(receivedFigure, figures, setFigures) {
@@ -124,7 +130,6 @@ function updateFigure(receivedFigure, figures, setFigures) {
     
   setFigures(updatedFigures);
 }
-
 
 
 export default Canvas

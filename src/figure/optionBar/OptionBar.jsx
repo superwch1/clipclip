@@ -10,14 +10,14 @@ import { RgbaColorPicker } from "react-colorful";
 import { useEffect, useRef } from 'react'
 import FigureApi from '../../services/webServer/figureApi.mjs'
 import { ToastContainer, toast } from 'react-toastify';
+import Quill from 'quill'
 
 
-function OptionBar({id, backgroundColor, props}) {
+function OptionBar({id, backgroundColor, isPinned, reverseActions}) {
 
   // execute the function after it has not been called for 200 milliseconds. 
   const changeColor = debounce(async (newColor) => {
-    const figure = { id: id, backgroundColor: newColor }
-    await FigureApi.updateBackgroundColor(figure);
+    await updateBackgroundColor(id, newColor, reverseActions);
   }, 200);
 
   const wrapperRef = useRef(null);
@@ -26,13 +26,13 @@ function OptionBar({id, backgroundColor, props}) {
 
   return (
     <div id={`${id}-optionbar`} className={`optionbar ${id}-noDrag`}>
-      <img src={props.isPinned === true ? pinnedButton : notpinnedButton} className='option' style={{height: "32px", width: "26px"}} alt="pin" onClick={async (event) => await FigureApi.updatePinStatus(id)} />
+      <img src={isPinned === true ? pinnedButton : notpinnedButton} className='option' style={{height: "32px", width: "26px"}} alt="pin" onClick={async (event) => await FigureApi.updatePinStatus(id)} />
       <div className='option-backgroundColor' style={{background: `${backgroundColor}`}} 
            onClick={(event) => document.getElementById(`${id}-colorpicker`).classList.remove('colorpicker-hide')}></div>
-      <img src={copyButton} className='option' alt="copy" onClick={async (event) => copyFigure(id, props)} />
-      <img src={deleteButton} className='option' alt="delete" onClick={async (event) => await FigureApi.deleteFigure(id) } />
-      <img src={layerupButton} className='option' alt="layerup" onClick={async (event) => await FigureApi.updateLayer(id, "up")} />
-      <img src={layerdownButton} className='option' alt="layerdown" onClick={async (event) => await FigureApi.updateLayer(id, "down")} />
+      <img src={copyButton} className='option' alt="copy" onClick={async (event) => await copyFigure(id, reverseActions)} />
+      <img src={deleteButton} className='option' alt="delete" onClick={async (event) => await deleteFigure(id, reverseActions) } />
+      <img src={layerupButton} className='option' alt="layerup" onClick={async (event) => await updateLayer(id, "up", reverseActions)} />
+      <img src={layerdownButton} className='option' alt="layerdown" onClick={async (event) => await updateLayer(id, "down", reverseActions)} />
       <img src={layerdownButton} className='option' alt="layerdown" onClick={(event) => toast("hello")} />
       
       <div ref={wrapperRef} id={`${id}-colorpicker`} className={'colorpicker-hide'} style={{position: "absolute", left: "7px", top: "60px", width: "200px", height: "200px"}}>
@@ -47,13 +47,95 @@ function OptionBar({id, backgroundColor, props}) {
   )
 }
 
-async function copyFigure(id, props){
-  var response = await FigureApi.copyFigure(id);
-  if (response.status && response.status === 200){
-    console.log(response.data);
+async function updateBackgroundColor(id, newColor, reverseActions) {
+
+  var figureElement = document.getElementById(id);
+  var originalColor = figureElement.getAttribute("data-backgroundcolor")
+
+  var response = await FigureApi.updateBackgroundColor(id, newColor);
+  if (response.status !== 200){
+    toast(response.data);
   }
   else {
+    reverseActions.current.push({ action: "update-backgroundColor", id: id, backgroundColor: originalColor });
+  }
+}
+
+async function updateLayer(id, action, reverseActions) {
+  var response = await FigureApi.updateLayer(id, action);
+  if (response.status !== 200){
     toast(response.data);
+  }
+  else {
+    if (reverseActions.current.length === 20) {
+      reverseActions.current.shift();
+    }
+
+    var layerAction = action === "up" ? "down" : "up";
+    reverseActions.current.push({ action: "update-layer", id: id, layerAction: layerAction });
+  }
+}
+
+async function deleteFigure(id, reverseActions) {
+
+  var figureElement = document.getElementById(id);
+
+  var figure = {
+    type: figureElement.getAttribute("data-type"),
+    width: parseInt(figureElement.getAttribute("data-width")),
+    height: parseInt(figureElement.getAttribute("data-height")),
+    x: parseInt(figureElement.getAttribute("data-x")),
+    y: parseInt(figureElement.getAttribute("data-y")),
+    zIndex: parseInt(figureElement.getAttribute("data-zindex")),
+    url: figureElement.getAttribute("data-url"),
+    backgroundColor: figureElement.getAttribute("data-backgroundcolor"),
+    isPinned: figureElement.getAttribute("data-ispinned")
+  }
+
+  if (figure.type === "editor") {
+    const container = document.querySelector(`#${id}-quill`);
+    const quill = Quill.find(container)
+    const delta = quill.getContents();
+    figure.quillDelta = JSON.stringify(delta.ops);
+  }
+
+  else if (figure.type === 'image') {
+    var imageElement = document.getElementById(`${id}-image`)
+    figure.base64 = imageElement.src;
+  }
+
+  var response = await FigureApi.deleteFigure(id);
+  if (response.status !== 200){
+    toast(response.data);
+  }
+  else {
+    
+    if (reverseActions.current.length === 20) {
+      reverseActions.current.shift();
+    }
+
+    if (figure.type === "editor") {
+      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+                                   width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, quillDelta: figure.quillDelta});
+    }
+    else if (figure.type === "image") {
+      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+                                   width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, base64: figure.base64});
+    }
+    else if (figure.type === "preview") {
+      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+                                   width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned});
+    }
+  }
+}
+
+async function copyFigure(id, reverseActions) {
+  var response = await FigureApi.copyFigure(id);
+  if (response.status !== 200){
+    toast(response.data);
+  }
+  else {
+    reverseActions.current.push({ action: "delete", id: response.data._id });
   }
 }
 
