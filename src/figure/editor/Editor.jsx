@@ -12,7 +12,7 @@ import { Rnd } from "react-rnd";
 import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureHasEqualProps } from '../utils.mjs'
 
 
-const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActions}) => {
+const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActions, boardId}) => {
 
   // x, y, width, height, enableResizing, disableDragging are used for react rnd in div
   // (x, y, width, height) and (enableResizing, disableDragging) have their own useEffect for receiving udpates
@@ -109,7 +109,8 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
         
         { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
         <div id={id} ref={containerRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`}} onMouseUp={(event) => onMouseUp(id, isPinned)}
-          className='editor' data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor} data-ispinned={isPinned}>
+          className='editor' data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor} 
+          data-ispinned={isPinned} data-boardid={boardId}>
           <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>
           <QuillToolbar id={id} />
         </div>     

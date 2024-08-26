@@ -13,7 +13,7 @@ import * as rdd from 'react-device-detect'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import './quill.bubble.css' // https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.bubble.css - prevent CORS issue of screenshot, remove last line for mapping issue
-
+import { useLocation } from 'react-router-dom'
 
 
 
@@ -97,6 +97,9 @@ function App() {
   // the actions will be manipulated inside reverse.jsx inside menu
   const reverseActions = useRef([]);
 
+  
+  const location = useLocation();
+  const boardId = location.pathname.slice(1); // Removes the leading '/'
 
   return (
     // return to the original location if the virtual keyboard has caused shifted right or bottom on the screen
@@ -115,16 +118,16 @@ function App() {
         <TransformComponent>
           {/* when cursor event is set to none, the cursor will not be respond to mouse event, it needs to create another div */}
           <div id="interface" style={{ width: `${Config.interfaceWidth}px`, height: `${Config.interfaceHeight}px`}}>
-            <Canvas scale={scale} reverseActions={reverseActions} />  
-            <Cursors scale={scale}/> {/* cursor needs to stay inside interface otherwise the position will be incorrect */}
+            <Canvas scale={scale} reverseActions={reverseActions} boardId={boardId} />  
+            <Cursors scale={scale} boardId={boardId} /> {/* cursor needs to stay inside interface otherwise the position will be incorrect */}
           </div>
         </TransformComponent>
 
         { /* the following components are placed on top of the Canvas */ }
         <div id='control'>
-          <Menu scale={scale} reverseActions={reverseActions} />
-          <CopyAndPaste scale={scale} reverseActions={reverseActions} />
-          <CutAndDelete reverseActions={reverseActions} />
+          <Menu scale={scale} reverseActions={reverseActions} boardId={boardId} />
+          <CopyAndPaste scale={scale} reverseActions={reverseActions} boardId={boardId} />
+          <CutAndDelete reverseActions={reverseActions} boardId={boardId} />
           {rdd.isDesktop === true && <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStorePosition={checkInsideBoundAndStorePosition}/>}
         </div>
       </TransformWrapper>

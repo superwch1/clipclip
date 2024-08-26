@@ -6,7 +6,7 @@ import cursorImage from './cursor.png'
 import { v4 as uuidv4 } from 'uuid';
 
 
-function Cursors({scale}) {
+function Cursors({scale, boardId}) {
 
   const cursorPosition = useRef({x: 0, y: 0});
   const previousCursorPosition = useRef(null);
@@ -18,10 +18,10 @@ function Cursors({scale}) {
 
   const cursorUUID = useRef(uuidv4());
   const cursorsMap = useRef(new Map());
-  var cursorsArray = Array.from(cursorsMap.current, ([key, value]) => ({ key, value }))
+  var cursorsArray = Array.from(cursorsMap.current, ([key, value]) => ({ key, value }));
 
   // if connection is lost, unsent messages will be discarded
-  const { sendMessage } = useWebSocket(`${Config.ws}/cursor?uuid=${cursorUUID.current}&isDesktop=${rdd.isDesktop}`, {
+  const { sendMessage } = useWebSocket(`${Config.ws}/cursors?uuid=${cursorUUID.current}&isDesktop=${rdd.isDesktop}&boardId=${boardId}`, {
     onMessage: (event) => processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState),
     shouldReconnect: (closeEvent) => true, // it will attempt to reconnect after the connection is closed
     reconnectInterval: () => 5000,
@@ -65,7 +65,7 @@ function Cursors({scale}) {
             var y = (translatePosition.current.y + cursorPosition.current.y) / scale;
                     
             // unsent message will be discarded when the connection is lost
-            const jsonString = JSON.stringify({uuid: cursorUUID.current, x: x, y: y});
+            const jsonString = JSON.stringify({uuid: cursorUUID.current, x: x, y: y, boardId: boardId});
             sendMessage(jsonString, false);
           }
         }, 100)

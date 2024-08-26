@@ -34,15 +34,15 @@ async function sendReverseActions(reverseActions) {
     if (figure.action === "create") {
   
       if (figure.type === "editor") {
-        response = await figureApi.createEditor(figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, null, JSON.parse(figure.quillDelta));
+        response = await figureApi.createEditor(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, null, JSON.parse(figure.quillDelta));
       }
 
       else if (figure.type === "image") {
-        response = await figureApi.createImage(figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, figure.base64, false);
+        response = await figureApi.createImage(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, figure.base64, false);
       }
 
       else if (figure.type === "preview") {
-        response = await figureApi.createPreview(figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
+        response = await figureApi.createPreview(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
       }
     }
 

@@ -1,6 +1,6 @@
 .ql-editor {
   padding: 0px !important;
-  height: auto;
+  height: auto !important;
   max-height: 100%;
   touch-action: none !important;
 

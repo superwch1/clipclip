@@ -5,7 +5,7 @@ import FigureApi from '../../services/webServer/figureApi.mjs';
 import { isUrlFocusedOrEditorFocused } from '../utlis.mjs';
 import { ToastContainer, toast } from 'react-toastify';
 
-function CopyAndPaste({scale, reverseActions}) {
+function CopyAndPaste({scale, reverseActions, boardId}) {
 
   const pastingFigure = useRef(false);
 
@@ -13,7 +13,7 @@ function CopyAndPaste({scale, reverseActions}) {
   if (rdd.isDesktop) {
     useEffect(() => {
       document.onpaste = async (event) => await pasteFigure(event, scale, pastingFigure, reverseActions); // can't use loudash since the event cannot be passed to the function in loudash
-      document.oncopy = (event) => copyFigure(event); // can't use async here
+      document.oncopy = (event) => copyFigure(event, boardId); // can't use async here
     }, [scale]);
   }
 
@@ -23,7 +23,7 @@ function CopyAndPaste({scale, reverseActions}) {
 }
 
 
-function copyFigure(event) {
+function copyFigure(event, boardId) {
 
   if (isUrlFocusedOrEditorFocused() === true) {
     return;
@@ -40,6 +40,7 @@ function copyFigure(event) {
   var figureElement = document.getElementById(selectedObjects[0].id);
 
   var figure = {
+    boardId: figureElement.getAttribute("data-boardId"),
     type: figureElement.getAttribute("data-type"),
     width: parseInt(figureElement.getAttribute("data-width")),
     height: parseInt(figureElement.getAttribute("data-height")),
@@ -106,26 +107,26 @@ async function pasteClipClipType(event, position, reverseActions) {
 
   if (event.clipboardData.types.includes('clipclip/editor')) {
     var quillDelta = JSON.parse(event.clipboardData.getData('clipclip/editor'));
-    var response = await FigureApi.createEditor(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, null, quillDelta);
+    var response = await FigureApi.createEditor(figure.boardId, figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, null, quillDelta);
     addReverseActions(response, reverseActions);
   }
 
   else if (event.clipboardData.types.includes('clipclip/preview')) {
     var url = event.clipboardData.getData('clipclip/preview');
-    var response = await FigureApi.createPreview(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
+    var response = await FigureApi.createPreview(figure.boardId, figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
     addReverseActions(response, reverseActions);
   }
 
   else if (event.clipboardData.types.includes('clipclip/image')) {
     var base64 = event.clipboardData.getData('clipclip/image');
-    var response = await FigureApi.createImage(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, base64, false);
+    var response = await FigureApi.createImage(figure.boardId, figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, base64, false);
     addReverseActions(response, reverseActions);
   }
 }
 
 async function pasteOrdinaryType(event, position, reverseActions) {
 
-  var figure = { type: "", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
+  var figure = { boardId: boardId, type: "", x: position.x, y: position.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
 
   if (event.clipboardData.types.includes('text/plain')) {
     // no idea yet for text/html for converting the style to quill
@@ -137,12 +138,12 @@ async function pasteOrdinaryType(event, position, reverseActions) {
     if (isUrl) {
       figure.type = "preview";
       figure.url = pastedText;
-      var response = await FigureApi.createPreview(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
+      var response = await FigureApi.createPreview(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
       addReverseActions(response, reverseActions);
     }
     else {
       figure.type = "editor";
-      var response = await FigureApi.createEditor(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, pastedText, null);
+      var response = await FigureApi.createEditor(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, pastedText, null);
       addReverseActions(response, reverseActions);
     }
   }
@@ -155,7 +156,7 @@ async function pasteOrdinaryType(event, position, reverseActions) {
       reader.readAsDataURL(file); // turn the file into base64 string
       reader.onload = async function () {
         figure.type = "image";
-        var response = await FigureApi.createImage(figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, reader.result, true);
+        var response = await FigureApi.createImage(figure.boardId, figure.x , figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, reader.result, true);
         addReverseActions(response, reverseActions);
       };
     }

@@ -6,13 +6,14 @@ import useWebSocket from 'react-use-websocket';
 import Config from '../config/Config'
 import figureApi from '../services/webServer/figureApi.mjs';
 
-function Canvas({scale, reverseActions}) {
+
+function Canvas({scale, reverseActions, boardId}) {
 
   const [figures, setFigures] = useState([]);
   const isFirstConnection = useRef(true);
 
   // if connection is lost, messages are queued up and sent after reconnected
-  const { sendMessage } = useWebSocket(`${Config.ws}/figure`, {
+  const { sendMessage } = useWebSocket(`${Config.ws}/figures?boardId=${boardId}`, {
     onMessage: (event) => processMessageFromWebSocket(event, figures, setFigures),
     shouldReconnect: (closeEvent) => true, // it will attempt to reconnect after the connection is closed
     reconnectInterval: () => 5000,
@@ -29,11 +30,11 @@ function Canvas({scale, reverseActions}) {
     onOpen: async (event) => {
       if (isFirstConnection.current === true) {
         isFirstConnection.current = false;
-        var figureList = await getFigureFromServer();
+        var figureList = await getFigureFromServer(boardId);
         setFigures(figureList);
       }
       else {
-        var figureList = await getFigureFromServer();
+        var figureList = await getFigureFromServer(boardId);
         setFigures(figureList);
       }
     }
@@ -44,15 +45,15 @@ function Canvas({scale, reverseActions}) {
       {figures.map((item, index) => {
         if (item.type === "editor") {
           return ( <Editor key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} />)
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} boardId={boardId} />)
         }
         else if (item.type === "preview") {
           return ( <Preview key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} />)
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} boardId={boardId} />)
         }
         else if (item.type === "image") {
           return (<Image key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url}
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} />)
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} boardId={boardId} />)
         }
       })}
     </>
@@ -60,8 +61,8 @@ function Canvas({scale, reverseActions}) {
 }
 
 
-async function getFigureFromServer() {
-  const response = await figureApi.readFigures();
+async function getFigureFromServer(boardId) {
+  const response = await figureApi.readFigures(boardId);
 
   if (response.status === 200) {
     const figureList = response.data.map((figure, index) => ({

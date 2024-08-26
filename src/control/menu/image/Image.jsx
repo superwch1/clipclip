@@ -3,7 +3,7 @@ import FigureApi from '../../../services/webServer/figureApi.mjs'
 import '../Menu.css'
 
 
-function Image({scale, reverseActions}) {
+function Image({scale, reverseActions, boardId}) {
 
   const hiddenFileInput = useRef(null);
   
@@ -12,7 +12,7 @@ function Image({scale, reverseActions}) {
       <div className='control-button' onClick={(event) => createImage(hiddenFileInput)} 
            style={{width: "80px", height: "38px", borderRadius: "20px", border: "1px solid #78290F", display: "flex", justifyContent: "center", alignItems: "center", color: "#78290F", fontWeight: "bold"}} >Upload</div>
         
-      <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage(event, scale, event.target.files[0], reverseActions)} 
+      <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage(event, scale, event.target.files[0], reverseActions, boardId)} 
               style={{display: 'none'}} accept=".jpg, .jpeg, .heif, .png, .webp, .heic, .gif" />   
     </>
   )
@@ -24,15 +24,15 @@ function createImage(hiddenFileInput) {
 };
 
 
-async function uploadImage(event, scale, file, reverseActions) {
+async function uploadImage(event, scale, file, reverseActions, boardId) {
   var reader = new FileReader();
   reader.readAsDataURL(file); // turn the file into base64 string
   reader.onload = async function () {
     var position = JSON.parse(localStorage.getItem('position'));
     var figurePosition = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
 
-    const figure = { type: "image", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false}
-    var response = await FigureApi.createImage(figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, reader.result, true);
+    const figure = { boardId: boardId, type: "image", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false}
+    var response = await FigureApi.createImage(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, reader.result, true);
 
     if (response.status === 200) {
       if (reverseActions.current.length === 20) {

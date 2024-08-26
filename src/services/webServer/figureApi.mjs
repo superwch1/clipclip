@@ -3,9 +3,9 @@ import Config from '../../config/Config'
 
 export default class figureApi {
 
-  static async readFigures() {
+  static async readFigures(boardId) {
     try {
-      var response = await axios.get(`${Config.url}/figures`);
+      var response = await axios.get(`${Config.url}/figures`, {params: {boardId: boardId}});
       return response;
     }
     catch (axiosError) { // status code 400 or 500 will throw errorx
@@ -16,18 +16,17 @@ export default class figureApi {
     }
   }
 
-  static async createEditor(x, y, width, height, type, backgroundColor, url, zIndex, isPinned, plainText, quillDelta) {
+  static async createEditor(boardId, x, y, width, height, type, backgroundColor, url, zIndex, isPinned, plainText, quillDelta) {
     try {
       var response = await axios.post(`${Config.url}/editor`, 
       { 
-        figure: { x: x, y: y, width: width, height: height, type: type, backgroundColor: backgroundColor, url: url, zIndex: zIndex, isPinned: isPinned }, 
+        figure: { boardId: boardId, x: x, y: y, width: width, height: height, type: type, backgroundColor: backgroundColor, url: url, zIndex: zIndex, isPinned: isPinned }, 
         plainText: plainText, 
         quillDelta: quillDelta 
       });
       return response;
     }
     catch (axiosError) { // status code 400 or 500 will throw error
-      console.log(axiosError);
       if(axiosError.code === "ERR_NETWORK"){ // no connection to the network
         return { status: 404, data: "No connection to the server" };
       }
@@ -35,9 +34,9 @@ export default class figureApi {
     }
   }
 
-  static async createPreview(x, y, width, height, type, backgroundColor, url, zIndex, isPinned){  
+  static async createPreview(boardId, x, y, width, height, type, backgroundColor, url, zIndex, isPinned){  
     try {
-      var response = await axios.post(`${Config.url}/preview`, {figure: {x: x, y: y, width: width, height: height, type: type, backgroundColor: backgroundColor, url: url, zIndex: zIndex, isPinned: isPinned }, url: url});
+      var response = await axios.post(`${Config.url}/preview`, {figure: {boardId: boardId, x: x, y: y, width: width, height: height, type: type, backgroundColor: backgroundColor, url: url, zIndex: zIndex, isPinned: isPinned }, url: url});
       return response;
     }
     catch (axiosError) { // status code 400 or 500 will throw error
@@ -48,9 +47,9 @@ export default class figureApi {
     }
   }
 
-  static async createImage(x, y, width, height, type, backgroundColor, url, zIndex, isPinned, base64, isDefaultSize){
+  static async createImage(boardId, x, y, width, height, type, backgroundColor, url, zIndex, isPinned, base64, isDefaultSize){
     try {
-      var response = await axios.post(`${Config.url}/image`, {figure: {x: x, y: y, width: width, height: height, type: type, backgroundColor: backgroundColor, url: url, zIndex: zIndex, isPinned: isPinned }, base64: base64, isDefaultSize: isDefaultSize});
+      var response = await axios.post(`${Config.url}/image`, {figure: {boardId: boardId, x: x, y: y, width: width, height: height, type: type, backgroundColor: backgroundColor, url: url, zIndex: zIndex, isPinned: isPinned }, base64: base64, isDefaultSize: isDefaultSize});
       return response;
     }
     catch (axiosError) { // status code 400 or 500 will throw error

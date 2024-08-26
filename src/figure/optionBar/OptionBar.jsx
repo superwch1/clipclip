@@ -95,6 +95,7 @@ async function deleteFigure(id, reverseActions) {
   var figureElement = document.getElementById(id);
 
   var figure = {
+    boardId: figureElement.getAttribute("data-boardid"),
     type: figureElement.getAttribute("data-type"),
     width: parseInt(figureElement.getAttribute("data-width")),
     height: parseInt(figureElement.getAttribute("data-height")),
@@ -129,15 +130,15 @@ async function deleteFigure(id, reverseActions) {
     }
 
     if (figure.type === "editor") {
-      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, quillDelta: figure.quillDelta});
     }
     else if (figure.type === "image") {
-      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, base64: figure.base64});
     }
     else if (figure.type === "preview") {
-      reverseActions.current.push({action: "create", type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned});
     }
   }

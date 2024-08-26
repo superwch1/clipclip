@@ -4,7 +4,7 @@ import '../Menu.css'
 import { toast } from 'react-toastify';
 
 
-function Preview({scale, reverseActions}) {
+function Preview({scale, reverseActions, boardId}) {
 
   const previewButtonRef = useRef(null);
 
@@ -20,7 +20,7 @@ function Preview({scale, reverseActions}) {
 
       <div id={controlUrlId} ref={urlRef}>
         <input id={`${controlUrlId}-input`} type='text' placeholder="press Enter to submit" 
-          onKeyDown={(event) => createPreview(event, controlUrlId, scale, document.getElementById(`${controlUrlId}-input`).value, reverseActions)}/>
+          onKeyDown={(event) => createPreview(event, controlUrlId, scale, document.getElementById(`${controlUrlId}-input`).value, reverseActions, boardId)}/>
       </div>  
     </>
   )
@@ -49,14 +49,14 @@ function showInput(controlUrlId) {
 }
 
 
-async function createPreview(event, controlUrlId, scale, url, reverseActions) {
+async function createPreview(event, controlUrlId, scale, url, reverseActions, boardId) {
   if (event.key === 'Enter' || event.keyCode === 13) {
 
     var position = JSON.parse(localStorage.getItem('position'));
     var figurePosition = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
 
-    const figure = { type: "preview", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: url, zIndex: 5, isPinned: false}
-    var response = await FigureApi.createPreview(figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
+    const figure = { boardId: boardId, type: "preview", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: url, zIndex: 5, isPinned: false}
+    var response = await FigureApi.createPreview(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
 
     
     if (response.status === 200) {

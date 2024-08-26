@@ -8,7 +8,7 @@ import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChange
 import axios from 'axios';
 
 
-const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActions}) => {
+const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActions, boardId}) => {
 
   // x, y, width, height, enableResizing, disableDragging are used for react rnd in div
   // (x, y, width, height) and (enableResizing, disableDragging) have their own useEffect for receiving udpates
@@ -73,7 +73,8 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
         onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, reverseActions)}>
 
         <div id={id} ref={containerRef} className='preview' style={{backgroundColor: `${backgroundColor}`}}
-            data-type={"preview"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor} data-ispinned={isPinned}> 
+            data-type={"preview"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor} 
+            data-ispinned={isPinned} data-boardid={boardId}> 
           
           {previewData !== null && previewData !== undefined && 
           <>

@@ -6,7 +6,7 @@ import Preview from "./preview/Preview"
 import MenuIcon from "./menu.png"
 import * as htmlToImage from 'html-to-image';
 
-function Menu({scale, reverseActions}) {
+function Menu({scale, reverseActions, boardId}) {
 
   return (
     <>
@@ -15,11 +15,11 @@ function Menu({scale, reverseActions}) {
       <div id="control-menu" 
            style={{position: 'fixed', top: '20px', left: '95px', flexDirection: "row", gap: '10px', display: 'flex', backgroundColor: "#FFEED6", alignItems: "center", padding: "9px 16px 9px 16px", borderRadius: "30px", boxShadow: "0px 4px 4px 0px #00000040"
           }}>
-        <Preview scale={scale} reverseActions={reverseActions} />
-        <Image scale={scale} reverseActions={reverseActions} />
+        <Preview scale={scale} reverseActions={reverseActions} boardId={boardId} />
+        <Image scale={scale} reverseActions={reverseActions} boardId={boardId} />
         <Gesture />
         <Reverse reverseActions={reverseActions} />
-        <Editor scale={scale} reverseActions={reverseActions} />
+        <Editor scale={scale} reverseActions={reverseActions} boardId={boardId} />
       </div>
     </>
     
