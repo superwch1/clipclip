@@ -54,7 +54,8 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
       theme: 'bubble',
       // not sure it purpose??
       bounds: '#interface' // prevent the quill option being moved up after double click / select text then (due to the property of css ql-flip)  
-    }, [])
+    }, []);
+
 
     const ydoc = new Y.Doc();
     const ytext = ydoc.getText('quill');
@@ -68,9 +69,13 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
 
     // not allow to edit and select text before having the second click in quill
     const quillEditor = document.getElementById(`${id}`).getElementsByClassName('ql-editor')[0];
-    quillEditor.classList.add(`move-cursor`);
     quillEditor.setAttribute('contenteditable', false);
     quillEditor.style.userSelect = 'none';
+    quillEditor.style.overflow = 'clip'; // not allow to scroll to prevent scroll editor and screen at the same time, it causes the quill toolbar to add margintop
+
+    if (isPinned === false) {
+      quillEditor.classList.add(`move-cursor`);
+    }
 
     // set auto display for quill toolbar
     const quillTooltip = barElement.getElementsByClassName('ql-tooltip')[0];
@@ -103,7 +108,7 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
         onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id, reverseActions)}>
         
         { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
-        <div id={id} ref={containerRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`}} onMouseUp={(event) => onMouseUp(id)}
+        <div id={id} ref={containerRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`}} onMouseUp={(event) => onMouseUp(id, isPinned)}
           className='editor' data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor} data-ispinned={isPinned}>
           <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>
           <QuillToolbar id={id} />
@@ -148,21 +153,23 @@ function onSelectFigureBeforeFunction(id) {
   if(figure.classList.contains('selected-object')) {
 
     const quillEditor = figure.getElementsByClassName('ql-editor')[0];
+
     quillEditor.classList.add(`${id}-noDrag`); // .${id}-noDrag disable for drag in rnd but outer part can continue to be dragged in rnd
     quillEditor.setAttribute('contenteditable', true);
-
-    // allow the user to select text
-    figure.style.userSelect = 'auto';
+    quillEditor.style.userSelect = 'auto'; // allow the user to select text
   }
 }
 
 
 
 // change cursor status after finish dragging figure
-function onMouseUp(id) {
+function onMouseUp(id, isPinned) {
   const figure = document.getElementById(`${id}`);
   const quillEditor = figure.getElementsByClassName('ql-editor')[0];
-  quillEditor.classList.remove(`move-cursor`); // change cursor back to pointer, default is move
+  
+  if (isPinned === false) {
+    quillEditor.classList.remove(`move-cursor`); // change cursor back to pointer, default is move
+  }
 }
 
 
@@ -170,10 +177,12 @@ function onMouseUp(id) {
 function onClickOutsideFigureBeforeFunction(id) {
   const figure = document.getElementById(`${id}`);
   const quillEditor = figure.getElementsByClassName('ql-editor')[0];
+
   quillEditor.classList.remove(`${id}-noDrag`); // .${id}-noDrag disable for drag in rnd but outer part can continue to be dragged in rnd
-  quillEditor.classList.add(`move-cursor`);
   quillEditor.setAttribute('contenteditable', false);
-  
-  // unselect the text inside quill and not allow use to select text
-  quillEditor.style.userSelect = 'none';
+  quillEditor.style.userSelect = 'none'; // unselect the text inside quill and not allow user to select text
+
+  if (figure.getAttribute("data-ispinned") === "false") {
+    quillEditor.classList.add(`move-cursor`); // change cursor back to pointer, default is move
+  }
 }

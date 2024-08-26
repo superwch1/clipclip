@@ -26,7 +26,8 @@ function OptionBar({id, backgroundColor, isPinned, reverseActions}) {
 
   return (
     <div id={`${id}-optionbar`} className={`optionbar ${id}-noDrag`}>
-      <img src={isPinned === true ? pinnedButton : notpinnedButton} className='option' style={{height: "32px", width: "26px"}} alt="pin" onClick={async (event) => await FigureApi.updatePinStatus(id)} />
+      <img src={isPinned === true ? pinnedButton : notpinnedButton} className='option' style={{height: "32px", width: "26px"}} alt="pin" 
+           onClick={async (event) => await updatePinStatus(id, isPinned, reverseActions)} />
       <div className='option-backgroundColor' style={{background: `${backgroundColor}`}} 
            onClick={(event) => document.getElementById(`${id}-colorpicker`).classList.remove('colorpicker-hide')}></div>
       <img src={copyButton} className='option' alt="copy" onClick={async (event) => await copyFigure(id, reverseActions)} />
@@ -45,6 +46,19 @@ function OptionBar({id, backgroundColor, isPinned, reverseActions}) {
       </div>
     </div>
   )
+}
+
+async function updatePinStatus(id, isPinned, reverseActions) {
+  var originalStatus = isPinned;
+  var newStatus = !isPinned;
+
+  var response = await FigureApi.updatePinStatus(id, newStatus);
+  if (response.status !== 200){
+    toast(response.data);
+  }
+  else {
+    reverseActions.current.push({ action: "update-pinStatus", id: id, isPinned: originalStatus });
+  }
 }
 
 async function updateBackgroundColor(id, newColor, reverseActions) {

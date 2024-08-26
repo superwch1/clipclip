@@ -101,9 +101,9 @@ export default class figureApi {
     }
   }
 
-  static async updatePinStatus(id) {
+  static async updatePinStatus(id, isPinned) {
     try {
-      var response = await axios.put(`${Config.url}/pin`, {id: id});
+      var response = await axios.put(`${Config.url}/pin`, {id: id, isPinned: isPinned});
       return response;
     }
     catch (axiosError) { // status code 400 or 500 will throw error

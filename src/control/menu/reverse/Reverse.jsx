@@ -1,11 +1,25 @@
 import { toast } from 'react-toastify';
 import figureApi from '../../../services/webServer/figureApi.mjs';
 import ReverseButton from './reverseButton.png'
+import { useState, useEffect, useRef } from 'react'
+import '../Menu.css'
+import { isUrlFocusedOrEditorFocused } from '../../utlis.mjs';
 
 function Reverse({reverseActions}) {
+
+  useEffect(() => {
+    document.addEventListener('keydown', (event) => {
+      if (event.ctrlKey && event.key === 'z' && isUrlFocusedOrEditorFocused() === false) {
+        sendReverseActions(reverseActions);
+      }
+    });
+  }, []);
+  
+
   return (
-    <div id="control-reverse" style={{display: "flex", flexDirection: "row", gap: "10px"}} onClick={(event) => sendReverseActions(reverseActions)}>
-      <img style={{width: "60px", height: "60px"}} src={ReverseButton} />
+    <div id="control-reverse" className='control-button' onClick={(event) => sendReverseActions(reverseActions)}
+         style={{backgroundColor: "#78290F", width: "55px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center"}} >
+      <img style={{width: "18px", height: "18px"}} src={ReverseButton} />
     </div>
   )
 }
@@ -42,7 +56,7 @@ async function sendReverseActions(reverseActions) {
       }
 
       else if (figure.action.includes("pinStatus")) {
-
+        response = await figureApi.updatePinStatus(figure.id, figure.isPinned);
       }
 
       else if (figure.action.includes("layer")) {

@@ -1,17 +1,19 @@
 import Canvas from '../figure/Canvas'
 import { useState, useEffect, useRef } from 'react'
-import React, {  } from "react";
+import React, {  } from "react"
 import Menu from '../control/menu/Menu'
 import Zoom from '../control/zoom/Zoom'
 import Cursors from '../cursors/Cursors'
-import CopyAndPaste from '../control/copyAndPaste/CopyAndPaste';
-import CutAndDelete from '../control/cutAndDelete/CutAndDelete';
+import CopyAndPaste from '../control/copyAndPaste/CopyAndPaste'
+import CutAndDelete from '../control/cutAndDelete/CutAndDelete'
 import './App.css'
 import Config from '../config/Config'
-import { TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
-import * as rdd from 'react-device-detect';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { TransformWrapper, TransformComponent} from "react-zoom-pan-pinch"
+import * as rdd from 'react-device-detect'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import './quill.bubble.css' // https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.bubble.css - prevent CORS issue of screenshot, remove last line for mapping issue
+
 
 
 
@@ -63,11 +65,11 @@ function App() {
       window.removeEventListener("resize", resize);
     };
   }, [canvasRef]);
+  
 
-
-
-  // prevent use of ctrl with wheel or ctrl with +- to scale up and down for the whole web page
+  
   useEffect(() => {
+    // prevent use of ctrl with wheel or ctrl with +- to scale up and down for the whole web page
     const handleWheel = (event) => {
       if (event.ctrlKey === true) {
         event.preventDefault();
@@ -111,6 +113,7 @@ function App() {
         onPanning={(transformState) => onPanning(transformState)} panning={{allowRightClickPan: true, excluded: ['figure', 'optionbar', 'toolbar'] }} >
 
         <TransformComponent>
+          {/* when cursor event is set to none, the cursor will not be respond to mouse event, it needs to create another div */}
           <div id="interface" style={{ width: `${Config.interfaceWidth}px`, height: `${Config.interfaceHeight}px`}}>
             <Canvas scale={scale} reverseActions={reverseActions} />  
             <Cursors scale={scale}/> {/* cursor needs to stay inside interface otherwise the position will be incorrect */}

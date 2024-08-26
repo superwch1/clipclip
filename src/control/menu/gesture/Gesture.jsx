@@ -1,6 +1,7 @@
 import DragButton from './dragButton.png'
 import PointButton from './pointButton.png'
 import { useRef, useState } from 'react'
+import "../Menu.css"
 
 function Gesture() {
 
@@ -8,8 +9,9 @@ function Gesture() {
   const isPoint = useRef(true);
 
   return (
-    <div id="control-gesture" style={{display: "flex", flexDirection: "row", gap: "10px"}} onClick={(event) => switchMode(event, isPoint, setButtonImage)}>
-      <img style={{width: "60px", height: "60px"}} src={buttonImage} />
+    <div id="control-gesture" className='control-button' style={{border: "1px solid #78290F", width: "55px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center"}} 
+         onClick={(event) => switchMode(event, isPoint, setButtonImage)}>
+      <img style={{width: "22px", height: "22px"}} src={buttonImage} />
     </div>
   )
 }

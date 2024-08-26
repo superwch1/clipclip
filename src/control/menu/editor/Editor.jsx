@@ -1,11 +1,13 @@
 import { toast } from 'react-toastify';
 import FigureApi from '../../../services/webServer/figureApi.mjs'
 import EditorButton from './editorButton.png'
+import '../Menu.css'
 
 function Editor({scale, reverseActions}) {
   return (
-    <div onClick={(event) => createEditor(event, scale, reverseActions)}>
-      <img style={{width: "60px", height: "60px"}} src={EditorButton} />
+    <div className='control-button' onClick={(event) => createEditor(event, scale, reverseActions)}
+         style={{backgroundColor: "#78290F", width: "55px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center"}} >
+      <img style={{width: "18px", height: "18px"}} src={EditorButton} />
     </div>
   )
 }

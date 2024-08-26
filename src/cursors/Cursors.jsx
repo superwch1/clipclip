@@ -78,8 +78,8 @@ function Cursors({scale}) {
     <div>
       { 
         cursorsArray.map((item, index) => {
-          return <img key={`${item.key}`} id={`${item.key}`} src={cursorImage} style={{transform: `translate(${item.value.x}px, ${item.value.y}px)`, 
-            position: 'absolute', left: '0px', top: '0px', width: '20px', height: '20px', zIndex: '100'}}/>
+          return <img key={`${item.key}`} id={`${item.key}`} src={cursorImage} className='cursor'
+                      style={{transform: `translate(${item.value.x}px, ${item.value.y}px)`, position: 'absolute', left: '0px', top: '0px', width: '20px', height: '20px', zIndex: '100'}}/>
         })
       }
     </div>
