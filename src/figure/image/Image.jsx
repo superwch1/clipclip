@@ -70,8 +70,8 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
         onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", ""))}, setSizeAndPosition, id, reverseActions)}>
         
         <div id={`${id}`} className='image' ref={containerRef} style={{ width: '100%', height: '100%'}}
-            data-type={"image"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor} 
-            data-ispinned={isPinned} data-boardid={boardId}>
+            data-id={id} data-type={"image"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} 
+            data-backgroundcolor={backgroundColor} data-ispinned={isPinned} data-boardid={boardId}>
           
           <img id={`${id}-image`} draggable={false} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
         </div>

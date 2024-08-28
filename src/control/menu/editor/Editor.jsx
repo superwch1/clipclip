@@ -21,7 +21,7 @@ async function createEditor(event, scale, reverseActions, boardId) {
   var response = await FigureApi.createEditor(boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, null, null);
 
   if (response.status === 200) {
-    if (reverseActions.current.length === 20) {
+    if (reverseActions.current.length === 30) {
       reverseActions.current.shift();
     }
 

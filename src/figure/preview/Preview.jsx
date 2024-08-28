@@ -3,9 +3,9 @@ import './Preview.css'
 import '../../config/Config.css'
 import Config from '../../config/Config'
 import OptionBar from '../optionBar/OptionBar'
-import { Rnd } from "react-rnd";
+import { Rnd } from "react-rnd"
 import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureHasEqualProps } from '../utils.mjs'
-import axios from 'axios';
+import axios from 'axios'
 
 
 const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActions, boardId}) => {
@@ -73,8 +73,8 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
         onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, reverseActions)}>
 
         <div id={id} ref={containerRef} className='preview' style={{backgroundColor: `${backgroundColor}`}}
-            data-type={"preview"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor} 
-            data-ispinned={isPinned} data-boardid={boardId}> 
+            data-id={id} data-type={"preview"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} 
+            data-backgroundcolor={backgroundColor} data-ispinned={isPinned} data-boardid={boardId}> 
           
           {previewData !== null && previewData !== undefined && 
           <>

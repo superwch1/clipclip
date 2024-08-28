@@ -60,8 +60,7 @@ async function createPreview(event, controlUrlId, scale, url, reverseActions, bo
 
     
     if (response.status === 200) {
-      console.log(reverseActions);
-      if (reverseActions.current.length === 20) {
+      if (reverseActions.current.length === 30) {
         reverseActions.current.shift();
       }
   

@@ -85,8 +85,9 @@ async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPositi
   barElement.style.transform = `translate(${newSizeAndPosition.x}px, ${newSizeAndPosition.y}px)`;
   setSizeAndPosition({ x: newSizeAndPosition.x, y: newSizeAndPosition.y, width: newSizeAndPosition.width, height: newSizeAndPosition.height });
 
-  newSizeAndPosition.x = newSizeAndPosition.x.toFixed(2);
-  newSizeAndPosition.y = newSizeAndPosition.y.toFixed(2);  
+  newSizeAndPosition.x = Number(newSizeAndPosition.x.toFixed(2));
+  newSizeAndPosition.y = Number(newSizeAndPosition.y.toFixed(2));  
+
   var response = await FigureApi.updatePositionAndSize(id, newSizeAndPosition.x, newSizeAndPosition.y, newSizeAndPosition.width, newSizeAndPosition.height);
 
   // return to original position and size if there is connection error
@@ -99,7 +100,7 @@ async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPositi
   }
 
   else {
-    if (reverseActions.current.length === 20) {
+    if (reverseActions.current.length === 30) {
       reverseActions.current.shift();
     }
 

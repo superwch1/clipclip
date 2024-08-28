@@ -109,8 +109,8 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
         
         { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
         <div id={id} ref={containerRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`}} onMouseUp={(event) => onMouseUp(id, isPinned)}
-          className='editor' data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} data-backgroundcolor={backgroundColor} 
-          data-ispinned={isPinned} data-boardid={boardId}>
+          className='editor' data-id={id} data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} 
+          data-backgroundcolor={backgroundColor} data-ispinned={isPinned} data-boardid={boardId}>
           <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>
           <QuillToolbar id={id} />
         </div>     

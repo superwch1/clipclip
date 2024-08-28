@@ -20,6 +20,8 @@ function CutAndDelete({reverseActions}) {
   )
 }
 
+
+
 async function deleteFigure(event, reverseActions) {
 
   if (isUrlFocusedOrEditorFocused() === true || event.key !== 'Delete') {
@@ -33,6 +35,7 @@ async function deleteFigure(event, reverseActions) {
 
   var figureElement = document.getElementById(selectedObjects[0].id);
   var figure = {
+    id: figureElement.getAttribute("data-id"),
     boardId: figureElement.getAttribute("data-boardid"),
     type: figureElement.getAttribute("data-type"),
     width: parseInt(figureElement.getAttribute("data-width")),
@@ -47,32 +50,40 @@ async function deleteFigure(event, reverseActions) {
 
   if (figure.type === "editor") {
     const container = document.querySelector(`#${figureElement.id}-quill`);
-    const quill = Quill.find(container)
+    const quill = Quill.find(container);
     const delta = quill.getContents();
+
+    // remove the tailing space in the text
+    if (delta.ops.length) {
+      const lastOp = delta.ops[delta.ops.length - 1];
+      if (typeof lastOp.insert === 'string' && lastOp.insert.endsWith('\n')) {
+        lastOp.insert = lastOp.insert.replace(/\n+$/, '');
+      }
+    }
     figure.quillDelta = JSON.stringify(delta.ops);
   }
+
   else if (figure.type === 'image') {
     var imageElement = document.getElementById(`${selectedObjects[0].id}-image`)
     figure.base64 = imageElement.src;
   }
 
   var response = await FigureApi.deleteFigure(figureElement.id);
-
   if (response.status === 200) {
-    if (reverseActions.current.length === 20) {
+    if (reverseActions.current.length === 30) {
       reverseActions.current.shift();
     }
 
     if (figure.type === "editor") {
-      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, quillDelta: figure.quillDelta});
     }
     else if (figure.type === "image") {
-      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, base64: figure.base64});
     }
     else if (figure.type === "preview") {
-      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned});
     }
   }
@@ -80,6 +91,7 @@ async function deleteFigure(event, reverseActions) {
     toast(response.data);
   }
 }
+
 
 
 async function cutFigure(event, reverseActions) {
@@ -97,6 +109,7 @@ async function cutFigure(event, reverseActions) {
 
   var figureElement = document.getElementById(selectedObjects[0].id);
   var figure = {
+    id: figureElement.getAttribute("data-id"),
     boardId: figureElement.getAttribute("data-boardid"),
     type: figureElement.getAttribute("data-type"),
     width: parseInt(figureElement.getAttribute("data-width")),
@@ -116,13 +129,20 @@ async function cutFigure(event, reverseActions) {
     const quill = Quill.find(container)
     const delta = quill.getContents();
 
-    event.clipboardData.setData("clipclip/editor", JSON.stringify(delta.ops));
-    figure.quillDelta = JSON.stringify(delta.ops);
+    // remove the tailing space in the text
+    if (delta.ops.length) {
+      const lastOp = delta.ops[delta.ops.length - 1];
+      if (typeof lastOp.insert === 'string' && lastOp.insert.endsWith('\n')) {
+        lastOp.insert = lastOp.insert.replace(/\n+$/, '');
+      }
+    }
+    event.clipboardData.setData("clipclip/editor", JSON.stringify(delta.ops)); // for clipboard
+    figure.quillDelta = JSON.stringify(delta.ops); // for reverse
   }
   else if (figure.type === 'image') {
     var imageElement = document.getElementById(`${selectedObjects[0].id}-image`)
-    event.clipboardData.setData("clipclip/image", imageElement.src);
-    figure.base64 = imageElement.src;
+    event.clipboardData.setData("clipclip/image", imageElement.src); // for clipboard
+    figure.base64 = imageElement.src; // for reverse
   }
   else if (figure.type === 'preview') {
     event.clipboardData.setData("clipclip/preview", figure.url);
@@ -131,20 +151,20 @@ async function cutFigure(event, reverseActions) {
   var response = await FigureApi.deleteFigure(figureElement.id);
 
   if (response.status === 200) {
-    if (reverseActions.current.length === 20) {
+    if (reverseActions.current.length === 30) {
       reverseActions.current.shift();
     }
 
     if (figure.type === "editor") {
-      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, quillDelta: figure.quillDelta});
     }
     else if (figure.type === "image") {
-      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, base64: figure.base64});
     }
     else if (figure.type === "preview") {
-      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned});
     }
   }

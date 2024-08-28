@@ -34,7 +34,6 @@ function OptionBar({id, backgroundColor, isPinned, reverseActions}) {
       <img src={deleteButton} className='option' alt="delete" onClick={async (event) => await deleteFigure(id, reverseActions) } />
       <img src={layerupButton} className='option' alt="layerup" onClick={async (event) => await updateLayer(id, "up", reverseActions)} />
       <img src={layerdownButton} className='option' alt="layerdown" onClick={async (event) => await updateLayer(id, "down", reverseActions)} />
-      <img src={layerdownButton} className='option' alt="layerdown" onClick={(event) => toast("hello")} />
       
       <div ref={wrapperRef} id={`${id}-colorpicker`} className={'colorpicker-hide'} style={{position: "absolute", left: "7px", top: "60px", width: "200px", height: "200px"}}>
         <RgbaColorPicker color={{r: parseInt(rgba[0]), g: parseInt(rgba[1]), b: parseInt(rgba[2]), a: parseFloat(rgba[3])}}
@@ -57,6 +56,9 @@ async function updatePinStatus(id, isPinned, reverseActions) {
     toast(response.data);
   }
   else {
+    if (reverseActions.current.length === 30) {
+      reverseActions.current.shift();
+    }
     reverseActions.current.push({ action: "update-pinStatus", id: id, isPinned: originalStatus });
   }
 }
@@ -71,6 +73,9 @@ async function updateBackgroundColor(id, newColor, reverseActions) {
     toast(response.data);
   }
   else {
+    if (reverseActions.current.length === 30) {
+      reverseActions.current.shift();
+    }
     reverseActions.current.push({ action: "update-backgroundColor", id: id, backgroundColor: originalColor });
   }
 }
@@ -81,7 +86,7 @@ async function updateLayer(id, action, reverseActions) {
     toast(response.data);
   }
   else {
-    if (reverseActions.current.length === 20) {
+    if (reverseActions.current.length === 30) {
       reverseActions.current.shift();
     }
 
@@ -95,6 +100,7 @@ async function deleteFigure(id, reverseActions) {
   var figureElement = document.getElementById(id);
 
   var figure = {
+    id: figureElement.getAttribute("data-id"),
     boardId: figureElement.getAttribute("data-boardid"),
     type: figureElement.getAttribute("data-type"),
     width: parseInt(figureElement.getAttribute("data-width")),
@@ -111,6 +117,14 @@ async function deleteFigure(id, reverseActions) {
     const container = document.querySelector(`#${id}-quill`);
     const quill = Quill.find(container)
     const delta = quill.getContents();
+
+    // remove the tailing space in the text
+    if (delta.ops.length) {
+      const lastOp = delta.ops[delta.ops.length - 1];
+      if (typeof lastOp.insert === 'string' && lastOp.insert.endsWith('\n')) {
+        lastOp.insert = lastOp.insert.replace(/\n+$/, '');
+      }
+    }
     figure.quillDelta = JSON.stringify(delta.ops);
   }
 
@@ -125,31 +139,80 @@ async function deleteFigure(id, reverseActions) {
   }
   else {
     
-    if (reverseActions.current.length === 20) {
+    if (reverseActions.current.length === 30) {
       reverseActions.current.shift();
     }
 
     if (figure.type === "editor") {
-      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, quillDelta: figure.quillDelta});
     }
     else if (figure.type === "image") {
-      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, base64: figure.base64});
     }
     else if (figure.type === "preview") {
-      reverseActions.current.push({action: "create", boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned});
     }
   }
 }
 
 async function copyFigure(id, reverseActions) {
-  var response = await FigureApi.copyFigure(id);
+
+  var figureElement = document.getElementById(id);
+  var figure = {
+    id: figureElement.getAttribute("data-id"),
+    boardId: figureElement.getAttribute("data-boardid"),
+    type: figureElement.getAttribute("data-type"),
+    width: parseInt(figureElement.getAttribute("data-width")),
+    height: parseInt(figureElement.getAttribute("data-height")),
+    x: parseInt(figureElement.getAttribute("data-x")),
+    y: parseInt(figureElement.getAttribute("data-y")),
+    zIndex: parseInt(figureElement.getAttribute("data-zindex")),
+    url: figureElement.getAttribute("data-url"),
+    backgroundColor: figureElement.getAttribute("data-backgroundcolor"),
+    isPinned: figureElement.getAttribute("data-ispinned")
+  }
+
+  figure.x = figure.x + figure.width + 100;
+
+  var response;
+  if (figure.type === "editor") {
+    const container = document.querySelector(`#${id}-quill`);
+    const quill = Quill.find(container)
+    const delta = quill.getContents();
+
+    // remove the tailing space in the text
+    if (delta.ops.length) {
+      const lastOp = delta.ops[delta.ops.length - 1];
+      if (typeof lastOp.insert === 'string' && lastOp.insert.endsWith('\n')) {
+        lastOp.insert = lastOp.insert.replace(/\n+$/, '');
+      }
+    }
+    figure.quillDelta = JSON.stringify(delta.ops);
+    response = await FigureApi.createEditor(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned,
+      null, figure.quillDelta);
+  }
+
+  else if (figure.type === 'image') {
+    var imageElement = document.getElementById(`${id}-image`)
+    figure.base64 = imageElement.src;
+    response = await FigureApi.createImage(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, 
+      figure.base64, false);
+  }
+
+  else if (figure.type === 'preview') {
+    response = await FigureApi.createPreview(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
+  }
+
   if (response.status !== 200){
     toast(response.data);
   }
   else {
+    if (reverseActions.current.length === 30) {
+      reverseActions.current.shift();
+    }
     reverseActions.current.push({ action: "delete", id: response.data._id });
   }
 }

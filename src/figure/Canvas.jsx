@@ -2,9 +2,9 @@ import Editor from './editor/Editor'
 import Image from './image/Image'
 import Preview from './preview/Preview'
 import { useState, useRef, useEffect } from 'react'
-import useWebSocket from 'react-use-websocket';
+import useWebSocket from 'react-use-websocket'
 import Config from '../config/Config'
-import figureApi from '../services/webServer/figureApi.mjs';
+import figureApi from '../services/webServer/figureApi.mjs'
 
 
 function Canvas({scale, reverseActions, boardId}) {
@@ -94,7 +94,7 @@ function processMessageFromWebSocket(event, figures, setFigures) {
     }
   }
 
-  else if (message.action === 'create' || message.action === 'copy') {
+  else if (message.action === 'create') {
     createFigure(message.figure, figures, setFigures);
   }
 
