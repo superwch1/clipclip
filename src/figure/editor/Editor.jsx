@@ -56,7 +56,6 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
       bounds: '#interface' // prevent the quill option being moved up after double click / select text then (due to the property of css ql-flip)  
     }, []);
 
-
     const ydoc = new Y.Doc();
     const ytext = ydoc.getText('quill');
     const binding = new QuillBinding(ytext, quill);
@@ -73,8 +72,13 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
     quillEditor.style.userSelect = 'none';
 
     // not allow to scroll to prevent scroll editor and screen at the same time
-    // it causes the quill toolbar to add margintop (issue solve by css)
-    quillEditor.style.overflow = 'hidden';  
+    quillEditor.addEventListener('wheel', function(event) {
+      const canScrollDown =  quillEditor.scrollTop + quillEditor.clientHeight < quillEditor.scrollHeight;
+      const canScrollUp = quillEditor.scrollTop > 0;
+      if (canScrollDown || canScrollUp) {
+        event.stopPropagation();
+      }
+  });
 
     if (isPinned === false) {
       quillEditor.classList.add(`move-cursor`);

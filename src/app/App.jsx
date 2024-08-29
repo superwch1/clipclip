@@ -49,7 +49,7 @@ function App() {
     }
 
     function handleWheel(event) {
-      if(event.ctrlKey === false && isUrlFocusedOrEditorFocused() === false) {
+      if(event.ctrlKey === false) {
         var state = canvasRef.current.instance.transformState;
         var position = checkInsideBound({x: state.positionX - event.deltaX, y: state.positionY - event.deltaY, scale: state.scale})
         canvasRef.current.setTransform(position.x, position.y, state.scale, 0);

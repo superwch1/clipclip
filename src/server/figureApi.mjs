@@ -20,9 +20,6 @@ export default class figureApi {
       if(axiosError.code === "ERR_NETWORK"){ 
         return { status: 404, data: "no connection" };
       }
-      else if (axiosError.status === 400) {
-        return { status: 400, data: axiosError.response.data };
-      }
       return { status: 500, data: "server error" };
     }
   }
