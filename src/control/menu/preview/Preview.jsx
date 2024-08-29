@@ -1,9 +1,16 @@
 import { useRef, useEffect } from 'react';
-import FigureApi from '../../../services/webServer/figureApi.mjs'
+import FigureApi from '../../../server/figureApi.mjs'
 import '../Menu.css'
 import { toast } from 'react-toastify';
 
 
+/** 
+ * click button to create a preview for link
+ * @param {*} scale
+ * @param {*} reverseActions 
+ * @param {*} boardId
+ * @returns image button
+ */
 function Preview({scale, reverseActions, boardId}) {
 
   const previewButtonRef = useRef(null);
@@ -27,28 +34,26 @@ function Preview({scale, reverseActions, boardId}) {
 }
 
 
-function onClickOutside(ref) {
-  useEffect( () => {
-    function handleClickOutside (event) {
-      if (!(ref.current && !ref.current.contains(event.target))) {
-        return;
-      }
-      document.getElementById(`${ref.current.id}`).style.display = 'none';
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [ref]);
-}
-
-
-
+/** 
+ * show the input for user to enter link
+ * @param {*} controlUrlId
+ * @returns input for link
+ */
 function showInput(controlUrlId) {
   document.getElementById(controlUrlId).style.display = 'initial';
 }
 
 
+/** 
+ * create a preview for the link
+ * @param {*} event
+ * @param {*} controlUrlId
+ * @param {*} scale
+ * @param {*} url
+ * @param {*} reverseActions 
+ * @param {*} boardId
+ * @returns image button
+ */
 async function createPreview(event, controlUrlId, scale, url, reverseActions, boardId) {
   if (event.key === 'Enter' || event.keyCode === 13) {
 
@@ -75,5 +80,24 @@ async function createPreview(event, controlUrlId, scale, url, reverseActions, bo
 }
 
 
+/** 
+ * hide the input when user click outside
+ * @param {*} ref
+ * @returns null
+ */
+function onClickOutside(ref) {
+  useEffect( () => {
+    function handleClickOutside (event) {
+      if (!(ref.current && !ref.current.contains(event.target))) {
+        return;
+      }
+      document.getElementById(`${ref.current.id}`).style.display = 'none';
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [ref]);
+}
 
 export default Preview

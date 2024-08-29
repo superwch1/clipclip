@@ -1,8 +1,15 @@
 import { toast } from 'react-toastify';
-import FigureApi from '../../../services/webServer/figureApi.mjs'
+import FigureApi from '../../../server/figureApi.mjs'
 import EditorButton from './editorButton.png'
 import '../Menu.css'
 
+/** 
+ * click button to create a editor
+ * @param {*} scale
+ * @param {*} reverseActions 
+ * @param {*} boardId
+ * @returns editor button
+ */
 function Editor({scale, reverseActions, boardId}) {
   return (
     <div className='control-button' onClick={(event) => createEditor(event, scale, reverseActions, boardId)}
@@ -12,6 +19,14 @@ function Editor({scale, reverseActions, boardId}) {
   )
 }
 
+
+/** 
+ * create a empty editor on the top left corner
+ * @param {*} scale
+ * @param {*} reverseActions 
+ * @param {*} boardId
+ * @returns null
+ */
 async function createEditor(event, scale, reverseActions, boardId) { 
   var position = JSON.parse(localStorage.getItem('position'));
   var figurePosition = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};

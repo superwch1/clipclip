@@ -1,5 +1,9 @@
 import Quill from 'quill'
 
+/** 
+ * check whether the link input or editor has been focused
+ * @returns true or false
+ */
 function isUrlFocusedOrEditorFocused() {
   var controlUrlInputElement = document.getElementById('control-url-input');
   var isUrlFocused = document.activeElement === controlUrlInputElement;

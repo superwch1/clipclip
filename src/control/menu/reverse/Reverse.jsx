@@ -1,10 +1,15 @@
 import { toast } from 'react-toastify';
-import figureApi from '../../../services/webServer/figureApi.mjs';
+import figureApi from '../../../server/figureApi.mjs';
 import ReverseButton from './reverseButton.png'
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import '../Menu.css'
 import { isUrlFocusedOrEditorFocused } from '../../utlis.mjs';
 
+/** 
+ * reverse button or use keyboard to reverse an action
+ * @param {*} reverseActions 
+ * @returns image button
+ */
 function Reverse({reverseActions}) {
 
   const waitingResponse = useRef(false);
@@ -16,7 +21,6 @@ function Reverse({reverseActions}) {
       }
     });
   }, []);
-  
 
   return (
     <div id="control-reverse" className='control-button' onClick={(event) => sendReverseActions(reverseActions, waitingResponse)}
@@ -27,6 +31,12 @@ function Reverse({reverseActions}) {
 }
 
 
+/** 
+ * reverse an action by creating / updating / deleteing a figure
+ * @param {*} reverseActions 
+ * @param {*} waitingResponse
+ * @returns null
+ */
 async function sendReverseActions(reverseActions, waitingResponse) {
 
   if (waitingResponse.current === true) {
@@ -76,10 +86,10 @@ async function sendReverseActions(reverseActions, waitingResponse) {
     }
 
 
-    // scenario not solved - 
+    // scenario not solved
     // 1. user B move the figure
     // 2. user A delete the figure
-    // 3. user B reverse but can't find the figure
+    // 3. user B reverse but cannot find the figure
     // 4. user B trapped in reverse action
 
     if (response.status === 200) {

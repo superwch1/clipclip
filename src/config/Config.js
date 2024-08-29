@@ -17,13 +17,13 @@ export default class Config {
   static interfaceMaxZoomScale = 2;
 
 
-  // static url = `https://clipclip.superwch1.com`; 
+  static url = `https://clipclip.superwch1.com`; 
   // static url = `http://192.168.50.111/`;
-  static url = `http://localhost:1234`;
+  // static url = `http://localhost:1234`;
 
-  // static ws = `wss://clipclip.superwch1.com`; 
+  static ws = `wss://clipclip.superwch1.com`; 
   // static ws = `ws://192.168.50.111`; 
-  static ws = `ws://localhost:1234`;
+  // static ws = `ws://localhost:1234`;
 
   /* not allow to resize on topLeft to prevent it overlaps while changing text color in editor toolbar */
   static enableResizingDirection = {bottomLeft: true, bottomRight: true, topLeft: true, topRight: true };

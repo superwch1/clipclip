@@ -4,27 +4,29 @@ import Gesture from "./gesture/Gesture"
 import Reverse from "./reverse/Reverse"
 import Preview from "./preview/Preview"
 import MenuIcon from "./menu.png"
-import * as htmlToImage from 'html-to-image'
-import { toast } from 'react-toastify'
-import { useState, useEffect, useRef } from 'react'
-import { saveAs } from 'file-saver'
+import { useState, useRef } from 'react'
 
 
-
+/** 
+ * menu with button to create preview / editor / image or switch gesture mode
+ * @param {*} scale
+ * @param {*} reverseActions 
+ * @param {*} boardId
+ * @returns div with buttons
+ */
 function Menu({scale, reverseActions, boardId}) {
 
-  const isTakingScreenshot = useRef(false);
+  // const isTakingScreenshot = useRef(false);
   const [visible, setVisible] = useState(true);
 
   return (
     <>
-      <img id="control-menu-button" src={MenuIcon} onClick={() => setVisible(!visible)} // onDoubleClick={async (event) => await takeScreenshot(isTakingScreenshot)}
+      <img src={MenuIcon} onClick={() => setVisible(!visible)} // onDoubleClick={async (event) => await takeScreenshot(isTakingScreenshot)}
            style={{position: 'fixed', top: '20px', left: '20px', width: "70px", height: "70px"}}></img>
       <div id="control-menu" 
            style={{position: 'fixed', top: '20px', left: '100px', flexDirection: "row", gap: '10px', display: 'flex', opacity: visible ? 1 : 0,
                    visibility: visible ? 'visible' : 'hidden', transition: `opacity 0.5s ease-in-out, visibility 0.5s ease-in-out`,
-                   backgroundColor: "#FFEED6", alignItems: "center", padding: "9px 16px 9px 16px", borderRadius: "30px", boxShadow: "0px 4px 4px 0px #00000040"
-          }}>
+                   backgroundColor: "#FFEED6", alignItems: "center", padding: "9px 16px 9px 16px", borderRadius: "30px", boxShadow: "0px 4px 4px 0px #00000040" }}>
         <Preview scale={scale} reverseActions={reverseActions} boardId={boardId} />
         <Image scale={scale} reverseActions={reverseActions} boardId={boardId} />
         <Gesture />
@@ -37,8 +39,10 @@ function Menu({scale, reverseActions, boardId}) {
 }
 
 
+export default Menu
 
 
+/*
 async function takeScreenshot(isTakingScreenshot) {
 
   if (isTakingScreenshot.current === true) {
@@ -104,8 +108,4 @@ async function processScreenshot() {
     console.error('Error capturing screenshot:', error);
   }
 }
-
-
-
-
-export default Menu
+*/

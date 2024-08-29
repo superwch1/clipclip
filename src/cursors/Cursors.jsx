@@ -5,7 +5,12 @@ import * as rdd from 'react-device-detect';
 import cursorImage from './cursor.png'
 import { v4 as uuidv4 } from 'uuid';
 
-
+/** 
+ * show all the cursors within the same boardId
+ * @param {*} scale
+ * @param {*} boardId
+ * @returns div with image of cursors
+ */
 function Cursors({scale, boardId}) {
 
   const cursorPosition = useRef({x: 0, y: 0});
@@ -61,6 +66,7 @@ function Cursors({scale, boardId}) {
             previousCursorPosition.current = { x: cursorPosition.current.x, y: cursorPosition.current.y };
             previousTranslatePosition.current = { x: translatePosition.current.x, y: translatePosition.current.y };
 
+            // chaning scale will not affect cursor position unless cursor move
             var x = (translatePosition.current.x + cursorPosition.current.x) / scale;
             var y = (translatePosition.current.y + cursorPosition.current.y) / scale;
                     
@@ -87,6 +93,14 @@ function Cursors({scale, boardId}) {
 };
 
 
+/** 
+ * process the message from websocket and update the cursor position
+ * @param {*} event
+ * @param {*} cursorUUID used to update state value to rerender the cursor div
+ * @param {*} cursorsMap
+ * @param {*} setState set state to a new value
+ * @returns null
+ */
 function processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState) {
   var cursorsInfoArray = JSON.parse(event.data).cursors;
 
@@ -125,7 +139,7 @@ function processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState) {
   }
 
   // needRerender will be true when 
-  // 1. new user join clipclip, 2. some user leave clipclip
+  // 1. new user join clipclip, 2. old user leave clipclip
   if (needRerender === true) {
     var cursorsNewMap = new Map();
     for (var i = 0; i < cursorsInfoArray.length; i++) {
@@ -140,5 +154,6 @@ function processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState) {
     setState(uuidv4());
   }
 }
+
 
 export default Cursors

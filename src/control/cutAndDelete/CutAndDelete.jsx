@@ -1,10 +1,14 @@
 import * as rdd from 'react-device-detect';
 import { useRef, useEffect } from 'react';
-import FigureApi from '../../services/webServer/figureApi.mjs';
+import FigureApi from '../../server/figureApi.mjs';
 import { isUrlFocusedOrEditorFocused } from '../utlis.mjs';
 import Quill from 'quill'
 
-
+/** 
+ * cut and delete figure using keyboard
+ * @param {*} reverseActions 
+ * @returns empty div
+ */
 function CutAndDelete({reverseActions}) {
 
   // only for desktop user
@@ -21,7 +25,12 @@ function CutAndDelete({reverseActions}) {
 }
 
 
-
+/** 
+ * delete the selected figure
+ * @param {*} event 
+ * @param {*} reverseActions 
+ * @returns null
+ */
 async function deleteFigure(event, reverseActions) {
 
   if (isUrlFocusedOrEditorFocused() === true || event.key !== 'Delete') {
@@ -93,7 +102,11 @@ async function deleteFigure(event, reverseActions) {
 }
 
 
-
+/** 
+ * get the properties of selected figure from data attribute and pass to clipboard
+ * @param {*} event use to prevent the default action
+ * @returns null
+ */
 async function cutFigure(event, reverseActions) {
   if (isUrlFocusedOrEditorFocused() === true) {
     return;
@@ -175,4 +188,3 @@ async function cutFigure(event, reverseActions) {
 
 
 export default CutAndDelete
-

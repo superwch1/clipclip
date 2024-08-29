@@ -28,6 +28,8 @@
 
   left: 0px !important;
   top: -65px !important;  
+
+  margin-top: 0 !important; /* prevent it add margin-top when the ql-editor overflows */
 }
 
 .ql-picker-options {

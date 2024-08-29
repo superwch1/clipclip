@@ -4,9 +4,15 @@ import Preview from './preview/Preview'
 import { useState, useRef, useEffect } from 'react'
 import useWebSocket from 'react-use-websocket'
 import Config from '../config/Config'
-import figureApi from '../services/webServer/figureApi.mjs'
+import figureApi from '../server/figureApi.mjs'
 
-
+/** 
+ * render the figures within the same boardId and update figure properties continuously
+ * @param {*} scale
+ * @param {*} reverseActions   
+ * @param {*} boardId
+ * @returns null
+ */
 function Canvas({scale, reverseActions, boardId}) {
 
   const [figures, setFigures] = useState([]);
@@ -61,6 +67,11 @@ function Canvas({scale, reverseActions, boardId}) {
 }
 
 
+/** 
+ * get the figures within the boardId and map the response into an array 
+ * @param {*} boardId
+ * @returns figureList or []
+ */
 async function getFigureFromServer(boardId) {
   const response = await figureApi.readFigures(boardId);
 
@@ -77,6 +88,13 @@ async function getFigureFromServer(boardId) {
 }
 
 
+/** 
+ * process the message from websocket then create / update /delete figure in canvas
+ * @param {*} event
+ * @param {*} figures
+ * @param {*} setFigures
+ * @returns null
+ */
 function processMessageFromWebSocket(event, figures, setFigures) {
   if (!event.data) {
     return;
@@ -104,14 +122,26 @@ function processMessageFromWebSocket(event, figures, setFigures) {
 }
 
 
-
+/** 
+ * delete the figure in figures then rerender
+ * @param {*} deletedFigure
+ * @param {*} figures
+ * @param {*} setFigures
+ * @returns null
+ */
 function deleteFigure(deletedFigure, figures, setFigures) {
   const updatedFigures = figures.filter((fig) => fig.id !== deletedFigure._id);
   setFigures(updatedFigures);
 }
 
 
-
+/** 
+ * put the figure in figures then rerender
+ * @param {*} receivedFigure
+ * @param {*} figures
+ * @param {*} setFigures
+ * @returns null
+ */
 function createFigure(receivedFigure, figures, setFigures) {
   const newFigure = { id: receivedFigure._id, x: receivedFigure.x, y: receivedFigure.y, width: receivedFigure.width, height: receivedFigure.height, 
     type: receivedFigure.type, backgroundColor: receivedFigure.backgroundColor, url: receivedFigure.url, zIndex: receivedFigure.zIndex, isPinned: receivedFigure.isPinned };
@@ -119,6 +149,13 @@ function createFigure(receivedFigure, figures, setFigures) {
 }
 
 
+/** 
+ * update the figure properties in figures then rerender
+ * @param {*} receivedFigure
+ * @param {*} figures
+ * @param {*} setFigures
+ * @returns null
+ */
 function updateFigure(receivedFigure, figures, setFigures) {
   const updatedFigures = figures.map((fig) => {
     if (fig.id === receivedFigure._id) {

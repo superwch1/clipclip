@@ -3,6 +3,13 @@ import { useControls } from "react-zoom-pan-pinch";
 import Config from '../../config/Config'
 import * as rdd from 'react-device-detect';
 
+/** 
+ * zoom in (+) and zoom out (-) buttons to modify zooming level
+ * @param {*} scale
+ * @param {*} setScale 
+ * @param {*} checkInsideBoundAndStorePosition
+ * @returns div with buttons
+ */
 function Zoom({scale, setScale, checkInsideBoundAndStorePosition}) {
   
   const { setTransform } = useControls();
@@ -16,6 +23,15 @@ function Zoom({scale, setScale, checkInsideBoundAndStorePosition}) {
   )
 }
 
+
+/** 
+ * zoom in to the cursor position
+ * @param {*} scale
+ * @param {*} setScale 
+ * @param {*} setTransform
+ * @param {*} checkInsideBoundAndStorePosition
+ * @returns null
+ */
 function zoomIn(scale, setScale, setTransform, checkInsideBoundAndStorePosition){
   var newScale = scale;
   if (scale + 0.1 <= Config.interfaceMaxZoomScale) { // Zoom in
@@ -36,6 +52,15 @@ function zoomIn(scale, setScale, setTransform, checkInsideBoundAndStorePosition)
   } 
 }
 
+
+/** 
+ * zoom out from the cursor position
+ * @param {*} scale
+ * @param {*} setScale 
+ * @param {*} setTransform
+ * @param {*} checkInsideBoundAndStorePosition
+ * @returns null
+ */
 function zoomOut(scale, setScale, setTransform, checkInsideBoundAndStorePosition){
   var newScale = scale;
   var minScale = rdd.isMobile === true ? Config.interfaceMinZoomScaleForMobile : Config.interfaceMinZoomScaleForDesktop;

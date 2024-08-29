@@ -14,6 +14,7 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import './quill.bubble.css' // https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.bubble.css - prevent CORS issue of screenshot, remove last line for mapping issue
 import { useLocation } from 'react-router-dom'
+import { isUrlFocusedOrEditorFocused } from '../control/utlis.mjs'
 
 
 
@@ -48,7 +49,7 @@ function App() {
     }
 
     function handleWheel(event) {
-      if(event.ctrlKey === false) {
+      if(event.ctrlKey === false && isUrlFocusedOrEditorFocused() === false) {
         var state = canvasRef.current.instance.transformState;
         var position = checkInsideBound({x: state.positionX - event.deltaX, y: state.positionY - event.deltaY, scale: state.scale})
         canvasRef.current.setTransform(position.x, position.y, state.scale, 0);
@@ -124,7 +125,7 @@ function App() {
         </TransformComponent>
 
         { /* the following components are placed on top of the Canvas */ }
-        <div id='control'>
+        <div id='control' style={{touchAction: "none"}}>
           <Menu scale={scale} reverseActions={reverseActions} boardId={boardId} />
           <CopyAndPaste scale={scale} reverseActions={reverseActions} boardId={boardId} />
           <CutAndDelete reverseActions={reverseActions} boardId={boardId} />

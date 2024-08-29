@@ -1,8 +1,16 @@
 import { useEffect } from 'react'
-import FigureApi from '../services/webServer/figureApi.mjs'
-import { ToastContainer, toast } from 'react-toastify';
+import FigureApi from '../server/figureApi.mjs'
+import { toast } from 'react-toastify';
 
-
+/** 
+ * hide the option bar and resize handle when click outside the figure
+ * @param {*} containerRef
+ * @param {*} barRef
+ * @param {*} id
+ * @param {*} beforeFunction   
+ * @param {*} afterFunction 
+ * @returns null
+ */
 function onClickOutsideFigure(containerRef, barRef, id, beforeFunction, afterFunction) {
   useEffect(() => {
     function handleClickOutside (event) {
@@ -37,7 +45,13 @@ function onClickOutsideFigure(containerRef, barRef, id, beforeFunction, afterFun
 }
 
 
-
+/** 
+ * display the option bar, resize handle and selected frame when click inside the figure
+ * @param {*} id
+ * @param {*} beforeFunction   
+ * @param {*} afterFunction 
+ * @returns null
+ */
 function onSelectFigure(id, beforeFunction, afterFunction) {
   if (beforeFunction !== null) {
     beforeFunction(id);
@@ -56,21 +70,37 @@ function onSelectFigure(id, beforeFunction, afterFunction) {
 }
 
 
-
+/** 
+ * hide the option bar
+ * @param {*} id
+ * @returns null
+ */
 function hideOptionBarAndToolBar(id) {
   const bar = document.getElementById(`${id}-bar`);
   bar.style.display = "none";
 }
 
 
-
+/** 
+ * show the option bar
+ * @param {*} id
+ * @returns null
+ */
 function showOptionBarAndToolBar(id) {
   const bar = document.getElementById(`${id}-bar`);
   bar.style.display = "initial";
 }
 
 
-
+/** 
+ * show the option bar then update the position and size of figure  
+ * @param {*} originalSizeAndPosition
+ * @param {*} newSizeAndPosition
+ * @param {*} setSizeAndPosition
+ * @param {*} id
+ * @param {*} reverseActions 
+ * @returns null
+ */
 async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPosition, setSizeAndPosition, id, reverseActions) {
   // there will be 0.001 difference for between the position (x, y) value for original and new position
   if (Math.abs(originalSizeAndPosition.x - newSizeAndPosition.x) < 0.01 && Math.abs(originalSizeAndPosition.y - newSizeAndPosition.y) < 0.01
@@ -109,7 +139,12 @@ async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPositi
 }
 
 
-
+/** 
+ * check whether the properties has been changed after rerender 
+ * @param {*} prevProps
+ * @param {*} nextProps
+ * @returns true (no change) / false
+ */
 function figureHasEqualProps(prevProps, nextProps) {
   // check whether it needs to rerender because of having different props
   var isEqualComponenet = prevProps.id === nextProps.id && prevProps.x === nextProps.x && prevProps.y === nextProps.y &&
@@ -118,8 +153,6 @@ function figureHasEqualProps(prevProps, nextProps) {
 
   return isEqualComponenet;
 }
-
-
 
 
 export { onClickOutsideFigure, onSelectFigure, onChangeSizeAndPosition, figureHasEqualProps, hideOptionBarAndToolBar }

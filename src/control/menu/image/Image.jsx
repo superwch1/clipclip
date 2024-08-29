@@ -1,8 +1,14 @@
 import { useRef, useEffect } from 'react';
-import FigureApi from '../../../services/webServer/figureApi.mjs'
+import FigureApi from '../../../server/figureApi.mjs'
 import '../Menu.css'
 
-
+/** 
+ * click button to upload an image from device
+ * @param {*} scale
+ * @param {*} reverseActions 
+ * @param {*} boardId
+ * @returns image button
+ */
 function Image({scale, reverseActions, boardId}) {
 
   const hiddenFileInput = useRef(null);
@@ -18,12 +24,26 @@ function Image({scale, reverseActions, boardId}) {
   )
 }
 
-// trigger the hidden file input click
+
+/** 
+ * click button to invoke a click on hidden input html
+ * @param {*} hiddenFileInput 
+ * @returns null
+ */
 function createImage(hiddenFileInput) {
   hiddenFileInput.current.click();
 };
 
 
+/** 
+ * open the gallery or dialog box to upload an image
+ * @param {*} event
+ * @param {*} scale
+ * @param {*} file
+ * @param {*} reverseActions
+ * @param {*} baordId
+ * @returns null
+ */
 async function uploadImage(event, scale, file, reverseActions, boardId) {
   var reader = new FileReader();
   reader.readAsDataURL(file); // turn the file into base64 string
@@ -49,7 +69,6 @@ async function uploadImage(event, scale, file, reverseActions, boardId) {
   // clear the file input's value to allow uploading same file twice for onChange
   event.target.value = null;
 };
-
 
 
 export default Image

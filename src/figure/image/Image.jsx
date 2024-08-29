@@ -9,6 +9,10 @@ import { Buffer } from "buffer";
 import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureHasEqualProps } from '../utils.mjs'
 
 
+/** 
+ * show the image (base64), option bar
+ * @returns div with image and option bar
+ */
 const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActions, boardId}) => {
 
   // x, y, width, height, enableResizing, disableDragging are used for react rnd in div
@@ -26,12 +30,10 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
   }, [x, y, width, height]); 
 
 
-
   // containerRef and barRef are used to check whether the click are inside the rnd and bar 
   const containerRef = useRef(null);
   const barRef = useRef(null);
   onClickOutsideFigure(containerRef, barRef, id, null, null);  
-
 
 
   useEffect(() => {
@@ -47,7 +49,6 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
       imageElement.src = base64;
     });
   }, []);
-
 
 
   // Rnd cannot be used to pass the ref
@@ -85,12 +86,16 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
 }, figureHasEqualProps);
 
 
-
-// simulate on clicking outside to unselect other figures then select current figure
-// it needs to use document insted of resizeHandle to dispatch event or else it will keep looping for event
+/** 
+ * resizeHandle unable to trigger an click event that it need to simulate it manually  
+ * create a click by dispatching an event to unselect other figure and select current figure
+ * @param {*} id 
+ * @returns null
+ */
 function addEventForResizeHandle(id) {
   var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`)[0];
 
+  // use document.dispatchEvent() instead of resizeHandle.dispatchEvent() or else it will keep looping for event
   resizeHandle.addEventListener('mousedown', (event) => {
     const outerEvent = new Event('mousedown', { bubbles: true });
     document.dispatchEvent(outerEvent);

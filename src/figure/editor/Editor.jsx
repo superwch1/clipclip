@@ -12,6 +12,10 @@ import { Rnd } from "react-rnd";
 import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureHasEqualProps } from '../utils.mjs'
 
 
+/** 
+ * show the quill editor, option bar and use yjs to enable editing simultaneously
+ * @returns div with quill editor and option bar
+ */
 const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActions, boardId}) => {
 
   // x, y, width, height, enableResizing, disableDragging are used for react rnd in div
@@ -28,13 +32,10 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
   }, [x, y, width, height]);
 
 
-
   // containerRef and barRef are used to check whether the click are inside the rnd and bar 
   const containerRef = useRef(null);
   const barRef = useRef(null);
   onClickOutsideFigure(containerRef, barRef, id, onClickOutsideFigureBeforeFunction, null);
-
-  
 
   
   useEffect(() => {
@@ -52,7 +53,6 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
         'background', 'bold', 'color', 'font', 'italic', 'link', 'size', 'strike', 
         'script', 'underline', 'header', 'align'], // not allow user to pasteimage or video
       theme: 'bubble',
-      // not sure it purpose??
       bounds: '#interface' // prevent the quill option being moved up after double click / select text then (due to the property of css ql-flip)  
     }, []);
 
@@ -71,7 +71,10 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
     const quillEditor = document.getElementById(`${id}`).getElementsByClassName('ql-editor')[0];
     quillEditor.setAttribute('contenteditable', false);
     quillEditor.style.userSelect = 'none';
-    quillEditor.style.overflow = 'clip'; // not allow to scroll to prevent scroll editor and screen at the same time, it causes the quill toolbar to add margintop
+
+    // not allow to scroll to prevent scroll editor and screen at the same time
+    // it causes the quill toolbar to add margintop (issue solve by css)
+    quillEditor.style.overflow = 'hidden';  
 
     if (isPinned === false) {
       quillEditor.classList.add(`move-cursor`);
@@ -88,7 +91,6 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
     }
   }, []);
 
-  
 
   // Rnd cannot be used to pass the ref
   // reason for using onDrag and onResize instead of onDragStart and onResizeStart is because even clicking figure will invoke start event
@@ -101,14 +103,14 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
         bounds="#interface" cancel={`.${id}-noDrag`} style={{zIndex: `${zIndex}`, touchAction: "none"}}
         minWidth={Config.figureMinWidth} minHeight={Config.figureMinHeight} maxWidth={Config.figureMaxWidth} maxHeight={Config.figureMaxHeight} 
         scale={scale} className='figure'
-        onMouseDown={(e) => onSelectFigure(id, onSelectFigureBeforeFunction, null)}
+        onMouseDown={(e) => onSelectFigure(id, null, null)}
         onDrag={(e, data) => hideOptionBarAndToolBar(id)}
         onResize={(e, direction, ref, delta, position) => hideOptionBarAndToolBar(id)}
         onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, reverseActions)} 
         onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id, reverseActions)}>
         
         { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
-        <div id={id} ref={containerRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`}} onMouseUp={(event) => onMouseUp(id, isPinned)}
+        <div id={id} ref={containerRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`}} onMouseUp={(event) => onMouseUpTouchUp(id, isPinned)} onTouchEnd={(event) => onMouseUpTouchUp(id, isPinned)}
           className='editor' data-id={id} data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} 
           data-backgroundcolor={backgroundColor} data-ispinned={isPinned} data-boardid={boardId}>
           <div id={`${id}-quill`} style={{padding: "12px 15px 12px 15px"}}></div>
@@ -126,47 +128,42 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
 export default Editor
 
 
-
-// simulate on clicking outside to unselect other figures then select current figure
-// it needs to use document insted of resizeHandle to dispatch event or else it will keep looping for event
+/** 
+ * resizeHandle unable to trigger an click event that it need to simulate it manually  
+ * create a click by dispatching an event to unselect other figure and select current figure
+ * @param {*} id 
+ * @returns null
+ */
 function addEventForResizeHandle(id) {
   var resizeHandle = document.getElementsByClassName(`${id}-resizeHandle`)[0];
 
+  // use document.dispatchEvent() instead of resizeHandle.dispatchEvent() or else it will keep looping for event
   resizeHandle.addEventListener('mousedown', (event) => {
     const outerEvent = new Event('mousedown', { bubbles: true });
     document.dispatchEvent(outerEvent);
-    onSelectFigure(id, onSelectFigureBeforeFunction, null);
+    onSelectFigure(id, null, null);
   });
   
   resizeHandle.addEventListener('touchstart', (event) => { 
     const outerEvent = new Event('touchstart', { bubbles: true });
     document.dispatchEvent(outerEvent); 
-    onSelectFigure(id, onSelectFigureBeforeFunction, null);
+    onSelectFigure(id, null, null);
   });
 }
 
 
-
-function onSelectFigureBeforeFunction(id) {
-  const figure = document.getElementById(`${id}`);
-
-  // check whether this is the second click of the figure
-  if(figure.classList.contains('selected-object')) {
-
-    const quillEditor = figure.getElementsByClassName('ql-editor')[0];
-
-    quillEditor.classList.add(`${id}-noDrag`); // .${id}-noDrag disable for drag in rnd but outer part can continue to be dragged in rnd
-    quillEditor.setAttribute('contenteditable', true);
-    quillEditor.style.userSelect = 'auto'; // allow the user to select text
-  }
-}
-
-
-
-// change cursor status after finish dragging figure
-function onMouseUp(id, isPinned) {
+/** 
+ * change cursor status to initial, disable drag and allow edit in quill editor 
+ * @param {*} id 
+ * @returns null
+ */
+function onMouseUpTouchUp(id, isPinned) {
   const figure = document.getElementById(`${id}`);
   const quillEditor = figure.getElementsByClassName('ql-editor')[0];
+
+  quillEditor.classList.add(`${id}-noDrag`); // .${id}-noDrag disable for drag in rnd but outer part can continue to be dragged in rnd
+  quillEditor.setAttribute('contenteditable', true);
+  quillEditor.style.userSelect = 'auto'; // allow the user to select text
   
   if (isPinned === false) {
     quillEditor.classList.remove(`move-cursor`); // change cursor back to pointer, default is move
@@ -174,7 +171,11 @@ function onMouseUp(id, isPinned) {
 }
 
 
-
+/** 
+ * change cursor status to move, enable drag, unselect text and disable edit in quill editor 
+ * @param {*} id 
+ * @returns null
+ */
 function onClickOutsideFigureBeforeFunction(id) {
   const figure = document.getElementById(`${id}`);
   const quillEditor = figure.getElementsByClassName('ql-editor')[0];

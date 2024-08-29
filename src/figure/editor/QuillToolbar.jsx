@@ -2,6 +2,12 @@
 // it provides the css propeties for toolbar buttons and options
 import './QuillToolbar.css' 
 
+
+/** 
+ * provide options to modify the style of selected text in quill editor
+ * @param {*} id 
+ * @returns null
+ */
 function QuillToolbar ({id}) {
 
   // when adding new options or button, make sure the format is supported in Editor.jsx

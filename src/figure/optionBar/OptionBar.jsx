@@ -8,11 +8,15 @@ import notpinnedButton from './notpinned.png'
 import { debounce } from 'lodash';
 import { RgbaColorPicker } from "react-colorful";
 import { useEffect, useRef } from 'react'
-import FigureApi from '../../services/webServer/figureApi.mjs'
-import { ToastContainer, toast } from 'react-toastify';
+import FigureApi from '../../server/figureApi.mjs'
+import { toast } from 'react-toastify';
 import Quill from 'quill'
 
 
+/** 
+ * show the option bar (background color, pin, copy, delete, layer)
+ * @returns div with option bar
+ */
 function OptionBar({id, backgroundColor, isPinned, reverseActions}) {
 
   // execute the function after it has not been called for 200 milliseconds. 
@@ -47,6 +51,14 @@ function OptionBar({id, backgroundColor, isPinned, reverseActions}) {
   )
 }
 
+
+/** 
+ * update the pin status of figure
+ * @param {*} id
+ * @param {*} isPinned
+ * @param {*} reverseActions   
+ * @returns null
+ */
 async function updatePinStatus(id, isPinned, reverseActions) {
   var originalStatus = isPinned;
   var newStatus = !isPinned;
@@ -63,6 +75,14 @@ async function updatePinStatus(id, isPinned, reverseActions) {
   }
 }
 
+
+/** 
+ * update the background color of figure
+ * @param {*} id
+ * @param {*} newColor
+ * @param {*} reverseActions   
+ * @returns null
+ */
 async function updateBackgroundColor(id, newColor, reverseActions) {
 
   var figureElement = document.getElementById(id);
@@ -80,6 +100,14 @@ async function updateBackgroundColor(id, newColor, reverseActions) {
   }
 }
 
+
+/** 
+ * update the layer of figure
+ * @param {*} id
+ * @param {*} action
+ * @param {*} reverseActions   
+ * @returns null
+ */
 async function updateLayer(id, action, reverseActions) {
   var response = await FigureApi.updateLayer(id, action);
   if (response.status !== 200){
@@ -95,6 +123,13 @@ async function updateLayer(id, action, reverseActions) {
   }
 }
 
+
+/** 
+ * delete the figure
+ * @param {*} id
+ * @param {*} reverseActions   
+ * @returns null
+ */
 async function deleteFigure(id, reverseActions) {
 
   var figureElement = document.getElementById(id);
@@ -158,6 +193,13 @@ async function deleteFigure(id, reverseActions) {
   }
 }
 
+
+/** 
+ * copy the figure and create copied version next to it
+ * @param {*} id
+ * @param {*} reverseActions   
+ * @returns null
+ */
 async function copyFigure(id, reverseActions) {
 
   var figureElement = document.getElementById(id);
@@ -192,7 +234,7 @@ async function copyFigure(id, reverseActions) {
     }
     figure.quillDelta = JSON.stringify(delta.ops);
     response = await FigureApi.createEditor(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned,
-      null, figure.quillDelta);
+      null, JSON.parse(figure.quillDelta));
   }
 
   else if (figure.type === 'image') {

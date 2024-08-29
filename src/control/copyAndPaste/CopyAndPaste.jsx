@@ -1,10 +1,17 @@
 import * as rdd from 'react-device-detect';
 import Quill from 'quill'
 import { useRef, useEffect } from 'react';
-import FigureApi from '../../services/webServer/figureApi.mjs';
+import FigureApi from '../../server/figureApi.mjs';
 import { isUrlFocusedOrEditorFocused } from '../utlis.mjs';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 
+/** 
+ * copy and paste figure using keyboard
+ * @param {*} scale
+ * @param {*} reverseActions 
+ * @param {*} boardId 
+ * @returns empty div
+ */
 function CopyAndPaste({scale, reverseActions, boardId}) {
 
   const pastingFigure = useRef(false);
@@ -23,7 +30,11 @@ function CopyAndPaste({scale, reverseActions, boardId}) {
 }
 
 
-
+/** 
+ * copy the properties of selected figure from data attribute and pass to clipboard
+ * @param {*} event use to prevent the default action
+ * @returns null
+ */
 function copyFigure(event) {
   if (isUrlFocusedOrEditorFocused() === true) {
     return;
@@ -80,7 +91,15 @@ function copyFigure(event) {
 }
 
 
-
+/** 
+ * copy the figure properties from data attribute and pass to clipboard
+ * @param {*} event 
+ * @param {*} scale
+ * @param {*} pastingFigure
+ * @param {*} reverseActions
+ * @param {*} boardId
+ * @returns null
+ */
 async function pasteFigure(event, scale, pastingFigure, reverseActions, boardId){
   // prevent user keep pasting new figure into the canvas by sapmming ctrl+v
   if (pastingFigure.current === true) {
@@ -108,7 +127,14 @@ async function pasteFigure(event, scale, pastingFigure, reverseActions, boardId)
 }
 
 
-
+/** 
+ * get the figure properties from clipboard (clipclip type) and create new figure 
+ * @param {*} event 
+ * @param {*} position
+ * @param {*} reverseActions
+ * @param {*} boardId
+ * @returns null
+ */
 async function pasteClipClipType(event, position, reverseActions, boardId) {
   var figure = JSON.parse(event.clipboardData.getData('clipclip/figure'));
 
@@ -132,7 +158,14 @@ async function pasteClipClipType(event, position, reverseActions, boardId) {
 }
 
 
-
+/** 
+ * get the text / image from clipboard (ordinary type) and create new figure 
+ * @param {*} event 
+ * @param {*} position
+ * @param {*} reverseActions
+ * @param {*} boardId
+ * @returns null
+ */
 async function pasteOrdinaryType(event, position, reverseActions, boardId) {
 
   var figure = { boardId: boardId, type: "", width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
@@ -169,7 +202,12 @@ async function pasteOrdinaryType(event, position, reverseActions, boardId) {
 }
 
 
-
+/** 
+ * add the reverse action to array
+ * @param {*} response
+ * @param {*} reverseActions
+ * @returns null
+ */
 function addReverseActions(response, reverseActions) {
 
   if (response.status === 200) {

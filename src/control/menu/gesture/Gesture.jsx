@@ -3,6 +3,10 @@ import PointButton from './pointButton.png'
 import { useRef, useState } from 'react'
 import "../Menu.css"
 
+/** 
+ * click button to switch the mode of gesture
+ * @returns gesture button
+ */
 function Gesture() {
 
   const [buttonImage, setButtonImage] = useState(PointButton);
@@ -16,6 +20,14 @@ function Gesture() {
   )
 }
 
+
+/** 
+ * switch to either select or drag mode then set the button image
+ * @param {*} event
+ * @param {*} isPoint 
+ * @param {*} setButtonImage
+ * @returns null
+ */
 function switchMode(event, isPoint, setButtonImage) {
 
   isPoint.current = !isPoint.current;
