@@ -14,7 +14,6 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import './quill.bubble.css' // https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.bubble.css - prevent CORS issue of screenshot, remove last line for mapping issue
 import { useLocation } from 'react-router-dom'
-import { isUrlFocusedOrEditorFocused } from '../control/utlis.mjs'
 
 
 
@@ -100,7 +99,8 @@ function App() {
 
   
   const location = useLocation();
-  const boardId = location.pathname.slice(7); // Removes the leading '/'
+  const boardId = location.pathname.slice(7).replace(/[^a-z0-9_-]/g, ''); // Removes the leading '/'
+  console.log(boardId);
 
   return (
     // return to the original location if the virtual keyboard has caused shifted right or bottom on the screen

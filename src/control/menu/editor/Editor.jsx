@@ -13,7 +13,7 @@ import '../Menu.css'
 function Editor({scale, reverseActions, boardId}) {
   return (
     <div className='control-button' onClick={(event) => createEditor(event, scale, reverseActions, boardId)}
-         style={{backgroundColor: "#78290F", width: "55px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center"}} >
+         style={{backgroundColor: "#78290F", width: "50px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center"}} >
       <img style={{width: "18px", height: "18px"}} src={EditorButton} />
     </div>
   )

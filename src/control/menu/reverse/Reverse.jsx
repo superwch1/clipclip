@@ -24,7 +24,7 @@ function Reverse({reverseActions}) {
 
   return (
     <div id="control-reverse" className='control-button' onClick={(event) => sendReverseActions(reverseActions, waitingResponse)}
-         style={{backgroundColor: "#78290F", width: "55px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center"}} >
+         style={{backgroundColor: "#78290F", width: "50px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center"}} >
       <img style={{width: "18px", height: "18px"}} src={ReverseButton} />
     </div>
   )

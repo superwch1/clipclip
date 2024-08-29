@@ -13,7 +13,8 @@ function Gesture() {
   const isPoint = useRef(true);
 
   return (
-    <div id="control-gesture" className='control-button' style={{border: "1px solid #78290F", width: "55px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center"}} 
+    <div id="control-gesture" className='control-button' 
+    style={{border: "1px solid #78290F", width: "50px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#78290F"}} 
          onClick={(event) => switchMode(event, isPoint, setButtonImage)}>
       <img style={{width: "22px", height: "22px"}} src={buttonImage} />
     </div>
