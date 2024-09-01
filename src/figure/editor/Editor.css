@@ -20,9 +20,9 @@
 
 .ql-tooltip {
   position: fixed !important;
-  background-color: #444444;
+  background-color: rgba(255, 244, 228, 0.8) !important;
   padding: 8px;
-  width: 450px;
+  width: 480px;
   border-radius: 20px;
   cursor: initial;
 
@@ -30,6 +30,7 @@
   top: -65px !important;  
 
   margin-top: 0 !important; /* prevent it add margin-top when the ql-editor overflows */
+  box-shadow: 0px 4px 4px 0px #00000040;
 }
 
 .ql-picker-options {
@@ -42,4 +43,45 @@
 
 .move-cursor p:hover{
   cursor: move;
+}
+
+/* add link to the text */
+.ql-tooltip-editor {
+  position: relative;
+  width: 300px;
+  top: -55px;
+  left: -10px;
+}
+
+.ql-tooltip-editor input {
+  height: 40px !important;
+  border-radius: 20px;
+  color: rgb(120, 41, 15) !important;
+  background-color: rgba(255, 244, 228, 0.8) !important;
+  box-shadow: 0px 4px 4px 0px #00000040;
+}
+ 
+.ql-tooltip-editor a {
+  position: relative;
+}
+
+/* hide the bubble text when mouse cusor is over the anchor */
+.ql-editor a::before, a::after {
+  display: none !important;
+}
+
+
+/* set the stroke color for buttons and text color for labels */
+svg .ql-stroke, svg .ql-fill {
+  stroke: rgb(120, 41, 15) !important;
+}
+
+
+.ql-picker-label, .ql-selected {
+  color: rgb(120, 41, 15) !important;
+}
+
+.ql-picker-options {
+  color: rgb(120, 41, 15) !important;
+  background-color: rgba(255, 244, 228, 1) !important;
 }

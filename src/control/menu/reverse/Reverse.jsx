@@ -92,6 +92,7 @@ async function sendReverseActions(reverseActions, waitingResponse) {
     // 3. user B reverse but cannot find the figure
     // 4. user B trapped in reverse action
 
+    console.log(response.status);
     if (response.status === 200) {
       reverseActions.current.pop();
     }

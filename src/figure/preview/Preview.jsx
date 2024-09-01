@@ -86,7 +86,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
         </div>   
       </Rnd>
 
-      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none", display: "none"}}>
+      <div id={`${id}-bar`} className={`${id}-noDrag`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none", display: "none"}}>
         <OptionBar id={id} backgroundColor={backgroundColor} isPinned={isPinned} reverseActions={reverseActions} />
       </div>
     </>

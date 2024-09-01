@@ -56,6 +56,18 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
       bounds: '#interface' // prevent the quill option being moved up after double click / select text then (due to the property of css ql-flip)  
     }, []);
 
+    // click text to open new page for the link - https://github.com/slab/quill/issues/1966
+    var currentLink = null;
+    quill.container.addEventListener('mouseover', (evt) => {
+      if (evt.target.tagName === 'A') {
+          currentLink = evt.target;
+          currentLink.setAttribute('contenteditable', false);
+      } else if (currentLink) {
+          currentLink.removeAttribute('contenteditable');
+          currentLink = null;
+      }
+    });
+
     const ydoc = new Y.Doc();
     const ytext = ydoc.getText('quill');
     const binding = new QuillBinding(ytext, quill);
@@ -65,20 +77,11 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
     var barElement = document.getElementById(`${id}-bar`);
     var toolbarElement = document.getElementById(`${id}`).getElementsByClassName(`ql-tooltip`)[0];
     barElement.appendChild(toolbarElement);
-
+  
     // not allow to edit and select text before having the second click in quill
     const quillEditor = document.getElementById(`${id}`).getElementsByClassName('ql-editor')[0];
     quillEditor.setAttribute('contenteditable', false);
     quillEditor.style.userSelect = 'none';
-
-    // not allow to scroll to prevent scroll editor and screen at the same time
-    quillEditor.addEventListener('wheel', function(event) {
-      const canScrollDown =  quillEditor.scrollTop + quillEditor.clientHeight < quillEditor.scrollHeight;
-      const canScrollUp = quillEditor.scrollTop > 0;
-      if (canScrollDown || canScrollUp) {
-        event.stopPropagation();
-      }
-  });
 
     if (isPinned === false) {
       quillEditor.classList.add(`move-cursor`);
@@ -86,8 +89,17 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
 
     // set auto display for quill toolbar
     const quillTooltip = barElement.getElementsByClassName('ql-tooltip')[0];
-    quillTooltip.classList.add('ql-display')
+    quillTooltip.classList.add('ql-display');
+
+    // set the placeholder text for link
+    const quillTooltipEditor = document.getElementById(`${id}-bar`).getElementsByClassName('ql-tooltip-editor')[0];
+    quillTooltipEditor.querySelectorAll('input')[0].placeholder = "Enter the link here";
+    quillTooltipEditor.querySelectorAll('input')[0].setAttribute('data-link', "Enter the link here");
     
+    quillTooltipEditor.querySelectorAll('input')[0].addEventListener('blur', (event) => {
+      quillTooltip.classList.remove('ql-editing');
+    });
+
     return () => {
       // the reference of quill will be removed by it self for garbage collection
       // https://github.com/quilljs/quill/blob/9cf0285caa6514356a7bba9db132ec7229eb254c/docs/guides/upgrading-to-1-0.md
@@ -95,9 +107,9 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
     }
   }, []);
 
-
   // Rnd cannot be used to pass the ref
   // reason for using onDrag and onResize instead of onDragStart and onResizeStart is because even clicking figure will invoke start event
+ 
   return (
     <>
       <Rnd id={`${id}-rnd`} enableResizing={pin.enableResizing} disableDragging={pin.disableDragging} 
@@ -114,6 +126,7 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
         onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id, reverseActions)}>
         
         { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
+        { /* bar need to not be dragged or else clicking the quill toolbar cause the editor to blur and lose the selection for text */ }
         <div id={id} ref={containerRef} style={{width: "100%", height: "100%", backgroundColor: `${backgroundColor}`}} onMouseUp={(event) => onMouseUpTouchUp(id, isPinned)} onTouchEnd={(event) => onMouseUpTouchUp(id, isPinned)}
           className='editor' data-id={id} data-type={"editor"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} 
           data-backgroundcolor={backgroundColor} data-ispinned={isPinned} data-boardid={boardId}>
@@ -121,7 +134,7 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
           <QuillToolbar id={id} />
         </div>     
       </Rnd>
-      <div id={`${id}-bar`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none", display: "none"}}>
+      <div id={`${id}-bar`} className={`${id}-noDrag`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none", display: "none"}}>
         <OptionBar id={id} backgroundColor={backgroundColor} isPinned={isPinned} reverseActions={reverseActions} />
       </div>
     </>

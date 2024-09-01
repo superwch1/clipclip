@@ -29,7 +29,7 @@ function OptionBar({id, backgroundColor, isPinned, reverseActions}) {
   const rgba = backgroundColor.replace(/rgba|\(|\)/g, '').split(',');
 
   return (
-    <div id={`${id}-optionbar`} className={`optionbar ${id}-noDrag`}>
+    <div id={`${id}-optionbar`} className={`optionbar`}>
       <img src={isPinned === true ? pinnedButton : notpinnedButton} className='option' style={{height: "32px", width: "26px"}} alt="pin" 
            onClick={async (event) => await updatePinStatus(id, isPinned, reverseActions)} />
       <div className='option-backgroundColor' style={{background: `${backgroundColor}`}} 

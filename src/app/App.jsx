@@ -100,7 +100,6 @@ function App() {
   
   const location = useLocation();
   const boardId = location.pathname.slice(7).replace(/[^a-z0-9_-]/g, ''); // Removes the leading '/'
-  console.log(boardId);
 
   return (
     // return to the original location if the virtual keyboard has caused shifted right or bottom on the screen

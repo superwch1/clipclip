@@ -24,6 +24,7 @@ function QuillToolbar ({id}) {
       <button className="ql-italic"></button>
       <button className="ql-underline"></button>
       <button className="ql-strike"></button>
+      <button className="ql-link"></button>
       <select className="ql-align"></select>
       
       <select className="ql-color">
