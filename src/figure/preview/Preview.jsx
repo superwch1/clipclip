@@ -31,25 +31,32 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
   // containerRef and barRef are used to check whether the click are inside the rnd and bar 
   const containerRef = useRef(null);
   const barRef = useRef(null);
+  const imageRef = useRef(null);
   onClickOutsideFigure(containerRef, barRef, id, null, null);  
 
 
   useEffect(() => {
+    // keep getting the preview data every 2 seconds if there are no response from server
+    const getInfo = async () => {
+      while (true) {
+        const response = await axios.get(`${Config.url}/preview`, { params: { id } });
+        if (response.status === 200) {
+          setPreviewData(response.data);
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    };
+
     // the resize handles need to trigger mousedown and event propagation manually
     addEventForResizeHandle(id);
+    getInfo();
+
   }, []);
 
 
   // get the previewData after rendering the initial figure, value is null for default
   const [previewData, setPreviewData] = useState(null);
-
-  useEffect(() => {
-    const getInfo = async () => {
-      const response = await axios.get(`${Config.url}/preview`, { params: { id: id} });
-      setPreviewData(response.data[0]);
-    }
-    getInfo();
-  }, [url])
  
   
   // Rnd cannot be used to pass the ref
@@ -76,7 +83,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
           
           {previewData !== null && previewData !== undefined && 
           <>
-            <img src={previewData.image} className='preview-media' draggable={false} />
+            <img src={previewData.image} className='preview-media' draggable={false} ref={imageRef} onError={(event) => imageOnError(event, imageRef)}/>
             <a className={`${id}-noDrag preview-content`} target="_blank" href={previewData.url}>
               <p className='preview-text preview-title'>{previewData.title}</p>
               {/* <p className='preview-text'>{previewData.description}</p> */}
@@ -92,6 +99,17 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
     </>
   )
 }, figureHasEqualProps);
+
+
+/** 
+ * attempt to reload the picture when there are no response from server
+ * @param {*} event
+ * @param {*} ref
+ * @returns null
+ */
+async function imageOnError(event, ref) {
+  setTimeout(() => ref.current.src = ref.current.src, 2000);
+}
 
 
 /** 

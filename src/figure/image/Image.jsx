@@ -67,7 +67,8 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
             data-id={id} data-type={"image"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} 
             data-backgroundcolor={backgroundColor} data-ispinned={isPinned} data-boardid={boardId}>
           
-          <img id={`${id}-image`} draggable={false} ref={imageRef} alt="Downloaded" src={`${Config.url}/image/?url=${url}`} onLoad={(event) => imageOnLoad(event, imageRef, isImageBase64)} style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
+          <img id={`${id}-image`} draggable={false} ref={imageRef} alt="Downloaded" src={`${Config.url}/image/?url=${url}`} style={{ width: '100%', height: '100%', objectFit: 'contain'}} 
+               onLoad={(event) => imageOnLoad(event, imageRef, isImageBase64)} onError={(event) => imageOnError(event, imageRef)}/>
         </div>
       </Rnd>
 
@@ -79,7 +80,24 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
 }, figureHasEqualProps);
 
 
+/** 
+ * attempt to reload the picture when there are no response from server
+ * @param {*} event
+ * @param {*} ref
+ * @returns null
+ */
+async function imageOnError(event, ref) {
+  setTimeout(() => ref.current.src = ref.current.src, 2000);
+}
 
+
+/** 
+ * convert the image to base64 format after loading
+ * @param {*} event
+ * @param {*} ref
+ * @param {*} iSimageBase64
+ * @returns null
+ */
 async function imageOnLoad(event, ref, isImageBase64) {
   if(isImageBase64.current === true) {
     return;
