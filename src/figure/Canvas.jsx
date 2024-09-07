@@ -16,7 +16,6 @@ import figureApi from '../server/figureApi.mjs'
 function Canvas({scale, reverseActions, boardId}) {
 
   const [figures, setFigures] = useState([]);
-  const isFirstConnection = useRef(true);
 
   // if connection is lost, messages are queued up and sent after reconnected
   const { sendMessage } = useWebSocket(`${Config.ws}/figures?boardId=${boardId}`, {
@@ -32,17 +31,10 @@ function Canvas({scale, reverseActions, boardId}) {
       interval: 5000, // every 5 seconds, a ping message will be sent
     }, 
     
-    // get all the figures properties from web server if it is not connected for longer than timeout period
-    onOpen: async (event) => {
-      if (isFirstConnection.current === true) {
-        isFirstConnection.current = false;
-        var figureList = await getFigureFromServer(boardId);
-        setFigures(figureList);
-      }
-      else {
-        var figureList = await getFigureFromServer(boardId);
-        setFigures(figureList);
-      }
+    // get all the figures properties from web server on every connection / reconnect from websocket
+    // should be using sync since async and await maybe causing error in mobile of not getting properties of figures
+    onOpen: (event) => {
+      getFigureFromServer(boardId).then(figureList => setFigures(figureList));
     }
   });
  
@@ -70,17 +62,16 @@ function Canvas({scale, reverseActions, boardId}) {
 /** 
  * get the figures within the boardId and map the response into an array 
  * @param {*} boardId
- * @returns figureList or []
+ * @returns figures or []
  */
 async function getFigureFromServer(boardId) {
-  const response = await figureApi.readFigures(boardId);
+  var response = await figureApi.readFigures(boardId);
 
   if (response.status === 200) {
-    const figureList = response.data.map((figure, index) => ({
-      id: figure._id, type: figure.type, x: figure.x, y: figure.y, width: figure.width, height: figure.height, backgroundColor: figure.backgroundColor, 
-      url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned
+    var figures = response.data.map((figure) => ({
+      id: figure._id, ...figure,
     }));
-    return figureList;
+    return figures;
   }
   else {
     return [];
@@ -143,8 +134,7 @@ function deleteFigure(deletedFigure, figures, setFigures) {
  * @returns null
  */
 function createFigure(receivedFigure, figures, setFigures) {
-  const newFigure = { id: receivedFigure._id, x: receivedFigure.x, y: receivedFigure.y, width: receivedFigure.width, height: receivedFigure.height, 
-    type: receivedFigure.type, backgroundColor: receivedFigure.backgroundColor, url: receivedFigure.url, zIndex: receivedFigure.zIndex, isPinned: receivedFigure.isPinned };
+  const newFigure = { id: receivedFigure._id, ...receivedFigure };
     setFigures([...figures, newFigure]);
 }
 
@@ -157,15 +147,14 @@ function createFigure(receivedFigure, figures, setFigures) {
  * @returns null
  */
 function updateFigure(receivedFigure, figures, setFigures) {
-  const updatedFigures = figures.map((fig) => {
-    if (fig.id === receivedFigure._id) {
-      return { id: receivedFigure._id, x: receivedFigure.x, y: receivedFigure.y, width: receivedFigure.width, height: receivedFigure.height, 
-        type: receivedFigure.type, backgroundColor: receivedFigure.backgroundColor, url: receivedFigure.url, zIndex: receivedFigure.zIndex, isPinned: receivedFigure.isPinned 
+  const updatedFigures = figures.map((figure) => {
+    if (figure.id === receivedFigure._id) {
+      return { 
+        id: receivedFigure._id, ...receivedFigure
       };
     }
-    return fig;
+    return figure;
   });
-    
   setFigures(updatedFigures);
 }
 

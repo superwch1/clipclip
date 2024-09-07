@@ -33,21 +33,14 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
   // containerRef and barRef are used to check whether the click are inside the rnd and bar 
   const containerRef = useRef(null);
   const barRef = useRef(null);
+  const imageRef = useRef(null);
+  const isImageBase64 = useRef(false);
   onClickOutsideFigure(containerRef, barRef, id, null, null);  
 
 
   useEffect(() => {
     // resize handles need to trigger mousedown and event propagation manually
     addEventForResizeHandle(id);
-
-    // reason for converting src to base64 here is because oncopy can't process axios or else it return [] for types
-    var imageElement = document.getElementById(`${id}-image`);
-    axios.get(`${Config.url}/image/?url=${url}`, { responseType: 'arraybuffer' }).then(response => {
-      const base64Data = Buffer.from(response.data, 'binary').toString('base64');
-      const contentType = response.headers['content-type'] || response.headers['Content-Type'];
-      const base64 = `data:${contentType};base64,${base64Data}`;
-      imageElement.src = base64;
-    });
   }, []);
 
 
@@ -74,7 +67,7 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
             data-id={id} data-type={"image"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} 
             data-backgroundcolor={backgroundColor} data-ispinned={isPinned} data-boardid={boardId}>
           
-          <img id={`${id}-image`} draggable={false} alt="Downloaded" style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
+          <img id={`${id}-image`} draggable={false} ref={imageRef} alt="Downloaded" src={`${Config.url}/image/?url=${url}`} onLoad={(event) => imageOnLoad(event, imageRef, isImageBase64)} style={{ width: '100%', height: '100%', objectFit: 'contain'}} />
         </div>
       </Rnd>
 
@@ -84,6 +77,21 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
     </>
   )
 }, figureHasEqualProps);
+
+
+
+async function imageOnLoad(event, ref, isImageBase64) {
+  if(isImageBase64.current === true) {
+    return;
+  }
+
+  var response = await axios.get(ref.current.src, { responseType: 'arraybuffer' });
+  var base64Data = Buffer.from(response.data, 'binary').toString('base64');
+  var contentType = response.headers['content-type'] || response.headers['Content-Type'];
+  ref.current.src = `data:${contentType};base64,${base64Data}`;
+
+  isImageBase64.current = true;
+}
 
 
 /** 
