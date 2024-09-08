@@ -81,7 +81,6 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
     // not allow to edit and select text before having the second click in quill
     const quillEditor = document.getElementById(`${id}`).getElementsByClassName('ql-editor')[0];
     quillEditor.setAttribute('contenteditable', false);
-    quillEditor.style.userSelect = 'none';
 
     if (isPinned === false) {
       quillEditor.classList.add(`move-cursor`);
@@ -93,8 +92,9 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
 
     // set the placeholder text for link
     const quillTooltipEditor = document.getElementById(`${id}-bar`).getElementsByClassName('ql-tooltip-editor')[0];
-    quillTooltipEditor.querySelectorAll('input')[0].placeholder = "Enter the link here";
-    quillTooltipEditor.querySelectorAll('input')[0].setAttribute('data-link', "Enter the link here");
+    quillTooltipEditor.querySelectorAll('input')[0].placeholder = "press Return to submit";
+    quillTooltipEditor.querySelectorAll('input')[0].setAttribute('data-link', "press Return to submit");
+    quillTooltipEditor.querySelectorAll('input')[0].classList.add("ql-tooltip-input"); // for determine whether it is focused or not
     
     quillTooltipEditor.querySelectorAll('input')[0].addEventListener('blur', (event) => {
       quillTooltip.classList.remove('ql-editing');
@@ -180,7 +180,6 @@ function onMouseUpTouchUp(id, isPinned) {
 
   quillEditor.classList.add(`${id}-noDrag`); // .${id}-noDrag disable for drag in rnd but outer part can continue to be dragged in rnd
   quillEditor.setAttribute('contenteditable', true);
-  quillEditor.style.userSelect = 'auto'; // allow the user to select text
   
   if (isPinned === false) {
     quillEditor.classList.remove(`move-cursor`); // change cursor back to pointer, default is move
@@ -199,7 +198,6 @@ function onClickOutsideFigureBeforeFunction(id) {
 
   quillEditor.classList.remove(`${id}-noDrag`); // .${id}-noDrag disable for drag in rnd but outer part can continue to be dragged in rnd
   quillEditor.setAttribute('contenteditable', false);
-  quillEditor.style.userSelect = 'none'; // unselect the text inside quill and not allow user to select text
 
   if (figure.getAttribute("data-ispinned") === "false") {
     quillEditor.classList.add(`move-cursor`); // change cursor back to pointer, default is move

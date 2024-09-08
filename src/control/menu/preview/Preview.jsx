@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react';
 import FigureApi from '../../../server/figureApi.mjs'
 import '../Menu.css'
 import { toast } from 'react-toastify';
+import * as rdd from 'react-device-detect'
 
 
 /** 
@@ -25,8 +26,8 @@ function Preview({scale, reverseActions, boardId}) {
       <div className='control-button' ref={previewButtonRef} onClick={(event) => showInput(controlUrlId)}  
            style={{width: "64px", height: "38px", borderRadius: "20px", border: "1px solid #78290F", display: "flex", justifyContent: "center", alignItems: "center", color: "#78290F", fontWeight: "bold"}} >Link</div>
 
-      <div id={controlUrlId} ref={urlRef}>
-        <input id={`${controlUrlId}-input`} type='text' placeholder="press Enter to submit" 
+      <div id={controlUrlId} ref={urlRef} style={{left: rdd.isMobile ? "10px" : "110px", top: rdd.isMobile ? "80px" : "100px"}}>
+        <input id={`${controlUrlId}-input`} type='text' placeholder="press Return to submit" 
           onKeyDown={(event) => createPreview(event, controlUrlId, scale, document.getElementById(`${controlUrlId}-input`).value, reverseActions, boardId)}/>
       </div>  
     </>
@@ -58,7 +59,13 @@ async function createPreview(event, controlUrlId, scale, url, reverseActions, bo
   if (event.key === 'Enter' || event.keyCode === 13) {
 
     var position = JSON.parse(localStorage.getItem('position'));
-    var figurePosition = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
+    var figurePosition;
+    if (rdd.isMobile) {
+      figurePosition = { x: -((position.x - 50) / scale) , y: -((position.y - 120) / scale)};
+    }
+    else {
+      figurePosition = { x: -((position.x - 100) / scale) , y: -((position.y - 170) / scale)};
+    }
 
     const figure = { boardId: boardId, type: "preview", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: url, zIndex: 5, isPinned: false}
     var response = await FigureApi.createPreview(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);

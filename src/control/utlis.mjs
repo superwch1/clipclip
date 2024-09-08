@@ -1,30 +1,15 @@
-import Quill from 'quill'
-
 /** 
- * check whether the link input or editor has been focused
+ * check whether the input (link) on preview or ql-tooltip or editor has been focused
  * @returns true or false
  */
-function isUrlFocusedOrEditorFocused() {
-  var controlUrlInputElement = document.getElementById('control-url-input');
-  var isUrlFocused = document.activeElement === controlUrlInputElement;
-
-  var selectedObjects = document.getElementsByClassName('selected-object');
-  var isEditorFocused = false;
-
-  for (let i = 0; i < selectedObjects.length; i++) {
-    if (selectedObjects[i].classList.contains('editor')) {
-
-      const container = document.querySelector(`#${selectedObjects[i].id}-quill`);
-      const quill = Quill.find(container);
-      isEditorFocused = quill.hasFocus();
-    }
+function isInputOrEditorFocused() {
+  var focusedElement = document.activeElement;
+  if (focusedElement.id === "control-url-input" || focusedElement.classList.contains("ql-editor") || focusedElement.classList.contains("ql-tooltip-input")) {
+    return true;
   }
-  
-  // only paste items when user is not pasting url and no editor is current selected
-  if (isUrlFocused === false && isEditorFocused === false) {
+  else {
     return false;
   }
-  return true;
 }
 
-export { isUrlFocusedOrEditorFocused }
+export { isInputOrEditorFocused }

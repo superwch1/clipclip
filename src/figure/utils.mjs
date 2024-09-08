@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import FigureApi from '../server/figureApi.mjs'
 import { toast } from 'react-toastify';
+import Quill from 'quill'
 
 /** 
  * hide the option bar and resize handle when click outside the figure
@@ -28,6 +29,15 @@ function onClickOutsideFigure(containerRef, barRef, id, beforeFunction, afterFun
   
         var resizeWrapperClass = document.getElementsByClassName(`${id}-resizeHandle`);
         resizeWrapperClass[0].style.opacity = '0';
+
+        // unselect the text inside quill only when it has selection, otherwise, other quill with selected text will be affected
+        if (containerRef.current.classList.contains("editor")) {
+          const container = document.querySelector(`#${containerRef.current.id}-quill`);
+          const quill = Quill.find(container);
+          if (quill.getSelection() !== null) {
+            quill.setSelection(null, undefined);
+          }
+        }
   
         if (afterFunction !== null) {
           afterFunction(id);

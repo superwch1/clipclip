@@ -2,6 +2,7 @@ import { toast } from 'react-toastify';
 import FigureApi from '../../../server/figureApi.mjs'
 import EditorButton from './editorButton.png'
 import '../Menu.css'
+import * as rdd from 'react-device-detect'
 
 /** 
  * click button to create a editor
@@ -29,8 +30,13 @@ function Editor({scale, reverseActions, boardId}) {
  */
 async function createEditor(event, scale, reverseActions, boardId) { 
   var position = JSON.parse(localStorage.getItem('position'));
-  var figurePosition = { x: -(position.x / scale) + 100, y: -(position.y / scale) + 100};
-
+  var figurePosition;
+  if (rdd.isMobile) {
+    figurePosition = { x: -((position.x - 50) / scale) , y: -((position.y - 120) / scale)};
+  }
+  else {
+    figurePosition = { x: -((position.x - 100) / scale) , y: -((position.y - 170) / scale)};
+  }
   
   const figure = { boardId: boardId, type: "editor", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
   var response = await FigureApi.createEditor(boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, null, null);

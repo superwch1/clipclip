@@ -1,7 +1,7 @@
 import * as rdd from 'react-device-detect';
 import { useRef, useEffect } from 'react';
 import FigureApi from '../../server/figureApi.mjs';
-import { isUrlFocusedOrEditorFocused } from '../utlis.mjs';
+import { isInputOrEditorFocused } from '../utlis.mjs';
 import Quill from 'quill'
 
 /** 
@@ -33,7 +33,7 @@ function CutAndDelete({reverseActions}) {
  */
 async function deleteFigure(event, reverseActions) {
 
-  if (isUrlFocusedOrEditorFocused() === true || event.key !== 'Delete') {
+  if (isInputOrEditorFocused() === true || event.key !== 'Delete') {
     return;
   }
   
@@ -108,7 +108,7 @@ async function deleteFigure(event, reverseActions) {
  * @returns null
  */
 async function cutFigure(event, reverseActions) {
-  if (isUrlFocusedOrEditorFocused() === true) {
+  if (isInputOrEditorFocused() === true) {
     return;
   }
 

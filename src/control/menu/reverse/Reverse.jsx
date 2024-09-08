@@ -3,7 +3,7 @@ import figureApi from '../../../server/figureApi.mjs';
 import ReverseButton from './reverseButton.png'
 import { useEffect, useRef } from 'react'
 import '../Menu.css'
-import { isUrlFocusedOrEditorFocused } from '../../utlis.mjs';
+import { isInputOrEditorFocused } from '../../utlis.mjs';
 
 /** 
  * reverse button or use keyboard to reverse an action
@@ -16,7 +16,7 @@ function Reverse({reverseActions}) {
 
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
-      if (event.ctrlKey && event.key === 'z' && isUrlFocusedOrEditorFocused() === false) {
+      if (event.ctrlKey && event.key === 'z' && isInputOrEditorFocused() === false) {
         sendReverseActions(reverseActions, waitingResponse);
       }
     });
@@ -91,8 +91,7 @@ async function sendReverseActions(reverseActions, waitingResponse) {
     // 2. user A delete the figure
     // 3. user B reverse but cannot find the figure
     // 4. user B trapped in reverse action
-
-    console.log(response.status);
+    
     if (response.status === 200) {
       reverseActions.current.pop();
     }

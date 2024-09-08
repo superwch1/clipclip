@@ -2,7 +2,7 @@ import * as rdd from 'react-device-detect';
 import Quill from 'quill'
 import { useRef, useEffect } from 'react';
 import FigureApi from '../../server/figureApi.mjs';
-import { isUrlFocusedOrEditorFocused } from '../utlis.mjs';
+import { isInputOrEditorFocused } from '../utlis.mjs';
 import { toast } from 'react-toastify';
 
 /** 
@@ -36,7 +36,8 @@ function CopyAndPaste({scale, reverseActions, boardId}) {
  * @returns null
  */
 function copyFigure(event) {
-  if (isUrlFocusedOrEditorFocused() === true) {
+  
+  if (isInputOrEditorFocused() === true) {
     return;
   }
 
@@ -108,7 +109,7 @@ async function pasteFigure(event, scale, pastingFigure, reverseActions, boardId)
   pastingFigure.current = true;
 
   // todo - need to be url focused, not openeded
-  if (isUrlFocusedOrEditorFocused() === true) {
+  if (isInputOrEditorFocused() === true) {
     return;
   }
   
