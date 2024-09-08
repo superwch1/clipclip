@@ -26,6 +26,50 @@ export default class figureApi {
 
 
   /** 
+   * get the properties of preview from id
+   * @returns 200 - Okay
+   * @returns 202 - preview not found (since iisnode provide default value for 400)
+   * @returns 404 - no connection to server or Internet
+   * @returns 500 - server error
+  */
+  static async readPreview(id) {
+    try {
+      var response = await axios.get(`${Config.url}/preview`, {params: { id }});
+      return response;
+    }
+    catch (axiosError) {
+      // no connect to internet or server closed will be have "ERR_NETWORK" and no response
+      if(axiosError.code === "ERR_NETWORK"){ 
+        return { status: 404, data: "no connection" };
+      }
+      return { status: 500, data: "server error" };
+    }
+  }
+
+
+  /** 
+   * get the buffers from image
+   * @returns 200 - Okay
+   * @returns 202 - image not found (since iisnode provide default value for 400)
+   * @returns 404 - no connection to server or Internet
+   * @returns 500 - server error
+  */
+  static async readImage(url) {
+    try {
+      var response = await axios.get(`${Config.url}/image/?url=${url}`, { responseType: 'arraybuffer' });
+      return response;
+    }
+    catch (axiosError) {
+      // no connect to internet or server closed will be have "ERR_NETWORK" and no response
+      if(axiosError.code === "ERR_NETWORK"){ 
+        return { status: 404, data: "no connection" };
+      }
+      return { status: 500, data: "server error" };
+    }
+  }
+
+
+  /** 
    * create an editor
    * @returns 200 - Okay
    * @returns 202 - invalid data in body or parameters (since iisnode provide default value for 400)

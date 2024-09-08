@@ -14,6 +14,7 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import './quill.bubble.css' // https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.bubble.css - prevent CORS issue of screenshot, remove last line for mapping issue
 import { useLocation } from 'react-router-dom'
+import { v4 as uuidv4 } from 'uuid';
 
 
 
@@ -92,6 +93,24 @@ function App() {
   }, []);
 
 
+  // unmounted and create a new instance of Component by changing the key of interface
+  const [interfaceKey, setInterfaceKey] = useState(uuidv4());
+  if (rdd.isMobile) {
+    useEffect(() => {
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          setInterfaceKey(uuidv4());
+        }
+      };  
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+  
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }, []);
+  }
+
+
 
   // store the reversed actions after performing create / update / delete figures
   // the actions will be manipulated inside reverse.jsx inside menu
@@ -117,7 +136,7 @@ function App() {
 
         <TransformComponent>
           {/* when cursor event is set to none, the cursor will not be respond to mouse event, it needs to create another div */}
-          <div id="interface" style={{ width: `${Config.interfaceWidth}px`, height: `${Config.interfaceHeight}px`}}>
+          <div id="interface" key={interfaceKey} style={{ width: `${Config.interfaceWidth}px`, height: `${Config.interfaceHeight}px`}}>
             <Canvas scale={scale} reverseActions={reverseActions} boardId={boardId} />  
             <Cursors scale={scale} boardId={boardId} /> {/* cursor needs to stay inside interface otherwise the position will be incorrect */}
           </div>

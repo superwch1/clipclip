@@ -18,10 +18,10 @@ function Canvas({scale, reverseActions, boardId}) {
   const [figures, setFigures] = useState([]);
 
   // if connection is lost, messages are queued up and sent after reconnected
-  const { sendMessage } = useWebSocket(`${Config.ws}/figures?boardId=${boardId}`, {
+  const { sendMessage, getWebSocket } = useWebSocket(`${Config.ws}/figures?boardId=${boardId}`, {
     onMessage: (event) => processMessageFromWebSocket(event, figures, setFigures),
     shouldReconnect: (closeEvent) => true, // it will attempt to reconnect after the connection is closed
-    reconnectInterval: () => 2000,
+    reconnectInterval: () => 1000,
     filter: (message) => false, // prevent rerender every time it receives a message from websocket
 
     heartbeat: {

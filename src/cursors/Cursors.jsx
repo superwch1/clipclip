@@ -29,7 +29,7 @@ function Cursors({scale, boardId}) {
   const { sendMessage } = useWebSocket(`${Config.ws}/cursors?uuid=${cursorUUID.current}&isDesktop=${rdd.isDesktop}&boardId=${boardId}`, {
     onMessage: (event) => processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState),
     shouldReconnect: (closeEvent) => true, // it will attempt to reconnect after the connection is closed
-    reconnectInterval: () => 5000,
+    reconnectInterval: () => 1000,
     filter: (message) => false, // prevent rerender every time it receives a message from websocket
 
     // no need to heartbeat since after reconnection, the cursor position will be updated automatcially in next incoming message

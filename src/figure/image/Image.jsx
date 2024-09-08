@@ -4,9 +4,9 @@ import '../../config/Config.css'
 import Config from '../../config/Config'
 import OptionBar from '../optionBar/OptionBar'
 import { Rnd } from "react-rnd";
-import axios from 'axios';
 import { Buffer } from "buffer";
 import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureHasEqualProps } from '../utils.mjs'
+import figureApi from '../../server/figureApi.mjs'
 
 
 /** 
@@ -68,7 +68,7 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
             data-backgroundcolor={backgroundColor} data-ispinned={isPinned} data-boardid={boardId}>
           
           <img id={`${id}-image`} draggable={false} ref={imageRef} alt="Downloaded" src={`${Config.url}/image/?url=${url}`} style={{ width: '100%', height: '100%', objectFit: 'contain'}} 
-               onLoad={(event) => imageOnLoad(event, imageRef, isImageBase64)} onError={(event) => imageOnError(event, imageRef)}/>
+               onLoad={(event) => imageOnLoad(event, url, imageRef, isImageBase64)} onError={(event) => imageOnError(event, imageRef)}/>
         </div>
       </Rnd>
 
@@ -87,7 +87,7 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
  * @returns null
  */
 async function imageOnError(event, ref) {
-  setTimeout(() => ref.current.src = ref.current.src, 2000);
+  setTimeout(() => ref.current.src = ref.current.src, 1000);
 }
 
 
@@ -98,12 +98,12 @@ async function imageOnError(event, ref) {
  * @param {*} iSimageBase64
  * @returns null
  */
-async function imageOnLoad(event, ref, isImageBase64) {
+async function imageOnLoad(event, url, ref, isImageBase64) {
   if(isImageBase64.current === true) {
     return;
   }
 
-  var response = await axios.get(ref.current.src, { responseType: 'arraybuffer' });
+  var response = await figureApi.readImage(url);
   var base64Data = Buffer.from(response.data, 'binary').toString('base64');
   var contentType = response.headers['content-type'] || response.headers['Content-Type'];
   ref.current.src = `data:${contentType};base64,${base64Data}`;

@@ -5,7 +5,7 @@ import Config from '../../config/Config'
 import OptionBar from '../optionBar/OptionBar'
 import { Rnd } from "react-rnd"
 import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChangeSizeAndPosition, figureHasEqualProps } from '../utils.mjs'
-import axios from 'axios'
+import figureApi from '../../server/figureApi.mjs'
 
 /** 
  * show the link preview, option bar
@@ -36,17 +36,21 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
 
 
   useEffect(() => {
-    // keep getting the preview data every 2 seconds if there are no response from server
-    const getInfo = async () => {
-      while (true) {
-        const response = await axios.get(`${Config.url}/preview`, { params: { id } });
-        if (response.status === 200) {
-          setPreviewData(response.data);
-          break;
+    // keep getting the preview data every second if there are no response from server
+    function getInfo() {
+      figureApi.readPreview(id)
+        .then(response => {
+          if (response.status === 200) {
+            setPreviewData(response.data);
+          } else {
+            setTimeout(getInfo, 1000);
+          }
+        })
+        .catch(error => {
+          setTimeout(getInfo, 1000); 
         }
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-    };
+      );
+    }
 
     // the resize handles need to trigger mousedown and event propagation manually
     addEventForResizeHandle(id);
@@ -108,7 +112,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
  * @returns null
  */
 async function imageOnError(event, ref) {
-  setTimeout(() => ref.current.src = ref.current.src, 2000);
+  setTimeout(() => ref.current.src = ref.current.src, 1000);
 }
 
 
