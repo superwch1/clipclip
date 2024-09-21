@@ -26,14 +26,18 @@ function CutAndDelete({reverseActions}) {
 
 
 /** 
- * delete the selected figure
+ * delete the selected figure with delete or backspace key
  * @param {*} event 
  * @param {*} reverseActions 
  * @returns null
  */
 async function deleteFigure(event, reverseActions) {
 
-  if (isInputOrEditorFocused() === true || event.key !== 'Delete') {
+  if (isInputOrEditorFocused() === true) {
+    return;
+  }
+
+  if (!(event.key === 'Delete' || event.key === 'Backspace')) {
     return;
   }
   

@@ -15,7 +15,7 @@ import * as rdd from 'react-device-detect'
  * @param {*} boardId
  * @returns div with buttons
  */
-function Menu({scale, reverseActions, boardId}) {
+function Menu({scale, reverseActions, boardId, position}) {
 
   // const isTakingScreenshot = useRef(false);
   const [visible, setVisible] = useState(true);
@@ -28,11 +28,11 @@ function Menu({scale, reverseActions, boardId}) {
            style={{flexDirection: "row", gap: '10px', display: 'flex', opacity: visible ? 1 : 0, height: 'fit-content',
                    visibility: visible ? 'visible' : 'hidden', transition: `opacity 0.5s ease-in-out, visibility 0.5s ease-in-out`,
                    backgroundColor: "#FFEED6", alignItems: "center", padding: "9px 16px 9px 16px", borderRadius: "30px", boxShadow: "0px 4px 4px 0px #00000040" }}>
-        <Preview scale={scale} reverseActions={reverseActions} boardId={boardId} />
-        <Image scale={scale} reverseActions={reverseActions} boardId={boardId} />
+        <Preview scale={scale} reverseActions={reverseActions} boardId={boardId} position={position} />
+        <Image scale={scale} reverseActions={reverseActions} boardId={boardId} position={position} />
         <Gesture />
         <Reverse reverseActions={reverseActions} />
-        <Editor scale={scale} reverseActions={reverseActions} boardId={boardId} />
+        <Editor scale={scale} reverseActions={reverseActions} boardId={boardId} position={position} />
       </div>
     </div>
     

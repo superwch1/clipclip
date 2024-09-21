@@ -12,14 +12,14 @@ import { toast } from 'react-toastify';
  * @param {*} boardId 
  * @returns empty div
  */
-function CopyAndPaste({scale, reverseActions, boardId}) {
+function CopyAndPaste({scale, reverseActions, boardId, cursor, position}) {
 
   const pastingFigure = useRef(false);
 
   // only for desktop user with cursor position
   if (rdd.isDesktop) {
     useEffect(() => {
-      document.onpaste = async (event) => await pasteFigure(event, scale, pastingFigure, reverseActions, boardId); // can't use loudash since the event cannot be passed to the function in loudash
+      document.onpaste = async (event) => await pasteFigure(event, scale, pastingFigure, reverseActions, boardId, cursor, position); // can't use loudash since the event cannot be passed to the function in loudash
       document.oncopy = (event) => copyFigure(event); // can't use async here
     }, [scale]);
   }
@@ -101,7 +101,7 @@ function copyFigure(event) {
  * @param {*} boardId
  * @returns null
  */
-async function pasteFigure(event, scale, pastingFigure, reverseActions, boardId){
+async function pasteFigure(event, scale, pastingFigure, reverseActions, boardId, cursor, position){
   // prevent user keep pasting new figure into the canvas by sapmming ctrl+v
   if (pastingFigure.current === true) {
     return;
@@ -113,15 +113,13 @@ async function pasteFigure(event, scale, pastingFigure, reverseActions, boardId)
     return;
   }
   
-  var position = JSON.parse(localStorage.getItem('position'));
-  var cursor = JSON.parse(localStorage.getItem('curosr'));
-  position = { x: -(position.x - cursor.x) / scale, y: -(position.y - cursor.y) / scale};
+  var figurePosition = { x: -(position.current.x - cursor.current.x) / scale, y: -(position.current.y - cursor.current.y) / scale};
 
   if (event.clipboardData.types.includes('clipclip/figure')) {
-    pasteClipClipType(event, position, reverseActions, boardId);
+    pasteClipClipType(event, figurePosition, reverseActions, boardId);
   }
   else {
-    pasteOrdinaryType(event, position, reverseActions, boardId);
+    pasteOrdinaryType(event, figurePosition, reverseActions, boardId);
   }
   
   setTimeout(() => pastingFigure.current = false, 500);

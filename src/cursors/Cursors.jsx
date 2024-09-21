@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
  * @param {*} boardId
  * @returns div with image of cursors
  */
-function Cursors({scale, boardId}) {
+function Cursors({scale, boardId, position, cursor}) {
 
   const cursorPosition = useRef({x: 0, y: 0});
   const previousCursorPosition = useRef(null);
@@ -39,17 +39,15 @@ function Cursors({scale, boardId}) {
   if (rdd.isDesktop) {
     useEffect(() => {  
         const handleMouseMove = (event) => {
-          cursorPosition.current.x = event.clientX;
-          cursorPosition.current.y = event.clientY;
+          cursorPosition.current = { x: event.clientX, y: event.clientY };
+          cursor.current = { x: event.clientX, y: event.clientY };
 
-          // save cursor position for create figure from onPaste
-          localStorage.setItem('curosr', JSON.stringify({x: event.clientX, y: event.clientY}));
+          localStorage.setItem(`${boardId.current}_props`, JSON.stringify({scale: scale, position: position.current, cursor: cursor.current}));
         };
         document.onmousemove = handleMouseMove;
     
         let id = setInterval(() => {
-          var position = JSON.parse(localStorage.getItem('position'));
-          translatePosition.current = { x: -position.x, y: -position.y};
+          translatePosition.current = { x: -position.current.x, y: -position.current.y};
                   
           if (previousCursorPosition.current === null) {
             previousCursorPosition.current = { x: cursorPosition.current.x, y: cursorPosition.current.y }
@@ -80,12 +78,14 @@ function Cursors({scale, boardId}) {
     }, [scale]);
   }
 
+  var cursorSize = 20 / scale;
+
   return (
     <div>
       { 
         cursorsArray.map((item, index) => {
           return <img key={`${item.key}`} id={`${item.key}`} src={cursorImage} className='cursor'
-                      style={{transform: `translate(${item.value.x}px, ${item.value.y}px)`, position: 'absolute', left: '0px', top: '0px', width: '20px', height: '20px', zIndex: '100'}}/>
+                      style={{transform: `translate(${item.value.x}px, ${item.value.y}px)`, position: 'absolute', left: '0px', top: '0px', width: `${cursorSize}px`, height: `${cursorSize}px`, zIndex: '100'}}/>
         })
       }
     </div>

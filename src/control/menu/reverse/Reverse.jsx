@@ -16,7 +16,7 @@ function Reverse({reverseActions}) {
 
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
-      if (event.ctrlKey && event.key === 'z' && isInputOrEditorFocused() === false) {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'z' && isInputOrEditorFocused() === false) {
         sendReverseActions(reverseActions, waitingResponse);
       }
     });

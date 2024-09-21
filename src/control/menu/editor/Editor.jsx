@@ -11,9 +11,9 @@ import * as rdd from 'react-device-detect'
  * @param {*} boardId
  * @returns editor button
  */
-function Editor({scale, reverseActions, boardId}) {
+function Editor({scale, reverseActions, boardId, position}) {
   return (
-    <div className='control-button' onClick={(event) => createEditor(event, scale, reverseActions, boardId)}
+    <div className='control-button' onClick={(event) => createEditor(event, scale, reverseActions, boardId, position)}
          style={{backgroundColor: "#78290F", width: "50px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center"}} >
       <img style={{width: "18px", height: "18px"}} src={EditorButton} />
     </div>
@@ -28,14 +28,13 @@ function Editor({scale, reverseActions, boardId}) {
  * @param {*} boardId
  * @returns null
  */
-async function createEditor(event, scale, reverseActions, boardId) { 
-  var position = JSON.parse(localStorage.getItem('position'));
+async function createEditor(event, scale, reverseActions, boardId, position) { 
   var figurePosition;
   if (rdd.isMobile) {
-    figurePosition = { x: -((position.x - 50) / scale) , y: -((position.y - 120) / scale)};
+    figurePosition = { x: -((position.current.x - 50) / scale) , y: -((position.current.y - 120) / scale)};
   }
   else {
-    figurePosition = { x: -((position.x - 100) / scale) , y: -((position.y - 170) / scale)};
+    figurePosition = { x: -((position.current.x - 100) / scale) , y: -((position.current.y - 170) / scale)};
   }
   
   const figure = { boardId: boardId, type: "editor", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};

@@ -10,7 +10,7 @@ import * as rdd from 'react-device-detect'
  * @param {*} boardId
  * @returns image button
  */
-function Image({scale, reverseActions, boardId}) {
+function Image({scale, reverseActions, boardId, position}) {
 
   const hiddenFileInput = useRef(null);
   
@@ -19,7 +19,7 @@ function Image({scale, reverseActions, boardId}) {
       <div className='control-button' onClick={(event) => createImage(hiddenFileInput)} 
            style={{width: "80px", height: "38px", borderRadius: "20px", border: "1px solid #78290F", display: "flex", justifyContent: "center", alignItems: "center", color: "#78290F", fontWeight: "bold"}} >Upload</div>
         
-      <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage(event, scale, event.target.files[0], reverseActions, boardId)} 
+      <input type="file" ref={hiddenFileInput} onChange={(event) => uploadImage(event, scale, event.target.files[0], reverseActions, boardId, position)} 
              style={{display: 'none'}} accept=".jpg, .jpeg, .heif, .png, .webp, .heic, .gif" />   
     </>
   )
@@ -45,17 +45,16 @@ function createImage(hiddenFileInput) {
  * @param {*} baordId
  * @returns null
  */
-async function uploadImage(event, scale, file, reverseActions, boardId) {
+async function uploadImage(event, scale, file, reverseActions, boardId, position) {
   var reader = new FileReader();
   reader.readAsDataURL(file); // turn the file into base64 string
   reader.onload = async function () {
-    var position = JSON.parse(localStorage.getItem('position'));
     var figurePosition;
     if (rdd.isMobile) {
-      figurePosition = { x: -((position.x - 50) / scale) , y: -((position.y - 120) / scale)};
+      figurePosition = { x: -((position.current.x - 50) / scale) , y: -((position.current.y - 120) / scale)};
     }
     else {
-      figurePosition = { x: -((position.x - 100) / scale) , y: -((position.y - 170) / scale)};
+      figurePosition = { x: -((position.current.x - 100) / scale) , y: -((position.current.y - 170) / scale)};
     }
 
     const figure = { boardId: boardId, type: "image", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false}

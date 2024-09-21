@@ -12,7 +12,7 @@ import * as rdd from 'react-device-detect'
  * @param {*} boardId
  * @returns image button
  */
-function Preview({scale, reverseActions, boardId}) {
+function Preview({scale, reverseActions, boardId, position}) {
 
   const previewButtonRef = useRef(null);
 
@@ -28,7 +28,7 @@ function Preview({scale, reverseActions, boardId}) {
 
       <div id={controlUrlId} ref={urlRef} style={{left: rdd.isMobile ? "10px" : "110px", top: rdd.isMobile ? "80px" : "100px"}}>
         <input id={`${controlUrlId}-input`} type='text' placeholder="press Return to submit" 
-          onKeyDown={(event) => createPreview(event, controlUrlId, scale, document.getElementById(`${controlUrlId}-input`).value, reverseActions, boardId)}/>
+          onKeyDown={(event) => createPreview(event, controlUrlId, scale, document.getElementById(`${controlUrlId}-input`).value, reverseActions, boardId, position)}/>
       </div>  
     </>
   )
@@ -55,16 +55,15 @@ function showInput(controlUrlId) {
  * @param {*} boardId
  * @returns image button
  */
-async function createPreview(event, controlUrlId, scale, url, reverseActions, boardId) {
+async function createPreview(event, controlUrlId, scale, url, reverseActions, boardId, position) {
   if (event.key === 'Enter' || event.keyCode === 13) {
 
-    var position = JSON.parse(localStorage.getItem('position'));
     var figurePosition;
     if (rdd.isMobile) {
-      figurePosition = { x: -((position.x - 50) / scale) , y: -((position.y - 120) / scale)};
+      figurePosition = { x: -((position.current.x - 50) / scale) , y: -((position.current.y - 120) / scale)};
     }
     else {
-      figurePosition = { x: -((position.x - 100) / scale) , y: -((position.y - 170) / scale)};
+      figurePosition = { x: -((position.current.x - 100) / scale) , y: -((position.current.y - 170) / scale)};
     }
 
     const figure = { boardId: boardId, type: "preview", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: url, zIndex: 5, isPinned: false}
