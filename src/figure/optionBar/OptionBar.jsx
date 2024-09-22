@@ -17,11 +17,11 @@ import Quill from 'quill'
  * show the option bar (background color, pin, copy, delete, layer)
  * @returns div with option bar
  */
-function OptionBar({id, backgroundColor, isPinned, reverseActions}) {
+function OptionBar({id, backgroundColor, isPinned, reverseActionsRef}) {
 
   // execute the function after it has not been called for 200 milliseconds. 
   const changeColor = debounce(async (newColor) => {
-    await updateBackgroundColor(id, newColor, reverseActions);
+    await updateBackgroundColor(id, newColor, reverseActionsRef);
   }, 200);
 
   const wrapperRef = useRef(null);
@@ -31,13 +31,13 @@ function OptionBar({id, backgroundColor, isPinned, reverseActions}) {
   return (
     <div id={`${id}-optionbar`} className={`optionbar`}>
       <img src={isPinned === true ? pinnedButton : notpinnedButton} className='option' style={{height: "32px", width: "26px"}} alt="pin" 
-           onClick={async (event) => await updatePinStatus(id, isPinned, reverseActions)} />
+           onClick={async (event) => await updatePinStatus(id, isPinned, reverseActionsRef)} />
       <div className='option-backgroundColor' style={{background: `${backgroundColor}`}} 
            onClick={(event) => document.getElementById(`${id}-colorpicker`).classList.remove('colorpicker-hide')}></div>
-      <img src={copyButton} className='option' alt="copy" onClick={async (event) => await copyFigure(id, reverseActions)} />
-      <img src={deleteButton} className='option' alt="delete" onClick={async (event) => await deleteFigure(id, reverseActions) } />
-      <img src={layerupButton} className='option' alt="layerup" onClick={async (event) => await updateLayer(id, "up", reverseActions)} />
-      <img src={layerdownButton} className='option' alt="layerdown" onClick={async (event) => await updateLayer(id, "down", reverseActions)} />
+      <img src={copyButton} className='option' alt="copy" onClick={async (event) => await copyFigure(id, reverseActionsRef)} />
+      <img src={deleteButton} className='option' alt="delete" onClick={async (event) => await deleteFigure(id, reverseActionsRef) } />
+      <img src={layerupButton} className='option' alt="layerup" onClick={async (event) => await updateLayer(id, "up", reverseActionsRef)} />
+      <img src={layerdownButton} className='option' alt="layerdown" onClick={async (event) => await updateLayer(id, "down", reverseActionsRef)} />
       
       <div ref={wrapperRef} id={`${id}-colorpicker`} className={'colorpicker-hide'} style={{position: "absolute", left: "7px", top: "60px", width: "200px", height: "200px"}}>
         <RgbaColorPicker color={{r: parseInt(rgba[0]), g: parseInt(rgba[1]), b: parseInt(rgba[2]), a: parseFloat(rgba[3])}}
@@ -56,10 +56,10 @@ function OptionBar({id, backgroundColor, isPinned, reverseActions}) {
  * update the pin status of figure
  * @param {*} id
  * @param {*} isPinned
- * @param {*} reverseActions   
+ * @param {*} reverseActionsRef   
  * @returns null
  */
-async function updatePinStatus(id, isPinned, reverseActions) {
+async function updatePinStatus(id, isPinned, reverseActionsRef) {
   var originalStatus = isPinned;
   var newStatus = !isPinned;
 
@@ -68,10 +68,10 @@ async function updatePinStatus(id, isPinned, reverseActions) {
     toast(response.data);
   }
   else {
-    if (reverseActions.current.length === 30) {
-      reverseActions.current.shift();
+    if (reverseActionsRef.current.length === 30) {
+      reverseActionsRef.current.shift();
     }
-    reverseActions.current.push({ action: "update-pinStatus", id: id, isPinned: originalStatus });
+    reverseActionsRef.current.push({ action: "update-pinStatus", id: id, isPinned: originalStatus });
   }
 }
 
@@ -80,10 +80,10 @@ async function updatePinStatus(id, isPinned, reverseActions) {
  * update the background color of figure
  * @param {*} id
  * @param {*} newColor
- * @param {*} reverseActions   
+ * @param {*} reverseActionsRef   
  * @returns null
  */
-async function updateBackgroundColor(id, newColor, reverseActions) {
+async function updateBackgroundColor(id, newColor, reverseActionsRef) {
 
   var figureElement = document.getElementById(id);
   var originalColor = figureElement.getAttribute("data-backgroundcolor")
@@ -93,10 +93,10 @@ async function updateBackgroundColor(id, newColor, reverseActions) {
     toast(response.data);
   }
   else {
-    if (reverseActions.current.length === 30) {
-      reverseActions.current.shift();
+    if (reverseActionsRef.current.length === 30) {
+      reverseActionsRef.current.shift();
     }
-    reverseActions.current.push({ action: "update-backgroundColor", id: id, backgroundColor: originalColor });
+    reverseActionsRef.current.push({ action: "update-backgroundColor", id: id, backgroundColor: originalColor });
   }
 }
 
@@ -105,21 +105,21 @@ async function updateBackgroundColor(id, newColor, reverseActions) {
  * update the layer of figure
  * @param {*} id
  * @param {*} action
- * @param {*} reverseActions   
+ * @param {*} reverseActionsRef   
  * @returns null
  */
-async function updateLayer(id, action, reverseActions) {
+async function updateLayer(id, action, reverseActionsRef) {
   var response = await FigureApi.updateLayer(id, action);
   if (response.status !== 200){
     toast(response.data);
   }
   else {
-    if (reverseActions.current.length === 30) {
-      reverseActions.current.shift();
+    if (reverseActionsRef.current.length === 30) {
+      reverseActionsRef.current.shift();
     }
 
     var layerAction = action === "up" ? "down" : "up";
-    reverseActions.current.push({ action: "update-layer", id: id, layerAction: layerAction });
+    reverseActionsRef.current.push({ action: "update-layer", id: id, layerAction: layerAction });
   }
 }
 
@@ -127,10 +127,10 @@ async function updateLayer(id, action, reverseActions) {
 /** 
  * delete the figure
  * @param {*} id
- * @param {*} reverseActions   
+ * @param {*} reverseActionsRef   
  * @returns null
  */
-async function deleteFigure(id, reverseActions) {
+async function deleteFigure(id, reverseActionsRef) {
 
   var figureElement = document.getElementById(id);
 
@@ -174,20 +174,20 @@ async function deleteFigure(id, reverseActions) {
   }
   else {
     
-    if (reverseActions.current.length === 30) {
-      reverseActions.current.shift();
+    if (reverseActionsRef.current.length === 30) {
+      reverseActionsRef.current.shift();
     }
 
     if (figure.type === "editor") {
-      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActionsRef.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, quillDelta: figure.quillDelta});
     }
     else if (figure.type === "image") {
-      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActionsRef.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, base64: figure.base64});
     }
     else if (figure.type === "preview") {
-      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActionsRef.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned});
     }
   }
@@ -197,10 +197,10 @@ async function deleteFigure(id, reverseActions) {
 /** 
  * copy the figure and create copied version next to it
  * @param {*} id
- * @param {*} reverseActions   
+ * @param {*} reverseActionsRef   
  * @returns null
  */
-async function copyFigure(id, reverseActions) {
+async function copyFigure(id, reverseActionsRef) {
 
   var figureElement = document.getElementById(id);
   var figure = {
@@ -252,10 +252,10 @@ async function copyFigure(id, reverseActions) {
     toast(response.data);
   }
   else {
-    if (reverseActions.current.length === 30) {
-      reverseActions.current.shift();
+    if (reverseActionsRef.current.length === 30) {
+      reverseActionsRef.current.shift();
     }
-    reverseActions.current.push({ action: "delete", id: response.data._id });
+    reverseActionsRef.current.push({ action: "delete", id: response.data._id });
   }
 }
 

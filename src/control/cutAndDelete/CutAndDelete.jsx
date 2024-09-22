@@ -1,21 +1,21 @@
 import * as rdd from 'react-device-detect';
-import { useRef, useEffect } from 'react';
+import { useEffect } from 'react';
 import FigureApi from '../../server/figureApi.mjs';
 import { isInputOrEditorFocused } from '../utlis.mjs';
 import Quill from 'quill'
 
 /** 
  * cut and delete figure using keyboard
- * @param {*} reverseActions 
+ * @param {*} reverseActionsRef 
  * @returns empty div
  */
-function CutAndDelete({reverseActions}) {
+function CutAndDelete({reverseActionsRef}) {
 
   // only for desktop user
   if (rdd.isDesktop) {
     useEffect(() => {
-      document.onkeydown = async (event) => await deleteFigure(event, reverseActions);
-      document.oncut = async (event) => await cutFigure(event, reverseActions);
+      document.onkeydown = async (event) => await deleteFigure(event, reverseActionsRef);
+      document.oncut = async (event) => await cutFigure(event, reverseActionsRef);
     }, []);
   }
 
@@ -28,10 +28,10 @@ function CutAndDelete({reverseActions}) {
 /** 
  * delete the selected figure with delete or backspace key
  * @param {*} event 
- * @param {*} reverseActions 
+ * @param {*} reverseActionsRef 
  * @returns null
  */
-async function deleteFigure(event, reverseActions) {
+async function deleteFigure(event, reverseActionsRef) {
 
   if (isInputOrEditorFocused() === true) {
     return;
@@ -83,20 +83,20 @@ async function deleteFigure(event, reverseActions) {
 
   var response = await FigureApi.deleteFigure(figureElement.id);
   if (response.status === 200) {
-    if (reverseActions.current.length === 30) {
-      reverseActions.current.shift();
+    if (reverseActionsRef.current.length === 30) {
+      reverseActionsRef.current.shift();
     }
 
     if (figure.type === "editor") {
-      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActionsRef.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, quillDelta: figure.quillDelta});
     }
     else if (figure.type === "image") {
-      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActionsRef.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, base64: figure.base64});
     }
     else if (figure.type === "preview") {
-      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActionsRef.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned});
     }
   }
@@ -111,7 +111,7 @@ async function deleteFigure(event, reverseActions) {
  * @param {*} event use to prevent the default action
  * @returns null
  */
-async function cutFigure(event, reverseActions) {
+async function cutFigure(event, reverseActionsRef) {
   if (isInputOrEditorFocused() === true) {
     return;
   }
@@ -168,20 +168,20 @@ async function cutFigure(event, reverseActions) {
   var response = await FigureApi.deleteFigure(figureElement.id);
 
   if (response.status === 200) {
-    if (reverseActions.current.length === 30) {
-      reverseActions.current.shift();
+    if (reverseActionsRef.current.length === 30) {
+      reverseActionsRef.current.shift();
     }
 
     if (figure.type === "editor") {
-      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActionsRef.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, quillDelta: figure.quillDelta});
     }
     else if (figure.type === "image") {
-      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActionsRef.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned, base64: figure.base64});
     }
     else if (figure.type === "preview") {
-      reverseActions.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
+      reverseActionsRef.current.push({action: "create", id: figure.id, boardId: figure.boardId, type: figure.type, x: figure.x, y: figure.y, backgroundColor: figure.backgroundColor, 
                                    width: figure.width, height: figure.height, url: figure.url, zIndex: figure.zIndex, isPinned: figure.isPinned});
     }
   }

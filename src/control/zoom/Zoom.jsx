@@ -9,9 +9,12 @@ import * as rdd from 'react-device-detect';
  * @param {*} scale
  * @param {*} setScale 
  * @param {*} checkInsideBoundAndStorePosition
+ * @param {*} cursorRef
+ * @param {*} positionRef
+ * @param {*} boardIdRef
  * @returns div with buttons
  */
-function Zoom({scale, setScale, checkInsideBoundAndStorePosition, cursor, position, boardId}) {
+function Zoom({scale, setScale, checkInsideBoundAndStorePosition, cursorRef, positionRef, boardIdRef}) {
   
   const { setTransform } = useControls();
 
@@ -53,11 +56,11 @@ function Zoom({scale, setScale, checkInsideBoundAndStorePosition, cursor, positi
       var ratio = (newScale - scale) / scale + 1;
 
       // var x = (matrix.m41) * ratio to set origin on top left
-      var x = (matrix.m41 - cursor.current.x * (1 - scale / newScale)) * ratio;
-      var y = (matrix.m42 - cursor.current.y * (1 - scale / newScale)) * ratio
+      var x = (matrix.m41 - cursorRef.current.x * (1 - scale / newScale)) * ratio;
+      var y = (matrix.m42 - cursorRef.current.y * (1 - scale / newScale)) * ratio
 
       setTransform(x, y, newScale, 0);
-      checkInsideBoundAndStorePosition({x: x, y: y, scale: newScale, setScale: setScale, setTransform: setTransform, cursor: cursor, position: position, boardId: boardId});
+      checkInsideBoundAndStorePosition({x: x, y: y, scale: newScale, setScale: setScale, setTransform: setTransform, cursorRef: cursorRef, positionRef: positionRef, boardIdRef: boardIdRef});
     }
     window.addEventListener("wheel", handleWheel);
 
@@ -68,9 +71,9 @@ function Zoom({scale, setScale, checkInsideBoundAndStorePosition, cursor, positi
 
   return (
     <div id="control-zoom" className='control'>
-      <p className="control-text control-scale" onClick={(event) => zoomIn(scale, setScale, setTransform, checkInsideBoundAndStorePosition, cursor, position, boardId)}>+</p>
+      <p className="control-text control-scale" onClick={(event) => zoomIn(scale, setScale, setTransform, checkInsideBoundAndStorePosition, cursorRef, positionRef, boardIdRef)}>+</p>
       <p className="control-text">{Math.round(scale * 100)}%</p>
-      <p className="control-text control-scale" onClick={(event) => zoomOut(scale, setScale, setTransform, checkInsideBoundAndStorePosition, cursor, position, boardId)}>-</p>
+      <p className="control-text control-scale" onClick={(event) => zoomOut(scale, setScale, setTransform, checkInsideBoundAndStorePosition, cursorRef, positionRef, boardIdRef)}>-</p>
     </div>
   )
 }
@@ -84,7 +87,7 @@ function Zoom({scale, setScale, checkInsideBoundAndStorePosition, cursor, positi
  * @param {*} checkInsideBoundAndStorePosition
  * @returns null
  */
-function zoomIn(scale, setScale, setTransform, checkInsideBoundAndStorePosition, cursor, position, boardId){
+function zoomIn(scale, setScale, setTransform, checkInsideBoundAndStorePosition, cursorRef, positionRef, boardIdRef){
   var newScale = scale;
   if (scale + 0.1 <= Config.interfaceMaxZoomScale) { // Zoom in
     newScale = scale + 0.1;
@@ -104,7 +107,7 @@ function zoomIn(scale, setScale, setTransform, checkInsideBoundAndStorePosition,
   var y = (matrix.m42 - window.innerHeight / 2 * (1 - scale / newScale)) * ratio
 
   setTransform(x, y, newScale, 0);
-  checkInsideBoundAndStorePosition({x: x, y: y, scale: newScale, setScale: setScale, setTransform: setTransform, position: position, cursor: cursor, boardId: boardId});
+  checkInsideBoundAndStorePosition({x: x, y: y, scale: newScale, setScale: setScale, setTransform: setTransform, positionRef: positionRef, cursorRef: cursorRef, boardIdRef: boardIdRef});
 }
 
 
@@ -116,7 +119,7 @@ function zoomIn(scale, setScale, setTransform, checkInsideBoundAndStorePosition,
  * @param {*} checkInsideBoundAndStorePosition
  * @returns null
  */
-function zoomOut(scale, setScale, setTransform, checkInsideBoundAndStorePosition, cursor, position, boardId){
+function zoomOut(scale, setScale, setTransform, checkInsideBoundAndStorePosition, cursorRef, positionRef, boardIdRef){
   var newScale = scale;
   var minScale = rdd.isMobile === true ? Config.interfaceMinZoomScaleForMobile : Config.interfaceMinZoomScaleForDesktop;
   
@@ -138,7 +141,7 @@ function zoomOut(scale, setScale, setTransform, checkInsideBoundAndStorePosition
   var y = (matrix.m42 - window.innerHeight / 2 * (1 - scale / newScale)) * ratio
 
   setTransform(x, y, newScale, 0);
-  checkInsideBoundAndStorePosition({x: x, y: y, scale: newScale, setScale: setScale, setTransform: setTransform, position: position, cursor: cursor, boardId: boardId});
+  checkInsideBoundAndStorePosition({x: x, y: y, scale: newScale, setScale: setScale, setTransform: setTransform, positionRef: positionRef, cursorRef: cursorRef, boardIdRef: boardIdRef});
 }
 
 export default Zoom

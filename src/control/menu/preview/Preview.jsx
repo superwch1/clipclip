@@ -8,11 +8,11 @@ import * as rdd from 'react-device-detect'
 /** 
  * click button to create a preview for link
  * @param {*} scale
- * @param {*} reverseActions 
+ * @param {*} reverseActionsRef 
  * @param {*} boardId
  * @returns image button
  */
-function Preview({scale, reverseActions, boardId, position}) {
+function Preview({scale, reverseActionsRef, boardIdRef, positionRef}) {
 
   const previewButtonRef = useRef(null);
 
@@ -28,7 +28,7 @@ function Preview({scale, reverseActions, boardId, position}) {
 
       <div id={controlUrlId} ref={urlRef} style={{left: rdd.isMobile ? "10px" : "110px", top: rdd.isMobile ? "80px" : "100px"}}>
         <input id={`${controlUrlId}-input`} type='text' placeholder="press Return to submit" 
-          onKeyDown={(event) => createPreview(event, controlUrlId, scale, document.getElementById(`${controlUrlId}-input`).value, reverseActions, boardId, position)}/>
+          onKeyDown={(event) => createPreview(event, controlUrlId, scale, document.getElementById(`${controlUrlId}-input`).value, reverseActionsRef, boardIdRef, positionRef)}/>
       </div>  
     </>
   )
@@ -51,33 +51,33 @@ function showInput(controlUrlId) {
  * @param {*} controlUrlId
  * @param {*} scale
  * @param {*} url
- * @param {*} reverseActions 
+ * @param {*} reverseActionsRef 
  * @param {*} boardId
  * @returns image button
  */
-async function createPreview(event, controlUrlId, scale, url, reverseActions, boardId, position) {
+async function createPreview(event, controlUrlId, scale, url, reverseActionsRef, boardIdRef, positionRef) {
   if (event.key === 'Enter' || event.keyCode === 13) {
 
     var figurePosition;
     if (rdd.isMobile) {
-      figurePosition = { x: -((position.current.x - 50) / scale) , y: -((position.current.y - 120) / scale)};
+      figurePosition = { x: -((positionRef.current.x - 50) / scale) , y: -((positionRef.current.y - 120) / scale)};
     }
     else {
-      figurePosition = { x: -((position.current.x - 100) / scale) , y: -((position.current.y - 170) / scale)};
+      figurePosition = { x: -((positionRef.current.x - 100) / scale) , y: -((positionRef.current.y - 170) / scale)};
     }
 
-    const figure = { boardId: boardId, type: "preview", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: url, zIndex: 5, isPinned: false}
+    const figure = { boardId: boardIdRef.current, type: "preview", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: url, zIndex: 5, isPinned: false}
     var response = await FigureApi.createPreview(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned);
 
     
     if (response.status === 200) {
-      if (reverseActions.current.length === 30) {
-        reverseActions.current.shift();
+      if (reverseActionsRef.current.length === 30) {
+        reverseActionsRef.current.shift();
       }
   
       document.getElementById(`${controlUrlId}-input`).value = '';
       document.getElementById(controlUrlId).style.display = 'none';
-      reverseActions.current.push({ action: "delete", id: response.data._id });
+      reverseActionsRef.current.push({ action: "delete", id: response.data._id });
     }
     else {
       toast(response.data);

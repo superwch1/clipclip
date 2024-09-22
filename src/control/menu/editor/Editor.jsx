@@ -7,13 +7,13 @@ import * as rdd from 'react-device-detect'
 /** 
  * click button to create a editor
  * @param {*} scale
- * @param {*} reverseActions 
+ * @param {*} reverseActionsRef 
  * @param {*} boardId
  * @returns editor button
  */
-function Editor({scale, reverseActions, boardId, position}) {
+function Editor({scale, reverseActionsRef, boardIdRef, positionRef}) {
   return (
-    <div className='control-button' onClick={(event) => createEditor(event, scale, reverseActions, boardId, position)}
+    <div className='control-button' onClick={(event) => createEditor(event, scale, reverseActionsRef, boardIdRef, positionRef)}
          style={{backgroundColor: "#78290F", width: "50px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center"}} >
       <img style={{width: "18px", height: "18px"}} src={EditorButton} />
     </div>
@@ -24,28 +24,28 @@ function Editor({scale, reverseActions, boardId, position}) {
 /** 
  * create a empty editor on the top left corner
  * @param {*} scale
- * @param {*} reverseActions 
+ * @param {*} reverseActionsRef 
  * @param {*} boardId
  * @returns null
  */
-async function createEditor(event, scale, reverseActions, boardId, position) { 
+async function createEditor(event, scale, reverseActionsRef, boardIdRef, positionRef) { 
   var figurePosition;
   if (rdd.isMobile) {
-    figurePosition = { x: -((position.current.x - 50) / scale) , y: -((position.current.y - 120) / scale)};
+    figurePosition = { x: -((positionRef.current.x - 50) / scale) , y: -((positionRef.current.y - 120) / scale)};
   }
   else {
-    figurePosition = { x: -((position.current.x - 100) / scale) , y: -((position.current.y - 170) / scale)};
+    figurePosition = { x: -((positionRef.current.x - 100) / scale) , y: -((positionRef.current.y - 170) / scale)};
   }
-  
-  const figure = { boardId: boardId, type: "editor", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
-  var response = await FigureApi.createEditor(boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, null, null);
+
+  const figure = { boardId: boardIdRef.current, type: "editor", x: figurePosition.x, y: figurePosition.y, width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
+  var response = await FigureApi.createEditor(figure.boardId, figure.x, figure.y, figure.width, figure.height, figure.type, figure.backgroundColor, figure.url, figure.zIndex, figure.isPinned, null, null);
 
   if (response.status === 200) {
-    if (reverseActions.current.length === 30) {
-      reverseActions.current.shift();
+    if (reverseActionsRef.current.length === 30) {
+      reverseActionsRef.current.shift();
     }
 
-    reverseActions.current.push({ action: "delete", id: response.data._id });
+    reverseActionsRef.current.push({ action: "delete", id: response.data._id });
   }
   else {
     toast(response.data);

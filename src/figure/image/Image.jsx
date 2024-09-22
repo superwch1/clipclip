@@ -13,7 +13,7 @@ import figureApi from '../../server/figureApi.mjs'
  * show the image (base64), option bar
  * @returns div with image and option bar
  */
-const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActions, boardId}) => {
+const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActionsRef, boardId}) => {
 
   // x, y, width, height, enableResizing, disableDragging are used for react rnd in div
   // (x, y, width, height) and (enableResizing, disableDragging) have their own useEffect for receiving udpates
@@ -34,7 +34,7 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
   const containerRef = useRef(null);
   const barRef = useRef(null);
   const imageRef = useRef(null);
-  const isImageBase64 = useRef(false);
+  const isImageBase64Ref = useRef(false);
   onClickOutsideFigure(containerRef, barRef, id, null, null);  
 
 
@@ -60,20 +60,20 @@ const Image = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPi
         onMouseDown={(e) => onSelectFigure(id, null, null)}
         onDrag={(e, data) => hideOptionBarAndToolBar(id)}
         onResize={(e, direction, ref, delta, position) => hideOptionBarAndToolBar(id)}
-        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, reverseActions)}
-        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", ""))}, setSizeAndPosition, id, reverseActions)}>
+        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, reverseActionsRef)}
+        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", ""))}, setSizeAndPosition, id, reverseActionsRef)}>
         
         <div id={`${id}`} className='image' ref={containerRef} style={{ width: '100%', height: '100%'}}
             data-id={id} data-type={"image"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} 
             data-backgroundcolor={backgroundColor} data-ispinned={isPinned} data-boardid={boardId}>
           
           <img id={`${id}-image`} draggable={false} ref={imageRef} alt="Downloaded" src={`${Config.url}/image/?url=${url}`} style={{ width: '100%', height: '100%', objectFit: 'contain'}} 
-               onLoad={(event) => imageOnLoad(event, url, imageRef, isImageBase64)} onError={(event) => imageOnError(event, imageRef)}/>
+               onLoad={(event) => imageOnLoad(event, url, imageRef, isImageBase64Ref)} onError={(event) => imageOnError(event, imageRef)}/>
         </div>
       </Rnd>
 
       <div id={`${id}-bar`} className={`${id}-noDrag`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none", display: "none"}}>
-        <OptionBar id={id} backgroundColor={backgroundColor} isPinned={isPinned} reverseActions={reverseActions} />
+        <OptionBar id={id} backgroundColor={backgroundColor} isPinned={isPinned} reverseActionsRef={reverseActionsRef} />
       </div>
     </>
   )
@@ -95,11 +95,11 @@ async function imageOnError(event, ref) {
  * convert the image to base64 format after loading
  * @param {*} event
  * @param {*} ref
- * @param {*} iSimageBase64
+ * @param {*} isImageBase64Ref
  * @returns null
  */
-async function imageOnLoad(event, url, ref, isImageBase64) {
-  if(isImageBase64.current === true) {
+async function imageOnLoad(event, url, ref, isImageBase64Ref) {
+  if(isImageBase64Ref.current === true) {
     return;
   }
 
@@ -108,7 +108,7 @@ async function imageOnLoad(event, url, ref, isImageBase64) {
   var contentType = response.headers['content-type'] || response.headers['Content-Type'];
   ref.current.src = `data:${contentType};base64,${base64Data}`;
 
-  isImageBase64.current = true;
+  isImageBase64Ref.current = true;
 }
 
 

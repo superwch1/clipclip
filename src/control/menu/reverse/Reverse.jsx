@@ -7,23 +7,23 @@ import { isInputOrEditorFocused } from '../../utlis.mjs';
 
 /** 
  * reverse button or use keyboard to reverse an action
- * @param {*} reverseActions 
+ * @param {*} reverseActionsRef 
  * @returns image button
  */
-function Reverse({reverseActions}) {
+function Reverse({reverseActionsRef}) {
 
-  const waitingResponse = useRef(false);
+  const waitingResponseRef = useRef(false);
 
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'z' && isInputOrEditorFocused() === false) {
-        sendReverseActions(reverseActions, waitingResponse);
+        sendreverseActionsRef(reverseActionsRef, waitingResponseRef);
       }
     });
   }, []);
 
   return (
-    <div id="control-reverse" className='control-button' onClick={(event) => sendReverseActions(reverseActions, waitingResponse)}
+    <div id="control-reverse" className='control-button' onClick={(event) => sendreverseActionsRef(reverseActionsRef, waitingResponseRef)}
          style={{backgroundColor: "#78290F", width: "50px", height: "38px", borderRadius: "20px", display: "flex", justifyContent: "center", alignItems: "center"}} >
       <img style={{width: "18px", height: "18px"}} src={ReverseButton} />
     </div>
@@ -33,19 +33,19 @@ function Reverse({reverseActions}) {
 
 /** 
  * reverse an action by creating / updating / deleteing a figure
- * @param {*} reverseActions 
- * @param {*} waitingResponse
+ * @param {*} reverseActionsRef 
+ * @param {*} waitingResponseRef
  * @returns null
  */
-async function sendReverseActions(reverseActions, waitingResponse) {
+async function sendreverseActionsRef(reverseActionsRef, waitingResponseRef) {
 
-  if (waitingResponse.current === true) {
+  if (waitingResponseRef.current === true) {
     return;
   }
-  waitingResponse.current = true;
+  waitingResponseRef.current = true;
 
-  if (reverseActions.current.length > 0) {
-    var figure = reverseActions.current[reverseActions.current.length - 1];
+  if (reverseActionsRef.current.length > 0) {
+    var figure = reverseActionsRef.current[reverseActionsRef.current.length - 1];
     var response;
 
     if (figure.action === "create") {
@@ -93,14 +93,14 @@ async function sendReverseActions(reverseActions, waitingResponse) {
     // 4. user B trapped in reverse action
     
     if (response.status === 200) {
-      reverseActions.current.pop();
+      reverseActionsRef.current.pop();
     }
     else {
       toast(response.data);
     }
   }
 
-  waitingResponse.current = false;
+  waitingResponseRef.current = false;
 }
 
 export default Reverse

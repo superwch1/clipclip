@@ -108,10 +108,10 @@ function showOptionBarAndToolBar(id) {
  * @param {*} newSizeAndPosition
  * @param {*} setSizeAndPosition
  * @param {*} id
- * @param {*} reverseActions 
+ * @param {*} reverseActionsRef 
  * @returns null
  */
-async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPosition, setSizeAndPosition, id, reverseActions) {
+async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPosition, setSizeAndPosition, id, reverseActionsRef) {
   // there will be 0.001 difference for between the position (x, y) value for original and new position
   if (Math.abs(originalSizeAndPosition.x - newSizeAndPosition.x) < 0.01 && Math.abs(originalSizeAndPosition.y - newSizeAndPosition.y) < 0.01
     && originalSizeAndPosition.width === newSizeAndPosition.width && originalSizeAndPosition.height === newSizeAndPosition.height) {
@@ -140,11 +140,11 @@ async function onChangeSizeAndPosition(originalSizeAndPosition, newSizeAndPositi
   }
 
   else {
-    if (reverseActions.current.length === 30) {
-      reverseActions.current.shift();
+    if (reverseActionsRef.current.length === 30) {
+      reverseActionsRef.current.shift();
     }
 
-    reverseActions.current.push({action: "update-positionAndSize", id: id, x: originalSizeAndPosition.x, y: originalSizeAndPosition.y, width: originalSizeAndPosition.width, height: originalSizeAndPosition.height});
+    reverseActionsRef.current.push({action: "update-positionAndSize", id: id, x: originalSizeAndPosition.x, y: originalSizeAndPosition.y, width: originalSizeAndPosition.width, height: originalSizeAndPosition.height});
   }
 }
 

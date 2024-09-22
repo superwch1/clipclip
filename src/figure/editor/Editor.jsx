@@ -16,7 +16,7 @@ import { onClickOutsideFigure, onSelectFigure, hideOptionBarAndToolBar, onChange
  * show the quill editor, option bar and use yjs to enable editing simultaneously
  * @returns div with quill editor and option bar
  */
-const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActions, boardId}) => {
+const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActionsRef, boardId}) => {
 
   // x, y, width, height, enableResizing, disableDragging are used for react rnd in div
   // (x, y, width, height) and (enableResizing, disableDragging) have their own useEffect for receiving udpates
@@ -68,6 +68,7 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
       }
     });
 
+
     const ydoc = new Y.Doc();
     const ytext = ydoc.getText('quill');
     const binding = new QuillBinding(ytext, quill);
@@ -81,6 +82,20 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
     // not allow to edit and select text before having the second click in quill
     const quillEditor = document.getElementById(`${id}`).getElementsByClassName('ql-editor')[0];
     quillEditor.setAttribute('contenteditable', false);
+
+    // allow user scroll only when the editor get focused
+    quillEditor.style.overflow = "hidden";
+    quill.on('editor-change', (eventName) => {
+      if (eventName === 'selection-change') {
+        const range = quill.getSelection();
+        if (range) {
+          document.getElementById(`${id}`).getElementsByClassName('ql-editor')[0].style.overflow = "auto";
+        } else {
+          document.getElementById(`${id}`).getElementsByClassName('ql-editor')[0].style.overflow = "hidden";
+        }
+      }
+    });
+
 
     if (isPinned === false) {
       quillEditor.classList.add(`move-cursor`);
@@ -122,8 +137,8 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
         onMouseDown={(e) => onSelectFigure(id, null, null)}
         onDrag={(e, data) => hideOptionBarAndToolBar(id)}
         onResize={(e, direction, ref, delta, position) => hideOptionBarAndToolBar(id)}
-        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, reverseActions)} 
-        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id, reverseActions)}>
+        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, reverseActionsRef)} 
+        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id, reverseActionsRef)}>
         
         { /* onMouseUp can't be placed inside rnd because of bug https://github.com/bokuweb/react-rnd/issues/647 */ }
         { /* bar need to not be dragged or else clicking the quill toolbar cause the editor to blur and lose the selection for text */ }
@@ -135,7 +150,7 @@ const Editor = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isP
         </div>     
       </Rnd>
       <div id={`${id}-bar`} className={`${id}-noDrag`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none", display: "none"}}>
-        <OptionBar id={id} backgroundColor={backgroundColor} isPinned={isPinned} reverseActions={reverseActions} />
+        <OptionBar id={id} backgroundColor={backgroundColor} isPinned={isPinned} reverseActionsRef={reverseActionsRef} />
       </div>
     </>
   )

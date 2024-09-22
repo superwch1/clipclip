@@ -11,7 +11,7 @@ import figureApi from '../../server/figureApi.mjs'
  * show the link preview, option bar
  * @returns div with preview and option bar
  */
-const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActions, boardId}) => {
+const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, isPinned, scale, reverseActionsRef, boardId}) => {
 
   // x, y, width, height, enableResizing, disableDragging are used for react rnd in div
   // (x, y, width, height) and (enableResizing, disableDragging) have their own useEffect for receiving udpates
@@ -78,8 +78,8 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
         onMouseDown={(e) => onSelectFigure(id, null, null)}
         onDrag={(e, data) => hideOptionBarAndToolBar(id)}
         onResize={(e, direction, ref, delta, position) => hideOptionBarAndToolBar(id)}
-        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id, reverseActions)}
-        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, reverseActions)}>
+        onResizeStop={async (e, direction, ref, delta, position) => await onChangeSizeAndPosition(sizeAndPosition, { x: position.x, y: position.y, width: parseInt(ref.style.width.replace("px", "")), height: parseInt(ref.style.height.replace("px", "")) }, setSizeAndPosition, id, reverseActionsRef)}
+        onDragStop={async (e, data) => await onChangeSizeAndPosition(sizeAndPosition, { x: data.x, y: data.y, width: sizeAndPosition.width, height: sizeAndPosition.height}, setSizeAndPosition, id, reverseActionsRef)}>
 
         <div id={id} ref={containerRef} className='preview' style={{backgroundColor: `${backgroundColor}`}}
             data-id={id} data-type={"preview"} data-x={x} data-y={y} data-zindex={zIndex} data-width={width} data-height={height} data-url={url} 
@@ -98,7 +98,7 @@ const Preview = memo(({x, y, backgroundColor, width, height, id, url, zIndex, is
       </Rnd>
 
       <div id={`${id}-bar`} className={`${id}-noDrag`} ref={barRef} style={{zIndex: '100', position: 'absolute', transform: `translate(${sizeAndPosition.x}px, ${sizeAndPosition.y}px)`, touchAction: "none", display: "none"}}>
-        <OptionBar id={id} backgroundColor={backgroundColor} isPinned={isPinned} reverseActions={reverseActions} />
+        <OptionBar id={id} backgroundColor={backgroundColor} isPinned={isPinned} reverseActionsRef={reverseActionsRef} />
       </div>
     </>
   )

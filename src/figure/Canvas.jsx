@@ -1,7 +1,7 @@
 import Editor from './editor/Editor'
 import Image from './image/Image'
 import Preview from './preview/Preview'
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import useWebSocket from 'react-use-websocket'
 import Config from '../config/Config'
 import figureApi from '../server/figureApi.mjs'
@@ -9,16 +9,16 @@ import figureApi from '../server/figureApi.mjs'
 /** 
  * render the figures within the same boardId and update figure properties continuously
  * @param {*} scale
- * @param {*} reverseActions   
- * @param {*} boardId
+ * @param {*} reverseActionsRef   
+ * @param {*} boardIdRef
  * @returns null
  */
-function Canvas({scale, reverseActions, boardId}) {
+function Canvas({scale, reverseActionsRef, boardIdRef}) {
 
   const [figures, setFigures] = useState([]);
 
   // if connection is lost, messages are queued up and sent after reconnected
-  const { sendMessage, getWebSocket } = useWebSocket(`${Config.ws}/figures?boardId=${boardId}`, {
+  const { sendMessage, getWebSocket } = useWebSocket(`${Config.ws}/figures?boardId=${boardIdRef.current}`, {
     onMessage: (event) => processMessageFromWebSocket(event, figures, setFigures),
     shouldReconnect: (closeEvent) => true, // it will attempt to reconnect after the connection is closed
     reconnectInterval: () => 1000,
@@ -34,7 +34,7 @@ function Canvas({scale, reverseActions, boardId}) {
     // get all the figures properties from web server on every connection / reconnect from websocket
     // should be using sync since async and await maybe causing error in mobile of not getting properties of figures
     onOpen: (event) => {
-      getFigureFromServer(boardId).then(figureList => setFigures(figureList));
+      getFigureFromServer(boardIdRef.current).then(figureList => setFigures(figureList));
     }
   });
  
@@ -43,15 +43,15 @@ function Canvas({scale, reverseActions, boardId}) {
       {figures.map((item, index) => {
         if (item.type === "editor") {
           return ( <Editor key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} boardId={boardId} />)
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActionsRef={reverseActionsRef} boardId={boardIdRef.current} />)
         }
         else if (item.type === "preview") {
           return ( <Preview key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url} 
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} boardId={boardId} />)
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActionsRef={reverseActionsRef} boardId={boardIdRef.current} />)
         }
         else if (item.type === "image") {
           return (<Image key={item.id} scale={scale} id={item.id} x={item.x} y={item.y} width={item.width} height={item.height} url={item.url}
-            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActions={reverseActions} boardId={boardId} />)
+            zIndex={item.zIndex} backgroundColor={item.backgroundColor} isPinned={item.isPinned} reverseActionsRef={reverseActionsRef} boardId={boardIdRef.current} />)
         }
       })}
     </>

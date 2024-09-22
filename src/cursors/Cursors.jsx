@@ -8,26 +8,28 @@ import { v4 as uuidv4 } from 'uuid';
 /** 
  * show all the cursors within the same boardId
  * @param {*} scale
- * @param {*} boardId
+ * @param {*} boardIdRef
+ * @param {*} positionRef
+ * @param {*} cursorRef
  * @returns div with image of cursors
  */
-function Cursors({scale, boardId, position, cursor}) {
+function Cursors({scale, boardIdRef, positionRef, cursorRef}) {
 
-  const cursorPosition = useRef({x: 0, y: 0});
-  const previousCursorPosition = useRef(null);
+  const cursorPositionRef = useRef({x: 0, y: 0});
+  const previousCursorPositionRef = useRef(null);
 
   const translatePosition = useRef({x: 0, y: 0});
   const previousTranslatePosition = useRef(null);
 
   const [state, setState] = useState("");
 
-  const cursorUUID = useRef(uuidv4());
-  const cursorsMap = useRef(new Map());
-  var cursorsArray = Array.from(cursorsMap.current, ([key, value]) => ({ key, value }));
+  const cursorUUIDRef = useRef(uuidv4());
+  const cursorsMapRef = useRef(new Map());
+  var cursorsArray = Array.from(cursorsMapRef.current, ([key, value]) => ({ key, value }));
 
   // if connection is lost, unsent messages will be discarded
-  const { sendMessage } = useWebSocket(`${Config.ws}/cursors?uuid=${cursorUUID.current}&isDesktop=${rdd.isDesktop}&boardId=${boardId}`, {
-    onMessage: (event) => processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState),
+  const { sendMessage } = useWebSocket(`${Config.ws}/cursors?uuid=${cursorUUIDRef.current}&isDesktop=${rdd.isDesktop}&boardId=${boardIdRef.current}`, {
+    onMessage: (event) => processMessageFromWebSocket(event, cursorUUIDRef, cursorsMapRef, setState),
     shouldReconnect: (closeEvent) => true, // it will attempt to reconnect after the connection is closed
     reconnectInterval: () => 1000,
     filter: (message) => false, // prevent rerender every time it receives a message from websocket
@@ -39,18 +41,18 @@ function Cursors({scale, boardId, position, cursor}) {
   if (rdd.isDesktop) {
     useEffect(() => {  
         const handleMouseMove = (event) => {
-          cursorPosition.current = { x: event.clientX, y: event.clientY };
-          cursor.current = { x: event.clientX, y: event.clientY };
+          cursorPositionRef.current = { x: event.clientX, y: event.clientY };
+          cursorRef.current = { x: event.clientX, y: event.clientY };
 
-          localStorage.setItem(`${boardId.current}_props`, JSON.stringify({scale: scale, position: position.current, cursor: cursor.current}));
+          localStorage.setItem(`${boardIdRef.current}_props`, JSON.stringify({scale: scale, position: positionRef.current, cursor: cursorRef.current}));
         };
         document.onmousemove = handleMouseMove;
     
         let id = setInterval(() => {
-          translatePosition.current = { x: -position.current.x, y: -position.current.y};
+          translatePosition.current = { x: -positionRef.current.x, y: -positionRef.current.y};
                   
-          if (previousCursorPosition.current === null) {
-            previousCursorPosition.current = { x: cursorPosition.current.x, y: cursorPosition.current.y }
+          if (previousCursorPositionRef.current === null) {
+            previousCursorPositionRef.current = { x: cursorPositionRef.current.x, y: cursorPositionRef.current.y }
           }
 
           if (previousTranslatePosition.current === null) {
@@ -58,18 +60,18 @@ function Cursors({scale, boardId, position, cursor}) {
           }
     
           // send the updated position of cursor when translate or cursor posotion is different with the previous
-          if (previousCursorPosition.current.x !== cursorPosition.current.x || previousCursorPosition.current.y !== cursorPosition.current.y ||
+          if (previousCursorPositionRef.current.x !== cursorPositionRef.current.x || previousCursorPositionRef.current.y !== cursorPositionRef.current.y ||
             previousTranslatePosition.current.x !== translatePosition.current.x || previousTranslatePosition.current.y !== translatePosition.current.y) {
 
-            previousCursorPosition.current = { x: cursorPosition.current.x, y: cursorPosition.current.y };
+            previousCursorPositionRef.current = { x: cursorPositionRef.current.x, y: cursorPositionRef.current.y };
             previousTranslatePosition.current = { x: translatePosition.current.x, y: translatePosition.current.y };
 
             // chaning scale will not affect cursor position unless cursor move
-            var x = (translatePosition.current.x + cursorPosition.current.x) / scale;
-            var y = (translatePosition.current.y + cursorPosition.current.y) / scale;
+            var x = (translatePosition.current.x + cursorPositionRef.current.x) / scale;
+            var y = (translatePosition.current.y + cursorPositionRef.current.y) / scale;
                     
             // unsent message will be discarded when the connection is lost
-            const jsonString = JSON.stringify({uuid: cursorUUID.current, x: x, y: y, boardId: boardId});
+            const jsonString = JSON.stringify({uuid: cursorUUIDRef.current, x: x, y: y, boardId: boardIdRef.current});
             sendMessage(jsonString, false);
           }
         }, 100)
@@ -96,21 +98,21 @@ function Cursors({scale, boardId, position, cursor}) {
 /** 
  * process the message from websocket and update the cursor position
  * @param {*} event
- * @param {*} cursorUUID used to update state value to rerender the cursor div
- * @param {*} cursorsMap
+ * @param {*} cursorUUIDRef used to update state value to rerender the cursor div
+ * @param {*} cursorsMapRef
  * @param {*} setState set state to a new value
  * @returns null
  */
-function processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState) {
+function processMessageFromWebSocket(event, cursorUUIDRef, cursorsMapRef, setState) {
   var cursorsInfoArray = JSON.parse(event.data).cursors;
 
-  var cursorsCopiedMap = new Map(cursorsMap.current);
+  var cursorsCopiedMap = new Map(cursorsMapRef.current);
   var needRerender = false;
 
   for (var i = 0; i < cursorsInfoArray.length; i++) {
 
     // ignore for the position of cursor form this client
-    if (cursorsInfoArray[i].key === cursorUUID.current) {
+    if (cursorsInfoArray[i].key === cursorUUIDRef.current) {
       continue;
     }
    
@@ -118,9 +120,9 @@ function processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState) {
     if (cursorsCopiedMap.has(cursorsInfoArray[i].key) === true) {
       
       // if the x and y value is different, it means some user has changed cursor location but no need rerender
-      var cursorCoordinate = cursorsMap.current.get(cursorsInfoArray[i].key);
+      var cursorCoordinate = cursorsMapRef.current.get(cursorsInfoArray[i].key);
       if (cursorCoordinate.x !== cursorsInfoArray[i].value.x || cursorCoordinate.y !== cursorsInfoArray[i].value.y) {
-        cursorsMap.current.set(cursorsInfoArray[i].key, { x: cursorsInfoArray[i].value.x, y: cursorsInfoArray[i].value.y })
+        cursorsMapRef.current.set(cursorsInfoArray[i].key, { x: cursorsInfoArray[i].value.x, y: cursorsInfoArray[i].value.y })
         document.getElementById(`${cursorsInfoArray[i].key}`).style.transform = `translate(${cursorsInfoArray[i].value.x}px, ${cursorsInfoArray[i].value.y}px)`;
       }
       cursorsCopiedMap.delete(cursorsInfoArray[i].key);
@@ -143,12 +145,12 @@ function processMessageFromWebSocket(event, cursorUUID, cursorsMap, setState) {
   if (needRerender === true) {
     var cursorsNewMap = new Map();
     for (var i = 0; i < cursorsInfoArray.length; i++) {
-      if (cursorsInfoArray[i].key === cursorUUID.current) {
+      if (cursorsInfoArray[i].key === cursorUUIDRef.current) {
         continue;
       }
       cursorsNewMap.set(cursorsInfoArray[i].key, cursorsInfoArray[i].value);
     }
-    cursorsMap.current = cursorsNewMap;
+    cursorsMapRef.current = cursorsNewMap;
     
     // setState need a different value than before to trigger rerender
     setState(uuidv4());
