@@ -164,12 +164,12 @@ async function pasteClipClipType(event, position, reverseActionsRef, boardIdRef)
  * @param {*} event 
  * @param {*} position
  * @param {*} reverseActionsRef
- * @param {*} boardId
+ * @param {*} boardIdRef
  * @returns null
  */
 async function pasteOrdinaryType(event, position, reverseActionsRef, boardIdRef) {
 
-  var figure = { boardId: boardId, type: "", width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
+  var figure = { boardId: boardIdRef.current, type: "", width: 400, height: 400, backgroundColor: "rgba(226,245,240,1)", url: "", zIndex: 5, isPinned: false};
 
   if (event.clipboardData.types.includes('text/plain')) {
     // no idea yet for text/html for converting the style to quill
