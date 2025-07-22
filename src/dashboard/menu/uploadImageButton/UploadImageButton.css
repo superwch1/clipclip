@@ -1,0 +1,12 @@
+#control-menu-bar-image {
+    width: 80px;
+    height: 38px;
+    border-radius: 20px;
+    border: 1px solid #78290F;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #78290F;
+    font-weight: bold;
+    cursor: pointer;
+}

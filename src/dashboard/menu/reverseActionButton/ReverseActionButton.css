@@ -1,0 +1,10 @@
+#control-menu-bar-reverse {
+    background-color: #78290F;
+    width: 50px;
+    height: 38px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}

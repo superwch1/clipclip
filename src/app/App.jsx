@@ -1,10 +1,8 @@
-import Canvas from '../figure/Canvas'
+import Dashboard from '../dashboard/Dashboard'
 import { useState, useEffect, useRef } from 'react'
-import Menu from '../control/menu/Menu'
-import Zoom from '../control/zoom/Zoom'
-import Cursors from '../cursors/Cursors'
-import CopyAndPaste from '../control/copyAndPaste/CopyAndPaste'
-import CutAndDelete from '../control/cutAndDelete/CutAndDelete'
+import Menu from '../dashboard/menu/Menu'
+import Zoom from '../dashboard/zoom/Zoom'
+import Cursors from '../dashboard/cursors/Cursors'
 import './App.css'
 import Config from '../config/Config'
 import { TransformWrapper, TransformComponent} from "react-zoom-pan-pinch"
@@ -14,7 +12,11 @@ import 'react-toastify/dist/ReactToastify.css'
 import './quill.bubble.css' // https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.bubble.css - prevent CORS issue of screenshot, remove last line for mapping issue
 import { useLocation } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid';
-import { isInputOrEditorFocused } from '../control/utlis.mjs'
+import { isInputOrEditorFocused } from '../utlis.mjs'
+import CopyHotKey from '../dashboard/hotKey/CopyHotKey'
+import PasteHotKey from '../dashboard/hotKey/PasteHotKey'
+import CutHotKey from '../dashboard/hotKey/CutHotKey'
+import DeleteHotKey from '../dashboard/hotKey/DeleteHotKey'
 
 
 
@@ -128,6 +130,8 @@ function App() {
   // the actions will be manipulated inside reverse.jsx inside menu
   const reverseActionsRef = useRef([]);
 
+
+  const figuresRef = useRef([])
   
 
   return (
@@ -147,7 +151,7 @@ function App() {
         <TransformComponent>
           {/* when cursor event is set to none, the cursor will not be respond to mouse event, it needs to create another div */}
           <div id="interface" key={interfaceKey} style={{ width: `${Config.interfaceWidth}px`, height: `${Config.interfaceHeight}px`}}>
-            <Canvas scale={scale} reverseActionsRef={reverseActionsRef} boardIdRef={boardIdRef} />  
+            <Dashboard scale={scale} reverseActionsRef={reverseActionsRef} boardIdRef={boardIdRef} figuresRef={figuresRef} />  
             <Cursors scale={scale} positionRef={positionRef} cursorRef={cursorRef} boardIdRef={boardIdRef} /> {/* cursor needs to stay inside interface otherwise the position will be incorrect */}
           </div>
         </TransformComponent>
@@ -155,8 +159,10 @@ function App() {
         { /* the following components are placed on top of the Canvas */ }
         <div id='control' style={{touchAction: "none"}}>
           <Menu scale={scale} reverseActionsRef={reverseActionsRef} boardIdRef={boardIdRef} positionRef={positionRef} />
-          <CopyAndPaste scale={scale} reverseActionsRef={reverseActionsRef} boardIdRef={boardIdRef} cursorRef={cursorRef} positionRef={positionRef} />
-          <CutAndDelete reverseActionsRef={reverseActionsRef} />
+          <PasteHotKey scale={scale} reverseActionsRef={reverseActionsRef} boardIdRef={boardIdRef} cursorRef={cursorRef} positionRef={positionRef}/>
+          <CopyHotKey figuresRef={figuresRef}/>
+          <CutHotKey reverseActionsRef={reverseActionsRef} figuresRef={figuresRef}/>
+          <DeleteHotKey reverseActionsRef={reverseActionsRef} figuresRef={figuresRef}/>
           {rdd.isDesktop === true && <Zoom scale={scale} setScale={setScale} checkInsideBoundAndStorePosition={checkInsideBoundAndStorePosition} boardIdRef={boardIdRef} cursorRef={cursorRef} positionRef={positionRef} />}
         </div>
       </TransformWrapper>

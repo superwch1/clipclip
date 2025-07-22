@@ -1,0 +1,16 @@
+#control-menu-bar-gesture {
+    border: 1px solid #78290F;
+    width: 50px;
+    height: 38px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #78290F;
+    cursor: pointer;
+}
+
+#control-menu-bar-gesture-image {
+    width: 22px;
+    height: 22px;
+}

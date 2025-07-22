@@ -1,0 +1,15 @@
+#control-menu-bar-editor {
+    background-color: #78290F;
+    width: 50px;
+    height: 38px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+#control-menu-bar-editor-image {
+    width: 18px;
+    height: 18px;
+}

@@ -1,12 +1,5 @@
 export default class Config {
 
-  // figure configuration
-  static figureMinWidth = 50;
-  static figureMinHeight = 50;
-
-  static figureMaxWidth = 1500;
-  static figureMaxHeight = 1500;
-
 
   // interface configuration
   static interfaceWidth = 5000;
@@ -24,6 +17,15 @@ export default class Config {
    static ws = `wss://clipclip.superwch1.com`; 
   // static ws = `ws://192.168.50.111`; 
   // static ws = `ws://localhost:1234`;
+
+
+  // figure configuration
+  static figureMinWidth = 50;
+  static figureMinHeight = 50;
+
+  static figureMaxWidth = 1500;
+  static figureMaxHeight = 1500;
+
 
   /* not allow to resize on topLeft to prevent it overlaps while changing text color in editor toolbar */
   static enableResizingDirection = {bottomLeft: true, bottomRight: true, topLeft: true, topRight: true };
